@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
         try {
           const res = await anthropic.messages.create({
             model: "claude-sonnet-4-20250514",
-            max_tokens: 2500,
-            messages: [{ role: "user", content: `당신은 온서사의 작곡프로듀서이자 IP콘텐츠전략실장입니다.
+            max_tokens: 3500,
+            messages: [{ role: "user", content: `당신은 온서사의 작곡프로듀서이자 Suno AI 전문 프롬프트 엔지니어입니다.
 
 앨범 제목: ${albumTitle}
 세계관/배경: ${worldview || "미지정"}
@@ -52,19 +52,40 @@ ${trackSummary}
 
 다음을 작성하세요:
 
-## 앨범 컨셉
+## 1. 앨범 컨셉
 1. 앨범 전체 콘셉트 (3-4문장)
 2. 앨범이 전달하는 핵심 감정/메시지
 3. 타깃 리스너 (어떤 상황에서 듣는 음악인지)
 4. 앨범 키워드 5개
 
-## 트랙 순서 제안
+## 2. 트랙 순서 & 역할
 - 앨범 전체 흐름을 고려한 최적 트랙 순서
-- 각 트랙이 앨범 안에서 맡는 역할 (인트로, 타이틀곡, 브릿지, 아웃트로 등)
+- 각 트랙이 앨범 안에서 맡는 역할 (인트로, 타이틀곡, 전환곡, 아웃트로 등)
+- 트랙 간 감정 흐름도 (기승전결)
 
-## 브랜드 연결
+## 3. 트랙별 Suno AI 프로덕션 노트
+각 트랙에 대해 다음을 작성:
+- **Suno Style of Music 프롬프트** (바로 복사해서 Suno에 붙여넣을 수 있는 태그 조합)
+  예: "Korean Ballad, emotional, piano, strings, female vocals, heartfelt, slow tempo"
+- **추천 곡 구조** (가사에 넣을 섹션 태그)
+  예: [Intro] → [Verse 1] → [Pre-Chorus] → [Chorus] → [Verse 2] → [Bridge] → [Chorus] → [Outro]
+- **Instrumental 여부**: 보컬 트랙 / 인스트루멘탈
+- **보컬 스타일**: male/female, 창법 (breathy, belting, falsetto 등)
+- **핵심 악기**: 메인 악기 2-3개
+- **분위기 키워드**: mood 태그 3-4개
+- **BPM 느낌**: slow/mid/uptempo/fast
+- **참고 레퍼런스**: 비슷한 느낌의 실제 곡 1-2개 (있다면)
+- **Suno 생성 팁**: 이 곡을 Suno에서 잘 뽑기 위한 구체적 조언
+
+## 4. 리마스터/확장 전략
+- Extend 기능 활용 제안 (4분 이상 곡이 필요한 트랙)
+- Remaster 필요 여부 판단
+- 같은 곡 다중 시드 생성 추천 트랙
+
+## 5. 브랜드 연결
 - 온서사 브랜드("꺼지지 않는 온기의 서사")와의 연결점
 
+중요: Style of Music 프롬프트는 영어 태그 쉼표 구분으로 작성하되, 한국적 요소(gugak, gayageum 등)는 적극 활용할 것.
 온서사 톤: 따뜻하되 구조적, 감성적이되 구체적.` }],
           });
           step1 = (res.content[0] as { text: string }).text;

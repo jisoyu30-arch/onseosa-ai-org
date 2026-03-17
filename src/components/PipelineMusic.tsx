@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { generateRunId, saveRun, updateRunSteps, PipelineRun, PipelineStepRecord } from "@/lib/projectStore";
 
 interface TrackInfo {
   id: string;
@@ -42,6 +43,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function PipelineMusic() {
   const [tracks, setTracks] = useState<TrackInfo[]>([]);
+  const [projectName, setProjectName] = useState("");
   const [albumTitle, setAlbumTitle] = useState("");
   const [worldview, setWorldview] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export default function PipelineMusic() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRefs = useRef<Record<string, HTMLAudioElement | null>>({});
   const resultRef = useRef<HTMLDivElement>(null);
+  const runIdRef = useRef<string>("");
 
   // --- Audio file handling ---
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,6 +124,26 @@ export default function PipelineMusic() {
     setSteps(INITIAL_STEPS);
     setExpandedStep(null);
 
+    // Save to project store
+    const runId = generateRunId();
+    runIdRef.current = runId;
+    const initialStepRecords: PipelineStepRecord[] = INITIAL_STEPS.map((s) => ({
+      step: s.step, title: s.title, status: "idle",
+    }));
+    const run: PipelineRun = {
+      id: runId,
+      pipelineType: "music-album",
+      pipelineLabel: "음원앨범 패키지",
+      projectName: projectName.trim() || albumTitle.trim() || "미분류",
+      inputs: { albumTitle: albumTitle.trim() || "미정", trackCount: tracks.length },
+      steps: initialStepRecords,
+      status: "running",
+      createdAt: new Date().toISOString(),
+      color: "#C8551F",
+      icon: "♪",
+    };
+    saveRun(run);
+
     const trackSummary = tracks.map((t, i) =>
       `${i + 1}. "${t.title}" — 장르: ${t.genre || "미지정"}, 분위기: ${t.mood || "미지정"}${t.memo ? `, 메모: ${t.memo}` : ""}`
     ).join("\n");
@@ -161,22 +184,52 @@ export default function PipelineMusic() {
             if (data === "[DONE]") break;
             try {
               const parsed = JSON.parse(data);
-              const { step, status, title, detail, result, error: errMsg } = parsed;
-              setSteps((prev) =>
-                prev.map((s) =>
+              const { step, status, title, detail, result, error: errMsg, agent } = parsed;
+              setSteps((prev) => {
+                const updated = prev.map((s) =>
                   s.step === step
                     ? { ...s, status, title: title || s.title, detail, result: result || s.result, error: errMsg || s.error }
                     : s
-                )
-              );
+                );
+                // Sync to project store
+                const stepRecords: PipelineStepRecord[] = updated.map((s) => ({
+                  step: s.step, title: s.title, status: s.status,
+                  result: s.result, error: s.error, agent: agent,
+                }));
+                const allDone = updated.every((s) => s.status === "done" || s.status === "skipped");
+                const anyError = updated.some((s) => s.status === "error");
+                const finalStatus = allDone ? "completed" : anyError ? "partial" : undefined;
+                updateRunSteps(runIdRef.current, stepRecords, finalStatus);
+                return updated;
+              });
               if (status === "done" || status === "error") setExpandedStep(step);
             } catch { /* skip */ }
           }
         }
       }
     } catch {
-      setSteps((prev) => prev.map((s) => s.status === "running" ? { ...s, status: "error", error: "네트워크 오류" } : s));
+      setSteps((prev) => {
+        const updated = prev.map((s) => s.status === "running" ? { ...s, status: "error" as const, error: "네트워크 오류" } : s);
+        const stepRecords: PipelineStepRecord[] = updated.map((s) => ({
+          step: s.step, title: s.title, status: s.status, result: s.result, error: s.error,
+        }));
+        updateRunSteps(runIdRef.current, stepRecords, "failed");
+        return updated;
+      });
     }
+
+    // Final status update
+    setSteps((prev) => {
+      const allDone = prev.every((s) => s.status === "done" || s.status === "skipped");
+      const anyError = prev.some((s) => s.status === "error");
+      const stepRecords: PipelineStepRecord[] = prev.map((s) => ({
+        step: s.step, title: s.title, status: s.status, result: s.result, error: s.error,
+      }));
+      if (allDone) updateRunSteps(runIdRef.current, stepRecords, "completed");
+      else if (anyError) updateRunSteps(runIdRef.current, stepRecords, "failed");
+      else updateRunSteps(runIdRef.current, stepRecords, "partial");
+      return prev;
+    });
 
     setIsRunning(false);
   };
@@ -356,6 +409,24 @@ export default function PipelineMusic() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* ━━━ Project Name ━━━ */}
+      <div style={{ marginBottom: "1rem" }}>
+        <label style={{ display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--smoke)", marginBottom: "0.4rem" }}>
+          프로젝트명 (트래커에 표시)
+        </label>
+        <input
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          disabled={isRunning}
+          placeholder="예: 미야옹 시즌1, 온서사 OST 프로젝트"
+          style={{
+            width: "100%", border: "1px solid rgba(123,94,167,0.3)", borderRadius: 10,
+            padding: "0.6rem 1rem", fontFamily: "'Noto Serif KR', serif", fontSize: "0.82rem",
+            background: "rgba(123,94,167,0.03)", color: "var(--charcoal)", outline: "none",
+          }}
+        />
       </div>
 
       {/* ━━━ Album Info ━━━ */}

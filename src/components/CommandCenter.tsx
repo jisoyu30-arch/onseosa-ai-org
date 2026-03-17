@@ -243,7 +243,7 @@ export default function CommandCenter() {
             value={directive}
             onChange={(e) => setDirective(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="팀장들에게 전달할 지시사항을 입력하세요..."
+            placeholder="실장들에게 전달할 지시사항을 입력하세요..."
             disabled={isRunning}
             rows={3}
             style={{
@@ -282,7 +282,7 @@ export default function CommandCenter() {
                 color: "var(--smoke)",
               }}
             >
-              대상 팀장 선택
+              대상 실장 선택
             </div>
             <button
               onClick={toggleAll}
@@ -381,7 +381,7 @@ export default function CommandCenter() {
         >
           {isRunning
             ? `응답 수신 중... (${doneCount}/${totalCount})`
-            : `${selectedLeads.length}명의 팀장에게 지시 전달`}
+            : `${selectedLeads.length}명의 실장에게 지시 전달`}
         </button>
 
         {/* Responses */}
@@ -397,7 +397,7 @@ export default function CommandCenter() {
                 marginBottom: "1rem",
               }}
             >
-              팀별 응답
+              본부별 응답
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1rem" }}>
               {Object.values(responses).map((resp) => {
@@ -554,7 +554,7 @@ export default function CommandCenter() {
                     {entry.directive}
                   </span>
                   <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.6rem", color: "var(--smoke)", flexShrink: 0 }}>
-                    {Object.keys(entry.responses).length}개 팀
+                    {Object.keys(entry.responses).length}개 본부
                   </span>
                 </summary>
                 <div style={{ padding: "0 1rem 1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>

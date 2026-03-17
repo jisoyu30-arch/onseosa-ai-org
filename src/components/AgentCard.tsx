@@ -4,10 +4,10 @@ import { Agent, TEAM_CONFIG, TeamId } from "@/data/agents";
 import Link from "next/link";
 
 const levelLabels: Record<string, string> = {
-  ceo: "C-Level · CDO",
-  lead: "팀장",
-  senior: "시니어",
-  junior: "주니어",
+  ceo: "총괄",
+  lead: "실장",
+  senior: "매니저",
+  junior: "담당",
 };
 
 function getCardStyle(agent: Agent, teamColor: string) {

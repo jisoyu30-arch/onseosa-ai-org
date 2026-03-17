@@ -3,7 +3,7 @@ import AgentCard from "@/components/AgentCard";
 import Link from "next/link";
 
 const teamOrder: (TeamId | "clevel")[] = [
-  "ip", "pub", "music", "video", "platform", "brand",
+  "ops", "creative", "production", "aiplatform",
 ];
 
 export default function HomePage() {
@@ -87,11 +87,11 @@ export default function HomePage() {
           }}
         >
           {[
-            { label: "C레벨", val: "1명" },
-            { label: "팀장", val: "6명" },
-            { label: "시니어", val: "12명" },
-            { label: "주니어", val: "12명" },
-            { label: "총 AI 직원", val: "31명" },
+            { label: "총괄", val: "1명" },
+            { label: "실장", val: "4명" },
+            { label: "매니저", val: "10명" },
+            { label: "담당", val: "6명" },
+            { label: "총 AI 직원", val: "21명" },
           ].map((s) => (
             <div key={s.label}>
               <div
@@ -317,7 +317,7 @@ export default function HomePage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(6, 1fr)",
+            gridTemplateColumns: "repeat(4, 1fr)",
             gap: "2px",
             marginTop: 0,
           }}

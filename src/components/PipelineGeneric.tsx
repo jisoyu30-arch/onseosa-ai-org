@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import mammoth from "mammoth";
+import { generateRunId, saveRun, updateRunSteps, PipelineRun, PipelineStepRecord } from "@/lib/projectStore";
 
 interface PipelineField {
   key: string;
@@ -29,19 +30,25 @@ export default function PipelineGeneric({
   endpoint,
   fields,
   color,
+  pipelineLabel = "",
+  pipelineIcon = "",
 }: {
   endpoint: string;
   fields: PipelineField[];
   color: string;
+  pipelineLabel?: string;
+  pipelineIcon?: string;
 }) {
   const [values, setValues] = useState<Record<string, string | number>>(() => {
     const init: Record<string, string | number> = {};
     fields.forEach((f) => { init[f.key] = f.defaultValue ?? ""; });
     return init;
   });
+  const [projectName, setProjectName] = useState("");
   const [steps, setSteps] = useState<StepResult[]>([]);
   const [running, setRunning] = useState(false);
   const [fileNames, setFileNames] = useState<Record<string, string>>({});
+  const currentRunId = useRef<string | null>(null);
   const [fileLoading, setFileLoading] = useState<Record<string, boolean>>({});
   const [expandedStep, setExpandedStep] = useState<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -104,6 +111,23 @@ export default function PipelineGeneric({
     setExpandedStep(null);
     abortRef.current = new AbortController();
 
+    // Save initial run to project store
+    const runId = generateRunId();
+    currentRunId.current = runId;
+    const newRun: PipelineRun = {
+      id: runId,
+      pipelineType: endpoint,
+      pipelineLabel: pipelineLabel || endpoint,
+      projectName: projectName.trim() || `프로젝트-${new Date().toLocaleDateString("ko-KR")}`,
+      inputs: { ...values },
+      steps: [],
+      status: "running",
+      createdAt: new Date().toISOString(),
+      color,
+      icon: pipelineIcon || "⚙",
+    };
+    saveRun(newRun);
+
     try {
       const res = await fetch(`/api/pipeline/${endpoint}`, {
         method: "POST",
@@ -130,12 +154,22 @@ export default function PipelineGeneric({
               if (data.step) {
                 setSteps((prev) => {
                   const idx = prev.findIndex((s) => s.step === data.step);
+                  let updated: StepResult[];
                   if (idx >= 0) {
-                    const updated = [...prev];
+                    updated = [...prev];
                     updated[idx] = data;
-                    return updated;
+                  } else {
+                    updated = [...prev, data];
                   }
-                  return [...prev, data];
+                  // Persist to project store
+                  if (currentRunId.current) {
+                    const records: PipelineStepRecord[] = updated.map((s) => ({
+                      step: s.step, title: s.title, status: s.status,
+                      result: s.result, error: s.error, agent: s.agent, content: s.content,
+                    }));
+                    updateRunSteps(currentRunId.current, records);
+                  }
+                  return updated;
                 });
                 if (data.status === "done" || data.status === "error") {
                   setExpandedStep(data.step);
@@ -149,6 +183,20 @@ export default function PipelineGeneric({
       if (e instanceof Error && e.name !== "AbortError") {
         setSteps((prev) => [...prev, { step: 0, status: "error", title: "오류", error: e.message }]);
       }
+    }
+    // Finalize run status
+    if (currentRunId.current) {
+      setSteps((prev) => {
+        const hasError = prev.some((s) => s.status === "error");
+        const allDone = prev.every((s) => s.status === "done" || s.status === "skipped");
+        const finalStatus = allDone ? "completed" : hasError ? "failed" : "partial";
+        const records: PipelineStepRecord[] = prev.map((s) => ({
+          step: s.step, title: s.title, status: s.status,
+          result: s.result, error: s.error, agent: s.agent, content: s.content,
+        }));
+        updateRunSteps(currentRunId.current!, records, finalStatus);
+        return prev;
+      });
     }
     setRunning(false);
   };
@@ -165,6 +213,20 @@ export default function PipelineGeneric({
 
   return (
     <div>
+      {/* Project name */}
+      <div style={{ marginBottom: "1rem" }}>
+        <label style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "0.65rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--smoke)", marginBottom: "0.3rem", display: "block" }}>
+          프로젝트명
+        </label>
+        <input
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+          placeholder="예: 미야옹 시즌1, 봄날의 소환 EP3..."
+          disabled={running}
+          style={{ width: "100%", padding: "0.6rem 0.8rem", border: `1.5px solid ${color}30`, borderRadius: 8, fontSize: "0.82rem", background: "white", fontFamily: "'Noto Serif KR', serif", outline: "none" }}
+        />
+      </div>
+
       {/* Input fields */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.8rem", marginBottom: "1.5rem" }}>
         {fields.map((f) => (

@@ -294,6 +294,64 @@ export default function HomePage() {
               </div>
             </div>
           </Link>
+          <Link href="/projects" style={{ textDecoration: "none" }}>
+            <div
+              className="agent-card"
+              style={{
+                background: "var(--charcoal-2)",
+                borderTop: "3px solid #7B5EA7",
+                padding: "1.4rem 1.2rem",
+                minHeight: "140px",
+                width: 220,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: "0.6rem",
+                cursor: "pointer",
+                height: "100%",
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  border: "2px solid #7B5EA7",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "1rem",
+                  color: "#7B5EA7",
+                }}
+              >
+                📋
+              </div>
+              <div
+                style={{
+                  fontFamily: "'Noto Serif KR', serif",
+                  fontSize: "0.8rem",
+                  fontWeight: 500,
+                  color: "var(--ivory)",
+                  textAlign: "center",
+                }}
+              >
+                프로젝트 트래커
+              </div>
+              <div
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "0.5rem",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: "var(--smoke)",
+                  textAlign: "center",
+                }}
+              >
+                Project Tracker
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Connector */}

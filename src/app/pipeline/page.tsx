@@ -167,7 +167,7 @@ export default function PipelinePage() {
         {/* Pipeline components */}
         {activeTab === "music" && <PipelineMusic />}
         {activeTab === "app" && (
-          <PipelineGeneric endpoint="app" color="#2E4B8A" fields={[
+          <PipelineGeneric endpoint="app" color="#2E4B8A" pipelineLabel="앱개발" pipelineIcon="⚡" fields={[
             { key: "spec", label: "기능 명세서 / 기획 문서", type: "file-textarea", placeholder: "기능 명세서를 붙여넣거나 파일로 업로드하세요. 어떤 기능을 만들고 싶은지 설명..." },
             { key: "existingCode", label: "기존 코드 / 참고 자료 (선택)", type: "file-textarea", placeholder: "기존에 작성한 코드나 참고 자료가 있으면 붙여넣거나 파일로 업로드하세요." },
             { key: "priority", label: "우선순위", type: "select", options: [
@@ -178,12 +178,12 @@ export default function PipelinePage() {
           ]} />
         )}
         {activeTab === "worldview" && (
-          <PipelineGeneric endpoint="worldview" color="#7B5EA7" fields={[
+          <PipelineGeneric endpoint="worldview" color="#7B5EA7" pipelineLabel="세계관 설정" pipelineIcon="◎" fields={[
             { key: "concept", label: "작품 콘셉트", type: "textarea", placeholder: "예: 조선시대 궁궐에서 벌어지는 타임슬립 로맨스. 현대의 웹소설 작가가 조선시대로 이동하여..." },
           ]} />
         )}
         {activeTab === "novel" && (
-          <PipelineGeneric endpoint="novel" color="#7B5EA7" fields={[
+          <PipelineGeneric endpoint="novel" color="#7B5EA7" pipelineLabel="웹소설 초안" pipelineIcon="✎" fields={[
             { key: "worldview", label: "세계관 설정 / 기획안", type: "file-textarea", placeholder: "세계관 설정집이나 기획안을 붙여넣거나 파일로 업로드하세요" },
             { key: "previousDraft", label: "기존 원고 (이전 회차)", type: "file-textarea", placeholder: "이전 회차까지 쓴 원고를 붙여넣거나 파일로 업로드하세요. 첫 회차면 비워두세요." },
             { key: "episode", label: "이어서 쓸 회차 번호", type: "number", defaultValue: 1 },
@@ -191,7 +191,7 @@ export default function PipelinePage() {
           ]} />
         )}
         {activeTab === "drama" && (
-          <PipelineGeneric endpoint="drama" color="#1A6B8A" fields={[
+          <PipelineGeneric endpoint="drama" color="#1A6B8A" pipelineLabel="웹드라마 대본" pipelineIcon="▣" fields={[
             { key: "plan", label: "기획안 (시리즈 개요/기획서)", type: "file-textarea", placeholder: "웹드라마 기획안을 붙여넣거나 파일로 업로드하세요. 시놉시스, 캐릭터 설정, 전체 에피소드 구성 등..." },
             { key: "previousScript", label: "기존 대본 (이전 회차)", type: "file-textarea", placeholder: "이전 회차까지 쓴 대본을 붙여넣거나 파일로 업로드하세요. 첫 회차면 비워두세요." },
             { key: "episodeNumber", label: "이어서 쓸 회차 번호", type: "number", defaultValue: 1 },
@@ -199,19 +199,19 @@ export default function PipelinePage() {
           ]} />
         )}
         {activeTab === "mv" && (
-          <PipelineGeneric endpoint="mv" color="#1A6B8A" fields={[
+          <PipelineGeneric endpoint="mv" color="#1A6B8A" pipelineLabel="뮤직비디오" pipelineIcon="▶" fields={[
             { key: "worldview", label: "세계관 / 곡 분위기", type: "textarea", placeholder: "곡의 세계관과 분위기를 설명하세요" },
             { key: "songTitle", label: "곡 제목", type: "text", placeholder: "예: 봄날의 소환" },
           ]} />
         )}
         {activeTab === "playlist" && (
-          <PipelineGeneric endpoint="playlist" color="#C8551F" fields={[
+          <PipelineGeneric endpoint="playlist" color="#C8551F" pipelineLabel="플레이리스트" pipelineIcon="☰" fields={[
             { key: "worldview", label: "세계관 / 테마", type: "textarea", placeholder: "플레이리스트의 테마를 설명하세요" },
             { key: "trackList", label: "트랙 리스트", type: "textarea", placeholder: "1. 곡명 - 장르\n2. 곡명 - 장르\n..." },
           ]} />
         )}
         {activeTab === "shortform" && (
-          <PipelineGeneric endpoint="shortform" color="#1A6B8A" fields={[
+          <PipelineGeneric endpoint="shortform" color="#1A6B8A" pipelineLabel="AI 숏폼" pipelineIcon="⊡" fields={[
             { key: "topic", label: "주제", type: "textarea", placeholder: "숏폼 콘텐츠 주제를 입력하세요" },
             { key: "platform", label: "플랫폼", type: "select", options: [
               { value: "youtube", label: "YouTube Shorts" },
@@ -221,19 +221,19 @@ export default function PipelinePage() {
           ]} />
         )}
         {activeTab === "ebook" && (
-          <PipelineGeneric endpoint="ebook" color="#2E6B4F" fields={[
+          <PipelineGeneric endpoint="ebook" color="#2E6B4F" pipelineLabel="전자책" pipelineIcon="▤" fields={[
             { key: "title", label: "전자책 제목", type: "text", placeholder: "예: 미야옹 세계관 설정집" },
             { key: "content", label: "콘텐츠 요약", type: "textarea", placeholder: "전자책에 담을 내용을 설명하세요" },
           ]} />
         )}
         {activeTab === "instagram" && (
-          <PipelineGeneric endpoint="instagram" color="#8A4A2E" fields={[
+          <PipelineGeneric endpoint="instagram" color="#8A4A2E" pipelineLabel="인스타그램" pipelineIcon="◻" fields={[
             { key: "theme", label: "테마", type: "textarea", placeholder: "이번 주 인스타그램 콘텐츠 테마를 입력하세요" },
             { key: "count", label: "포스트 개수", type: "number", defaultValue: 5 },
           ]} />
         )}
         {activeTab === "grants" && (
-          <PipelineGeneric endpoint="grants" color="#7B5EA7" fields={[
+          <PipelineGeneric endpoint="grants" color="#7B5EA7" pipelineLabel="지원사업" pipelineIcon="★" fields={[
             { key: "category", label: "지원사업 분야", type: "select", options: [
               { value: "content", label: "콘텐츠 창작 지원" },
               { value: "tech", label: "기술/AI 개발 지원" },

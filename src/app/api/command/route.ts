@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
         try {
           const response = await anthropic.messages.stream({
-            model: "claude-sonnet-4-20250514",
+            model: agent.model,
             max_tokens: 2048,
             system: `${agent.systemPrompt}\n\n[CDO 지시 모드] CDO가 전체 팀장에게 지시를 내렸습니다. 당신은 ${agent.teamName}의 ${agent.name}으로서, 해당 지시에 대해 팀 관점에서 구체적이고 실행 가능한 응답을 작성하세요. 응답은 간결하게(500자 이내) 핵심만 전달하세요.`,
             messages: [

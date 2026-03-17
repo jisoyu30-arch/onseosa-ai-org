@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import OpenAI from "openai";
+
 import { NextRequest } from "next/server";
 
 // SSE helper
@@ -37,7 +37,6 @@ export async function POST(request: NextRequest) {
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const openaiKey = process.env.OPENAI_API_KEY;
   const runwayKey = process.env.RUNWAY_API_KEY;
 
   if (!anthropicKey) {
@@ -45,7 +44,6 @@ export async function POST(request: NextRequest) {
   }
 
   const anthropic = new Anthropic({ apiKey: anthropicKey });
-  const openai = openaiKey ? new OpenAI({ apiKey: openaiKey }) : null;
 
   const { stream, send, close } = createSSE();
 
@@ -63,7 +61,7 @@ export async function POST(request: NextRequest) {
           model: "claude-sonnet-4-20250514",
           max_tokens: 1024,
           system: `당신은 온서사 레코즈팀의 음악 프로듀서입니다.
-세계관 설명을 받으면 DALL-E 3에 입력할 앨범 자켓 이미지 프롬프트를 영문으로 생성하세요.
+세계관 설명을 받으면 앨범 자켓 이미지 프롬프트를 영문으로 생성하세요.
 온서사 브랜드: 따뜻한 한국적 감성, 시적이되 흐리지 않은 비주얼.
 형식: 순수한 영문 프롬프트만 출력. 설명 없이.`,
           messages: [{ role: "user", content: `세계관:\n${worldview}\n\n음원: ${audioFileName || "untitled"}\n\n위 세계관을 표현하는 앨범 자켓 이미지 프롬프트를 작성하세요.` }],
@@ -86,36 +84,35 @@ export async function POST(request: NextRequest) {
 
     if (hasError) { close(); return; }
 
-    // ── Step 2: DALL-E 3 → Album Jacket Image ──
-    send({ step: 2, status: "running", title: "앨범 자켓 이미지 생성", detail: "DALL-E 3 API로 이미지 생성 중..." });
+    // ── Step 2: Claude → Midjourney 앨범 자켓 프롬프트 생성 ──
+    send({ step: 2, status: "running", title: "Midjourney 앨범 자켓 프롬프트 생성", detail: "Claude API로 Midjourney용 이미지 프롬프트 변환 중..." });
 
-    if (openai) {
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        try {
-          const imgRes = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: `Album cover art: ${results.albumPrompt}. Style: artistic, warm Korean aesthetic, cinematic lighting, no text overlay.`,
-            n: 1,
-            size: "1024x1024",
-            quality: "hd",
-          });
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const mjRes = await anthropic.messages.create({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1024,
+          system: `당신은 Midjourney v6용 앨범 자켓 이미지 프롬프트를 작성하는 전문가입니다.
+주어진 이미지 컨셉을 Midjourney v6에 바로 복붙할 수 있는 형태의 프롬프트로 변환하세요.
+온서사 브랜드: 따뜻한 한국적 감성, 시적이되 흐리지 않은 비주얼.
+형식: /imagine prompt: ... --ar 1:1 --v 6 --style raw
+설명 없이 프롬프트만 출력하세요.`,
+          messages: [{ role: "user", content: `다음 앨범 자켓 컨셉을 Midjourney v6 프롬프트로 변환하세요:\n\n${results.albumPrompt}` }],
+        });
 
-          results.albumImageUrl = imgRes.data?.[0]?.url || "";
-          results.albumImageRevised = imgRes.data?.[0]?.revised_prompt || "";
-          send({ step: 2, status: "done", title: "앨범 자켓 이미지 생성", result: results.albumImageUrl, revisedPrompt: results.albumImageRevised });
-          break;
-        } catch (e) {
-          if (attempt === 3) {
-            send({ step: 2, status: "error", title: "앨범 자켓 이미지 생성", error: `DALL-E 오류: ${e instanceof Error ? e.message : "unknown"}` });
-            hasError = true;
-          } else {
-            send({ step: 2, status: "retry", title: "앨범 자켓 이미지 생성", detail: `재시도 ${attempt}/3...` });
-            await sleep(3000);
-          }
+        const mjText = mjRes.content[0].type === "text" ? mjRes.content[0].text : "";
+        results.midjourneyPrompt = mjText;
+        send({ step: 2, status: "done", title: "Midjourney 앨범 자켓 프롬프트 생성", result: mjText, detail: "이 프롬프트를 Midjourney에 입력하세요." });
+        break;
+      } catch (e) {
+        if (attempt === 3) {
+          send({ step: 2, status: "error", title: "Midjourney 앨범 자켓 프롬프트 생성", error: `실패: ${e instanceof Error ? e.message : "unknown"}` });
+          hasError = true;
+        } else {
+          send({ step: 2, status: "retry", title: "Midjourney 앨범 자켓 프롬프트 생성", detail: `재시도 ${attempt}/3...` });
+          await sleep(2000);
         }
       }
-    } else {
-      send({ step: 2, status: "skipped", title: "앨범 자켓 이미지 생성", detail: "OPENAI_API_KEY 미설정 — 건너뜀 (프롬프트만 생성됨)" });
     }
 
     // ── Step 3: Claude → MV Concept Prompt ──

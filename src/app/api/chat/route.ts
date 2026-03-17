@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     async start(controller) {
       try {
         const response = await anthropic.messages.stream({
-          model: "claude-sonnet-4-20250514",
+          model: agent.model,
           max_tokens: 4096,
           system: agent.systemPrompt,
           messages: messages.map((m: { role: string; content: string }) => ({

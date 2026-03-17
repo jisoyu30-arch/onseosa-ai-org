@@ -25,14 +25,19 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
+        // Process messages - handle both string content and multi-part content (with images)
+        const processedMessages = messages.map(
+          (m: { role: string; content: string | Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> }) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          })
+        );
+
         const response = await anthropic.messages.stream({
           model: agent.model,
           max_tokens: 4096,
           system: agent.systemPrompt,
-          messages: messages.map((m: { role: string; content: string }) => ({
-            role: m.role as "user" | "assistant",
-            content: m.content,
-          })),
+          messages: processedMessages,
         });
 
         for await (const event of response) {

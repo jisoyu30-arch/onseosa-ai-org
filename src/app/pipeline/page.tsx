@@ -180,8 +180,10 @@ export default function PipelinePage() {
         )}
         {activeTab === "drama" && (
           <PipelineGeneric endpoint="drama" color="#1A6B8A" fields={[
-            { key: "worldview", label: "세계관 설정", type: "textarea", placeholder: "세계관 설정을 입력하세요" },
-            { key: "episodeNumber", label: "회차 번호", type: "number", defaultValue: 1 },
+            { key: "plan", label: "기획안 (시리즈 개요/기획서)", type: "textarea", placeholder: "웹드라마 기획안을 붙여넣으세요. 시놉시스, 캐릭터 설정, 전체 에피소드 구성 등..." },
+            { key: "previousScript", label: "기존 대본 (이전 회차)", type: "textarea", placeholder: "이전 회차까지 쓴 대본을 붙여넣으세요. 없으면 비워두세요." },
+            { key: "episodeNumber", label: "이어서 쓸 회차 번호", type: "number", defaultValue: 1 },
+            { key: "direction", label: "이번 회차 방향 메모 (선택)", type: "textarea", placeholder: "이번 회차에서 다루고 싶은 내용, 반전 포인트, 감정 방향 등..." },
           ]} />
         )}
         {activeTab === "mv" && (

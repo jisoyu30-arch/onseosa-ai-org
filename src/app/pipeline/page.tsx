@@ -166,7 +166,17 @@ export default function PipelinePage() {
 
         {/* Pipeline components */}
         {activeTab === "music" && <PipelineMusic />}
-        {activeTab === "app" && <PipelineApp />}
+        {activeTab === "app" && (
+          <PipelineGeneric endpoint="app" color="#2E4B8A" fields={[
+            { key: "spec", label: "기능 명세서 / 기획 문서", type: "file-textarea", placeholder: "기능 명세서를 붙여넣거나 파일로 업로드하세요. 어떤 기능을 만들고 싶은지 설명..." },
+            { key: "existingCode", label: "기존 코드 / 참고 자료 (선택)", type: "file-textarea", placeholder: "기존에 작성한 코드나 참고 자료가 있으면 붙여넣거나 파일로 업로드하세요." },
+            { key: "priority", label: "우선순위", type: "select", options: [
+              { value: "high", label: "긴급 (이번 주 배포)" },
+              { value: "medium", label: "보통 (이번 달 내)" },
+              { value: "low", label: "여유 (다음 스프린트)" },
+            ], defaultValue: "medium" },
+          ]} />
+        )}
         {activeTab === "worldview" && (
           <PipelineGeneric endpoint="worldview" color="#7B5EA7" fields={[
             { key: "concept", label: "작품 콘셉트", type: "textarea", placeholder: "예: 조선시대 궁궐에서 벌어지는 타임슬립 로맨스. 현대의 웹소설 작가가 조선시대로 이동하여..." },
@@ -174,14 +184,16 @@ export default function PipelinePage() {
         )}
         {activeTab === "novel" && (
           <PipelineGeneric endpoint="novel" color="#7B5EA7" fields={[
-            { key: "worldview", label: "세계관 설정", type: "textarea", placeholder: "세계관 파이프라인에서 생성된 설정집을 붙여넣으세요" },
-            { key: "episode", label: "회차 번호", type: "number", defaultValue: 1 },
+            { key: "worldview", label: "세계관 설정 / 기획안", type: "file-textarea", placeholder: "세계관 설정집이나 기획안을 붙여넣거나 파일로 업로드하세요" },
+            { key: "previousDraft", label: "기존 원고 (이전 회차)", type: "file-textarea", placeholder: "이전 회차까지 쓴 원고를 붙여넣거나 파일로 업로드하세요. 첫 회차면 비워두세요." },
+            { key: "episode", label: "이어서 쓸 회차 번호", type: "number", defaultValue: 1 },
+            { key: "direction", label: "이번 회차 방향 메모 (선택)", type: "textarea", placeholder: "이번 회차에서 다루고 싶은 전개, 반전, 감정 흐름 등..." },
           ]} />
         )}
         {activeTab === "drama" && (
           <PipelineGeneric endpoint="drama" color="#1A6B8A" fields={[
-            { key: "plan", label: "기획안 (시리즈 개요/기획서)", type: "textarea", placeholder: "웹드라마 기획안을 붙여넣으세요. 시놉시스, 캐릭터 설정, 전체 에피소드 구성 등..." },
-            { key: "previousScript", label: "기존 대본 (이전 회차)", type: "textarea", placeholder: "이전 회차까지 쓴 대본을 붙여넣으세요. 없으면 비워두세요." },
+            { key: "plan", label: "기획안 (시리즈 개요/기획서)", type: "file-textarea", placeholder: "웹드라마 기획안을 붙여넣거나 파일로 업로드하세요. 시놉시스, 캐릭터 설정, 전체 에피소드 구성 등..." },
+            { key: "previousScript", label: "기존 대본 (이전 회차)", type: "file-textarea", placeholder: "이전 회차까지 쓴 대본을 붙여넣거나 파일로 업로드하세요. 첫 회차면 비워두세요." },
             { key: "episodeNumber", label: "이어서 쓸 회차 번호", type: "number", defaultValue: 1 },
             { key: "direction", label: "이번 회차 방향 메모 (선택)", type: "textarea", placeholder: "이번 회차에서 다루고 싶은 내용, 반전 포인트, 감정 방향 등..." },
           ]} />

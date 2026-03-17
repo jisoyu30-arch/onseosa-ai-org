@@ -28,10 +28,11 @@ async function sleep(ms: number) {
 }
 
 export async function POST(request: NextRequest) {
-  const { featureSpec } = await request.json();
+  const { spec, existingCode, priority } = await request.json();
+  const featureSpec = spec;
 
   if (!featureSpec) {
-    return Response.json({ error: "featureSpec required" }, { status: 400 });
+    return Response.json({ error: "기능 명세서를 입력해주세요" }, { status: 400 });
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
 5. 상태 관리 전략
 
 형식: 마크다운, 코드 블록 포함`,
-          messages: [{ role: "user", content: `운동앱 기능 명세:\n${featureSpec}\n\nNext.js + Supabase 스택으로 컴포넌트 구조를 설계하세요.` }],
+          messages: [{ role: "user", content: `기능 명세:\n${featureSpec}\n\n${existingCode ? `기존 코드/참고자료:\n${existingCode.slice(0, 3000)}` : ""}\n\n우선순위: ${priority || "medium"}\n\nNext.js + Supabase 스택으로 컴포넌트 구조를 설계하세요.` }],
         });
 
         const text = res.content[0].type === "text" ? res.content[0].text : "";

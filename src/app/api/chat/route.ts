@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Build system prompt with real project data
-  let systemPrompt = agent.systemPrompt + ANTI_HALLUCINATION_RULE;
+  const today = new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" });
+  let systemPrompt = agent.systemPrompt + `\n\n오늘 날짜: ${today}` + ANTI_HALLUCINATION_RULE;
 
   if (projectContext) {
     systemPrompt += `\n\n═══ 실제 프로젝트 데이터 (프로젝트 트래커 기준) ═══\n${projectContext}`;

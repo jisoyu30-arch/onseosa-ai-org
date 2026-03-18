@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Agent, TEAM_CONFIG, TeamId } from "@/data/agents";
 import Link from "next/link";
 import mammoth from "mammoth";
+import { getAllRuns } from "@/lib/projectStore";
 
 interface Attachment {
   id: string;
@@ -147,6 +148,49 @@ export default function ChatInterface({ agent }: { agent: Agent }) {
     return content;
   };
 
+  // ── Build project context from tracker data ──
+  const buildProjectContext = (runs: ReturnType<typeof getAllRuns>) => {
+    const grouped: Record<string, typeof runs> = {};
+    for (const run of runs) {
+      const key = run.projectName || "미분류";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(run);
+    }
+
+    const lines: string[] = [];
+    const totalRuns = runs.length;
+    const completed = runs.filter((r) => r.status === "completed").length;
+    const running = runs.filter((r) => r.status === "running").length;
+    const failed = runs.filter((r) => r.status === "failed").length;
+
+    lines.push(`[프로젝트 현황] ${Object.keys(grouped).length}개 프로젝트, 총 ${totalRuns}회 실행 (완료 ${completed}, 진행 중 ${running}, 실패 ${failed})`);
+
+    for (const [name, projectRuns] of Object.entries(grouped)) {
+      const pCompleted = projectRuns.filter((r) => r.status === "completed").length;
+      const latest = projectRuns[0];
+      lines.push(`\n▸ ${name} — ${projectRuns.length}회 실행, ${pCompleted} 완료`);
+
+      // Show latest 3 runs per project
+      for (const run of projectRuns.slice(0, 3)) {
+        const date = new Date(run.createdAt).toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
+        const doneSteps = run.steps.filter((s) => s.status === "done").length;
+        const statusLabel = run.status === "completed" ? "완료" : run.status === "running" ? "진행 중" : run.status === "failed" ? "실패" : "부분완료";
+        lines.push(`  - ${run.pipelineLabel} (${date}) [${statusLabel}] ${doneSteps}/${run.steps.length}단계`);
+
+        // Include step results for completed runs (truncated)
+        if (run.status === "completed") {
+          for (const step of run.steps) {
+            if (step.result) {
+              lines.push(`    ${step.title}: ${step.result.slice(0, 200)}${step.result.length > 200 ? "..." : ""}`);
+            }
+          }
+        }
+      }
+    }
+
+    return lines.join("\n");
+  };
+
   // ── Build API messages with image support ──
   const buildApiMessages = (allMessages: Message[]) => {
     return allMessages.map((m) => {
@@ -203,12 +247,17 @@ export default function ChatInterface({ agent }: { agent: Agent }) {
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     try {
+      // Build project context from tracker
+      const runs = getAllRuns();
+      const projectSummary = runs.length > 0 ? buildProjectContext(runs) : null;
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           agentId: agent.id,
           messages: buildApiMessages(newMessages),
+          projectContext: projectSummary,
         }),
       });
 

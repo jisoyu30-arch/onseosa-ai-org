@@ -1,0 +1,22 @@
+FROM node:20-slim AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+# 의존성 설치
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/engine-contracts/package.json packages/engine-contracts/
+COPY packages/shared-types/package.json packages/shared-types/
+COPY packages/memory-schema/package.json packages/memory-schema/
+COPY apps/claude-worker/package.json apps/claude-worker/
+RUN pnpm install --frozen-lockfile --filter claude-worker...
+
+# 소스 복사
+COPY packages/ packages/
+COPY apps/claude-worker/ apps/claude-worker/
+COPY automations/prompts/ automations/prompts/
+
+# 빌드
+RUN pnpm --filter claude-worker build
+
+EXPOSE 3001
+CMD ["node", "apps/claude-worker/dist/server.js"]

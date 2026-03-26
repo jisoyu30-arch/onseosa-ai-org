@@ -26,6 +26,13 @@ Thumbs.db
 # Output files
 data/outputs/
 
-# misc
+# Credentials
+google-credentials.json
 *.pem
+
+# Claude Code
+.claude/worktrees/
+.claude/settings.local.json
+
+# misc
 .vercel

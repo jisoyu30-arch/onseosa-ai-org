@@ -1,0 +1,20 @@
+FROM node:20-slim AS base
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+# 의존성 설치
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/shared-types/package.json packages/shared-types/
+COPY apps/control-room/package.json apps/control-room/
+RUN pnpm install --frozen-lockfile --filter control-room...
+
+# 소스 복사 + 빌드
+COPY packages/ packages/
+COPY apps/control-room/ apps/control-room/
+RUN pnpm --filter control-room build
+
+# Nginx로 정적 서빙
+FROM nginx:alpine
+COPY --from=base /app/apps/control-room/dist /usr/share/nginx/html
+COPY apps/control-room/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80

@@ -83,7 +83,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'plan', instruction: $('Set Input').item.json.goal, context: $json.output }) }}"
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'plan', instruction: $('Set Input').item.json.goal, context: { noah_analysis: $('Noah Analyze').item.json.output } }) }}"
       },
       "id": "eden-plan",
       "name": "Eden Plan",
@@ -103,7 +103,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'write', instruction: $('Set Input').item.json.goal, context: $json.output }) }}"
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'write', instruction: $('Set Input').item.json.goal, context: { noah_analysis: $('Noah Analyze').item.json.output, eden_plan: $json.output } }) }}"
       },
       "id": "ria-write",
       "name": "Ria Write",
@@ -123,7 +123,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'review', instruction: '창작물 품질 검수', context: $json.output }) }}"
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'review', instruction: '창작물 품질 검수', context: { noah_analysis: $('Noah Analyze').item.json.output, eden_plan: $('Eden Plan').item.json.output, ria_output: $json.output } }) }}"
       },
       "id": "kal-review",
       "name": "Kal Review",
@@ -164,7 +164,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'record', instruction: '결과 저장', context: { outputData: $('Ria Write').item.json.output, feedback: $('Kal Review').item.json.output.summary } }) }}"
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'record', instruction: '결과 저장', context: { outputData: $('Ria Write').item.json.output, feedback: $('Kal Review').item.json.output.summary, score: $('Kal Review').item.json.output.score } }) }}"
       },
       "id": "luka-record",
       "name": "Luka Record",
@@ -184,7 +184,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'write', instruction: $('Set Input').item.json.goal + ' [재시도] 수정사항: ' + ($('Kal Review').item.json.output.data.fix_instruction || '품질 향상 필요'), context: $('Eden Plan').item.json.output }) }}"
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'write', instruction: $('Set Input').item.json.goal, context: { noah_analysis: $('Noah Analyze').item.json.output, eden_plan: $('Eden Plan').item.json.output, weak_point: $('Kal Review').item.json.output.data.weak_point, fix_instruction: $('Kal Review').item.json.output.data.fix_instruction, retry_count: ($('Kal Review').item.json.output.data.retry_count || 0) + 1 } }) }}"
       },
       "id": "ria-retry",
       "name": "Ria Retry",

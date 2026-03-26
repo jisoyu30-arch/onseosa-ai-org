@@ -14,7 +14,7 @@ export type ProjectType = 'playlist' | 'webnovel' | 'marketing' | 'letterbrick';
 export type TaskType = 'analyze' | 'plan' | 'write' | 'review' | 'record' | 'orchestrate';
 
 // 엔진 이름
-export type EngineName = 'arko' | 'noah' | 'eden' | 'ria' | 'kal' | 'luka';
+export type EngineName = 'seo' | 'baek' | 'ahn' | 'han' | 'hong';
 
 // 엔진 정보
 export interface EngineProfile {

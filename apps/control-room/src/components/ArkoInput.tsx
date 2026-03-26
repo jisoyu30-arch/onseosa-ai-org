@@ -1,23 +1,21 @@
 import { useState } from 'react';
-import { runWorkflow } from '../services/api';
+import { runPipeline } from '../services/api';
 
 interface ArkoInputProps {
   onResult?: (result: unknown) => void;
-  onRunning?: (running: boolean) => void;
 }
 
-export function ArkoInput({ onResult, onRunning }: ArkoInputProps) {
+export function ArkoInput({ onResult }: ArkoInputProps) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!message.trim() || loading) return;
     setLoading(true);
-    onRunning?.(true);
     try {
-      const res = await runWorkflow({
-        projectName: message,
-        projectType: 'auto',
+      const res = await runPipeline({
+        projectName: message.slice(0, 30),
+        projectType: 'playlist',
         goal: message,
       });
       onResult?.(res);
@@ -25,14 +23,13 @@ export function ArkoInput({ onResult, onRunning }: ArkoInputProps) {
       onResult?.({ error: err instanceof Error ? err.message : '실행 실패' });
     } finally {
       setLoading(false);
-      onRunning?.(false);
     }
   };
 
   return (
     <div className="bg-slate-800 rounded-xl p-5 border border-blue-600 mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-blue-400 text-lg font-bold">&#x1F537; 아르코</span>
+        <span className="text-blue-400 text-lg font-bold">&#x1F537; 서 본부장</span>
       </div>
       <div className="flex gap-3">
         <input

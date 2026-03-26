@@ -1,25 +1,32 @@
 import { google } from 'googleapis';
-import { Readable } from 'stream';
+import { resolve } from 'path';
 
 function getDriveClient() {
+  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '';
+  const absoluteKeyFile = resolve(__dirname, '../../../..', keyFile);
+
   const auth = new google.auth.GoogleAuth({
-    keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE,
+    keyFile: absoluteKeyFile,
     scopes: ['https://www.googleapis.com/auth/drive'],
   });
   return google.drive({ version: 'v3', auth });
 }
 
-// 폴더 찾기 (없으면 null)
+// 폴더 찾기
 async function findFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string | null> {
   const res = await drive.files.list({
-    q: `name='${name}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-    fields: 'files(id)',
+    q: `'${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+    fields: 'files(id,name)',
+    supportsAllDrives: true,
   });
-  return res.data.files?.[0]?.id || null;
+  const trimmed = name.trim();
+  const match = res.data.files?.find(f => f.name?.trim() === trimmed);
+  return match?.id || null;
 }
 
-// 폴더 생성
+// 폴더 생성 (서비스 계정으로 가능)
 async function createFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
+  console.log(`[Drive] Creating folder: ${name}`);
   const res = await drive.files.create({
     requestBody: {
       name,
@@ -27,6 +34,7 @@ async function createFolder(drive: ReturnType<typeof google.drive>, name: string
       parents: [parentId],
     },
     fields: 'id',
+    supportsAllDrives: true,
   });
   return res.data.id!;
 }
@@ -34,26 +42,67 @@ async function createFolder(drive: ReturnType<typeof google.drive>, name: string
 // 폴더 찾기 or 생성
 async function findOrCreateFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
   const existing = await findFolder(drive, name, parentId);
-  if (existing) return existing;
+  if (existing) {
+    console.log(`[Drive] Found folder: ${name} (${existing})`);
+    return existing;
+  }
   return createFolder(drive, name, parentId);
 }
 
-// 텍스트 파일 업로드
-async function uploadTextFile(drive: ReturnType<typeof google.drive>, fileName: string, content: string, folderId: string) {
-  const stream = new Readable();
-  stream.push(content);
-  stream.push(null);
+// n8n 웹훅으로 파일 업로드 위임 (OAuth 인증 사용)
+async function uploadViaN8n(fileName: string, content: string, folderId: string) {
+  const n8nBase = process.env.N8N_BASE_URL || 'http://localhost:5678';
+  const secret = process.env.N8N_WEBHOOK_SECRET || '';
 
-  await drive.files.create({
-    requestBody: {
-      name: fileName,
-      parents: [folderId],
+  const res = await fetch(`${n8nBase}/webhook/drive-upload`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(secret ? { 'x-secret': secret } : {}),
     },
-    media: {
-      mimeType: 'text/plain',
-      body: stream,
-    },
+    body: JSON.stringify({ fileName, content, folderId }),
   });
+
+  if (!res.ok) {
+    throw new Error(`n8n upload failed: ${res.status}`);
+  }
+  console.log(`[Drive/n8n] Uploaded: ${fileName}`);
+}
+
+// 직접 업로드 시도, 실패 시 n8n 폴백
+async function uploadTextFile(fileName: string, content: string, folderId: string) {
+  // 먼저 n8n 시도
+  try {
+    await uploadViaN8n(fileName, content, folderId);
+    return;
+  } catch {
+    console.log(`[Drive] n8n unavailable, trying direct upload...`);
+  }
+
+  // n8n 안 되면 서비스 계정으로 직접 시도
+  try {
+    const drive = getDriveClient();
+    const { Readable } = await import('stream');
+    const stream = new Readable();
+    stream.push(content);
+    stream.push(null);
+
+    await drive.files.create({
+      requestBody: {
+        name: fileName,
+        parents: [folderId],
+      },
+      media: {
+        mimeType: 'text/plain',
+        body: stream,
+      },
+      supportsAllDrives: true,
+    });
+    console.log(`[Drive] Direct uploaded: ${fileName}`);
+  } catch (err) {
+    console.error(`[Drive] Upload failed for ${fileName}:`, (err as Error).message);
+    throw err;
+  }
 }
 
 // 플레이리스트 결과 Google Drive 저장
@@ -64,28 +113,28 @@ export async function savePlaylistToDrive(data: {
   descriptionContent: string;
   copyContent: string;
 }) {
-  const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
-  if (!rootFolderId) {
-    console.log('[Drive] GOOGLE_DRIVE_ROOT_FOLDER_ID not set, skipping Drive save');
+  const playlistParentId = process.env.GOOGLE_DRIVE_PLAYLIST_FOLDER_ID || process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!playlistParentId) {
+    console.log('[Drive] GOOGLE_DRIVE_PLAYLIST_FOLDER_ID not set, skipping');
     return;
   }
 
-  try {
-    const drive = getDriveClient();
+  const drive = getDriveClient();
 
-    // 폴더 경로: onseosa_에이전트 / 유튜브 플레이리스트 / {채널명} / {YYYY-MM-DD}
-    const playlistFolderId = await findOrCreateFolder(drive, '유튜브 플레이리스트', rootFolderId);
-    const channelFolderId = await findOrCreateFolder(drive, data.channelName || '기본채널', playlistFolderId);
-    const dateFolderId = await findOrCreateFolder(drive, data.date, channelFolderId);
+  // 폴더 생성 (서비스 계정으로 가능)
+  const channelFolderId = await findOrCreateFolder(drive, data.channelName || 'default', playlistParentId);
+  const dateFolderId = await findOrCreateFolder(drive, data.date, channelFolderId);
 
-    // 파일 3개 업로드
-    await uploadTextFile(drive, '제목후보.txt', data.titleContent, dateFolderId);
-    await uploadTextFile(drive, '설명문.txt', data.descriptionContent, dateFolderId);
-    await uploadTextFile(drive, '카피.txt', data.copyContent, dateFolderId);
+  // 파일 업로드 (n8n 우선, 실패 시 직접)
+  const files = [
+    { name: '제목후보.txt', content: data.titleContent },
+    { name: '설명문.txt', content: data.descriptionContent },
+    { name: '카피.txt', content: data.copyContent },
+  ].filter(f => f.content);
 
-    console.log(`[Drive] Saved to 유튜브 플레이리스트/${data.channelName}/${data.date}/`);
-  } catch (error) {
-    console.error('[Drive] Save failed:', error);
-    // Drive 저장 실패해도 워크플로우는 중단하지 않음
+  for (const f of files) {
+    await uploadTextFile(f.name, f.content, dateFolderId);
   }
+
+  console.log(`[Drive] Save complete: ${data.channelName}/${data.date}/`);
 }

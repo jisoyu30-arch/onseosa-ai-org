@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { resolve } from 'path';
 import { executeRoute } from './routes/execute';
+import { pipelineRoute, sseRoute } from './routes/pipeline';
 
 // .env 파일은 프로젝트 루트에서 로드
 dotenv.config({ path: resolve(__dirname, '../../../.env'), override: true });
@@ -26,6 +27,8 @@ app.use('/execute', (req, res, next) => {
 
 // 라우트
 app.post('/execute', executeRoute);
+app.post('/pipeline', pipelineRoute);
+app.get('/events', sseRoute);
 
 // 헬스 체크
 app.get('/health', (_req, res) => {
@@ -33,7 +36,7 @@ app.get('/health', (_req, res) => {
     ok: true,
     service: 'claude-worker',
     timestamp: new Date().toISOString(),
-    engines: ['arko', 'noah', 'eden', 'ria', 'kal', 'luka'],
+    engines: ['seo', 'baek', 'ahn', 'han', 'hong'],
   });
 });
 

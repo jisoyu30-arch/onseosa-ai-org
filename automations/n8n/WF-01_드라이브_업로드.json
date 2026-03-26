@@ -1,0 +1,50 @@
+{
+  "name": "WF-01 Drive 업로드",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "drive-upload",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-upload",
+      "name": "Upload Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "name": "={{ $json.body.fileName }}",
+        "parents": ["={{ $json.body.folderId }}"],
+        "binaryPropertyName": "",
+        "options": {},
+        "folderId": "={{ $json.body.folderId }}",
+        "driveId": "",
+        "mimeType": "text/plain",
+        "content": "={{ $json.body.content }}"
+      },
+      "id": "drive-upload",
+      "name": "Google Drive Upload",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [440, 300],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "",
+          "name": "Google Drive OAuth2 (설정 필요)"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Upload Webhook": { "main": [[{ "node": "Google Drive Upload", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "ONS Studio" }]
+}

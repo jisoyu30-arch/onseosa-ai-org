@@ -24,7 +24,7 @@ async function findFolder(drive: ReturnType<typeof google.drive>, name: string, 
   return match?.id || null;
 }
 
-// 폴더 생성 (서비스 계정으로 가능)
+// 폴더 생성 (서비스 계정 — 할당량 불필요)
 async function createFolder(drive: ReturnType<typeof google.drive>, name: string, parentId: string): Promise<string> {
   console.log(`[Drive] Creating folder: ${name}`);
   const res = await drive.files.create({
@@ -49,7 +49,7 @@ async function findOrCreateFolder(drive: ReturnType<typeof google.drive>, name: 
   return createFolder(drive, name, parentId);
 }
 
-// n8n 웹훅으로 파일 업로드 위임 (OAuth 인증 사용)
+// n8n 웹훅으로 파일 업로드 (OAuth 인증 — 할당량 문제 없음)
 async function uploadViaN8n(fileName: string, content: string, folderId: string) {
   const n8nBase = process.env.N8N_BASE_URL || 'http://localhost:5678';
   const secret = process.env.N8N_WEBHOOK_SECRET || '';
@@ -57,7 +57,7 @@ async function uploadViaN8n(fileName: string, content: string, folderId: string)
   const res = await fetch(`${n8nBase}/webhook/drive-upload`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
       ...(secret ? { 'x-secret': secret } : {}),
     },
     body: JSON.stringify({ fileName, content, folderId }),
@@ -69,38 +69,15 @@ async function uploadViaN8n(fileName: string, content: string, folderId: string)
   console.log(`[Drive/n8n] Uploaded: ${fileName}`);
 }
 
-// 직접 업로드 시도, 실패 시 n8n 폴백
-async function uploadTextFile(fileName: string, content: string, folderId: string) {
-  // 먼저 n8n 시도
+// 파일 업로드 (n8n OAuth 경유)
+// 서비스 계정은 저장소 할당량이 없어서 파일 업로드 불가
+// 반드시 n8n(OAuth)을 통해 업로드해야 함
+async function uploadFile(fileName: string, content: string, folderId: string) {
   try {
     await uploadViaN8n(fileName, content, folderId);
-    return;
-  } catch {
-    console.log(`[Drive] n8n unavailable, trying direct upload...`);
-  }
-
-  // n8n 안 되면 서비스 계정으로 직접 시도
-  try {
-    const drive = getDriveClient();
-    const { Readable } = await import('stream');
-    const stream = new Readable();
-    stream.push(content);
-    stream.push(null);
-
-    await drive.files.create({
-      requestBody: {
-        name: fileName,
-        parents: [folderId],
-      },
-      media: {
-        mimeType: 'text/plain',
-        body: stream,
-      },
-      supportsAllDrives: true,
-    });
-    console.log(`[Drive] Direct uploaded: ${fileName}`);
   } catch (err) {
-    console.error(`[Drive] Upload failed for ${fileName}:`, (err as Error).message);
+    console.warn(`[Drive] Upload failed for "${fileName}": ${(err as Error).message}`);
+    console.warn('[Drive] n8n이 실행 중이어야 파일 업로드 가능 (서비스 계정은 할당량 제한)');
     throw err;
   }
 }
@@ -125,16 +102,28 @@ export async function savePlaylistToDrive(data: {
   const channelFolderId = await findOrCreateFolder(drive, data.channelName || 'default', playlistParentId);
   const dateFolderId = await findOrCreateFolder(drive, data.date, channelFolderId);
 
-  // 파일 업로드 (n8n 우선, 실패 시 직접)
+  // 파일 업로드 (n8n OAuth 경유)
   const files = [
     { name: '제목후보.txt', content: data.titleContent },
     { name: '설명문.txt', content: data.descriptionContent },
     { name: '카피.txt', content: data.copyContent },
   ].filter(f => f.content);
 
+  let uploadedCount = 0;
   for (const f of files) {
-    await uploadTextFile(f.name, f.content, dateFolderId);
+    try {
+      await uploadFile(f.name, f.content, dateFolderId);
+      uploadedCount++;
+    } catch {
+      // 개별 파일 실패해도 계속 진행
+    }
   }
 
-  console.log(`[Drive] Save complete: ${data.channelName}/${data.date}/`);
+  if (uploadedCount > 0) {
+    console.log(`[Drive] Save complete: ${data.channelName}/${data.date}/ (${uploadedCount}/${files.length} files)`);
+  } else {
+    console.log(`[Drive] Folders created but files pending (n8n required): ${data.channelName}/${data.date}/`);
+  }
+
+  return { folderId: dateFolderId, uploadedCount, totalFiles: files.length };
 }

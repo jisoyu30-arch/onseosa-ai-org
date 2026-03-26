@@ -5,6 +5,7 @@ import { runBaek } from '../engines/baek';
 import { runAhn } from '../engines/ahn';
 import { runHan } from '../engines/han';
 import { runHong } from '../engines/hong';
+import { saveToNotion } from '../utils/notion';
 
 // SSE 클라이언트 관리
 const sseClients = new Set<Response>();
@@ -124,6 +125,23 @@ export async function pipelineRoute(req: Request, res: Response) {
       broadcast('engine:status', { engine: engineName, status: 'idle' });
     }
   }
+
+  // 파이프라인 완료 후 Notion 자동 저장
+  broadcast('engine:status', { engine: 'system', status: 'working', task: 'Notion 저장' });
+  try {
+    const hanData = results['han']?.data || {};
+    const reviewData = results['seo-review']?.data || {};
+    await saveToNotion({
+      projectName,
+      projectType: projectType || 'playlist',
+      results: { ...hanData, score: reviewData.score },
+    });
+    broadcast('engine:done', { engine: 'system', step: 'notion', result: { summary: 'Notion 저장 완료' } });
+  } catch (err) {
+    console.warn('[Pipeline] Notion save failed:', (err as Error).message);
+    broadcast('engine:error', { engine: 'system', step: 'notion', error: String(err) });
+  }
+  broadcast('engine:status', { engine: 'system', status: 'idle' });
 
   broadcast('pipeline:done', { projectId, results });
 

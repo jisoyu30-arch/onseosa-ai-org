@@ -37,3 +37,10 @@ export interface TaskHistory {
   resultStatus: 'pass' | 'revise' | 'fail' | 'done';
   createdAt: string;
 }
+
+// Supabase 테이블 이름
+export const TABLES = {
+  projectMemory: 'project_memory',
+  engineMemory: 'engine_memory',
+  taskHistory: 'task_history',
+} as const;

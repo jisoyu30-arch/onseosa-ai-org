@@ -23,18 +23,21 @@ export async function runHong(payload: WorkerPayload): Promise<EngineOutput> {
     console.warn('[hong] Supabase save skipped:', (err as Error).message);
   }
 
-  // 2. Google Drive 저장 (폴더 생성 + n8n 업로드)
+  // 2. Google Drive 저장
   try {
+    // 제목 추출
     const titles = context.title_options || context.titles || [];
-    const titleContent = Array.isArray(titles) ? titles.join('\n') : String(titles);
-    const descContent = context.description || context.descriptions
-      ? (Array.isArray(context.descriptions) ? context.descriptions.join('\n\n') : String(context.description || context.descriptions || ''))
-      : '';
-    const copyContent = context.copy_variants || context.copies
-      ? (Array.isArray(context.copy_variants || context.copies)
-        ? (context.copy_variants as string[] || context.copies as string[]).join('\n\n')
-        : String(context.copy_variants || context.copies || ''))
-      : '';
+    const titleContent = Array.isArray(titles) ? titles.join('\n') : String(titles || '');
+
+    // 설명문 추출
+    const desc = context.description || context.descriptions || '';
+    const descContent = Array.isArray(desc) ? desc.join('\n\n') : String(desc);
+
+    // 카피 추출
+    const copies = context.copy_variants || context.copies || [];
+    const copyContent = Array.isArray(copies) ? copies.join('\n\n') : String(copies || '');
+
+    console.log(`[hong] Drive data — titles: ${titleContent.length}ch, desc: ${descContent.length}ch, copy: ${copyContent.length}ch`);
 
     if (titleContent || descContent) {
       await savePlaylistToDrive({
@@ -45,13 +48,12 @@ export async function runHong(payload: WorkerPayload): Promise<EngineOutput> {
         copyContent: copyContent || '',
       });
       savedTo.push('google-drive');
+    } else {
+      console.warn('[hong] No title/desc data found in context. Keys:', Object.keys(context).join(', '));
     }
   } catch (err) {
-    console.warn('[hong] Drive save skipped:', (err as Error).message);
+    console.warn('[hong] Drive save failed:', (err as Error).message);
   }
-
-  // 3. Notion 저장은 파이프라인에서 MCP로 처리
-  // (내부 integration 연결 불필요, MCP가 직접 저장)
 
   return {
     engine: 'hong',
@@ -61,7 +63,6 @@ export async function runHong(payload: WorkerPayload): Promise<EngineOutput> {
       saved: savedTo.length > 0,
       savedTo,
       projectId: payload.projectId,
-      // Notion 저장용 데이터를 pipeline으로 전달
       notionReady: true,
       notionData: {
         projectName: payload.projectName,

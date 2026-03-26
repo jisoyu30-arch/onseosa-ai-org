@@ -1,0 +1,215 @@
+{
+  "name": "WF-00 아르코 오케스트라",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ons-start",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "projectName", "value": "={{ $json.body.projectName }}" },
+            { "name": "projectType", "value": "={{ $json.body.projectType }}" },
+            { "name": "goal", "value": "={{ $json.body.goal }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-input",
+      "name": "Set Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $json.projectName, projectType: $json.projectType, taskType: 'orchestrate', instruction: $json.goal }) }}"
+      },
+      "id": "arko-orchestrate",
+      "name": "Arko Orchestrate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'analyze', instruction: $('Set Input').item.json.goal }) }}"
+      },
+      "id": "noah-analyze",
+      "name": "Noah Analyze",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'plan', instruction: $('Set Input').item.json.goal, context: $json.output }) }}"
+      },
+      "id": "eden-plan",
+      "name": "Eden Plan",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'write', instruction: $('Set Input').item.json.goal, context: $json.output }) }}"
+      },
+      "id": "ria-write",
+      "name": "Ria Write",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'review', instruction: '창작물 품질 검수', context: $json.output }) }}"
+      },
+      "id": "kal-review",
+      "name": "Kal Review",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "" },
+          "conditions": [
+            {
+              "id": "score-check",
+              "leftValue": "={{ $json.output.score }}",
+              "rightValue": 75,
+              "operator": { "type": "number", "operation": "gte" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "score-check",
+      "name": "Score >= 75?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1760, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'record', instruction: '결과 저장', context: { outputData: $('Ria Write').item.json.output, feedback: $('Kal Review').item.json.output.summary } }) }}"
+      },
+      "id": "luka-record",
+      "name": "Luka Record",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3001/execute",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ projectId: 'auto', projectName: $('Set Input').item.json.projectName, projectType: $('Set Input').item.json.projectType, taskType: 'write', instruction: $('Set Input').item.json.goal + ' [재시도] 수정사항: ' + ($('Kal Review').item.json.output.data.fix_instruction || '품질 향상 필요'), context: $('Eden Plan').item.json.output }) }}"
+      },
+      "id": "ria-retry",
+      "name": "Ria Retry",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2000, 420]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Set Input", "type": "main", "index": 0 }]] },
+    "Set Input": { "main": [[{ "node": "Arko Orchestrate", "type": "main", "index": 0 }]] },
+    "Arko Orchestrate": { "main": [[{ "node": "Noah Analyze", "type": "main", "index": 0 }]] },
+    "Noah Analyze": { "main": [[{ "node": "Eden Plan", "type": "main", "index": 0 }]] },
+    "Eden Plan": { "main": [[{ "node": "Ria Write", "type": "main", "index": 0 }]] },
+    "Ria Write": { "main": [[{ "node": "Kal Review", "type": "main", "index": 0 }]] },
+    "Kal Review": { "main": [[{ "node": "Score >= 75?", "type": "main", "index": 0 }]] },
+    "Score >= 75?": {
+      "main": [
+        [{ "node": "Luka Record", "type": "main", "index": 0 }],
+        [{ "node": "Ria Retry", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [{ "name": "ONS Studio" }]
+}

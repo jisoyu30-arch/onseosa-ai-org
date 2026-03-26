@@ -2,11 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev"],
-      "port": 3000,
-      "autoPort": false
+      "name": "control-room",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "control-room", "dev"],
+      "port": 5173
     }
   ]
 }

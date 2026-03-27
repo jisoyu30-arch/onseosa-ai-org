@@ -26,9 +26,9 @@ export const STATUS_LABEL: Record<EngineStatus, string> = {
 };
 
 export const ENGINES: EngineInfo[] = [
-  { name: 'seo', label: '서 본부장', department: '총괄지휘 + 검수', model: 'GPT-4o', status: 'idle' },
-  { name: 'baek', label: '백박사', department: '자료조사 + 분석', model: 'Gemini 2.5 Flash', status: 'idle' },
-  { name: 'ahn', label: '정수석', department: '기획', model: 'GPT-4o', status: 'idle' },
-  { name: 'han', label: '한강작가', department: '창작', model: 'Claude Sonnet', status: 'idle' },
-  { name: 'hong', label: '홍사서', department: '기록관리', model: 'Supabase', status: 'idle' },
+  { name: 'arko', label: '아르코', department: '총괄 디렉터 + 검수', model: 'GPT-4o', status: 'idle' },
+  { name: 'noah', label: '노아', department: '분석', model: 'Gemini 2.5 Flash', status: 'idle' },
+  { name: 'eden', label: '이든', department: '기획', model: 'GPT-4o', status: 'idle' },
+  { name: 'ria', label: '리아', department: '작가', model: 'Claude Sonnet', status: 'idle' },
+  { name: 'luka', label: '루카', department: '기록', model: 'Supabase + Drive', status: 'idle' },
 ];

@@ -4,7 +4,8 @@ import { loadPrompt } from '../utils/prompt-loader';
 
 export async function runArko(payload: WorkerPayload): Promise<EngineOutput> {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const systemPrompt = loadPrompt('arko');
+  const isReview = payload.taskType === 'review';
+  const systemPrompt = loadPrompt(isReview ? 'arko-review' : 'arko');
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -22,17 +23,39 @@ export async function runArko(payload: WorkerPayload): Promise<EngineOutput> {
       },
     ],
     response_format: { type: 'json_object' },
-    temperature: 0.3,
-    max_tokens: 1000,
+    temperature: isReview ? 0.1 : 0.3,
+    max_tokens: isReview ? 800 : 1000,
   });
 
   const content = response.choices[0]?.message?.content || '{}';
   const data = JSON.parse(content);
 
+  if (isReview) {
+    const score = data.score ?? 0;
+    const retryCount = (payload.context?.retry_count as number) || 0;
+    const decision = score >= 75 ? 'pass' : (retryCount >= 2 ? 'fail' : 'revise');
+
+    return {
+      engine: 'arko',
+      status: decision,
+      summary: `아르코 검수: ${score}/100 — ${decision} (시도 ${retryCount + 1}/3)`,
+      data: {
+        ...data,
+        score,
+        decision,
+        retry_count: retryCount,
+        weak_point: data.weak_point || '',
+        fix_instruction: data.fix_instruction || '',
+      },
+      score,
+      nextHints: data.fix_instruction ? [data.fix_instruction] : [],
+    };
+  }
+
   return {
     engine: 'arko',
     status: 'pass',
-    summary: data.project_summary || '총괄 분석 완료',
+    summary: data.project_summary || '아르코 총괄 완료',
     data,
     nextHints: data.next_action ? [data.next_action] : [],
   };

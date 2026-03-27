@@ -13,8 +13,8 @@ export type ProjectType = 'playlist' | 'webnovel' | 'marketing' | 'letterbrick';
 // 태스크 타입
 export type TaskType = 'analyze' | 'plan' | 'write' | 'review' | 'record' | 'orchestrate';
 
-// 엔진 이름
-export type EngineName = 'seo' | 'baek' | 'ahn' | 'han' | 'hong';
+// 엔진 이름 (2세대)
+export type EngineName = 'arko' | 'noah' | 'eden' | 'ria' | 'luka';
 
 // 엔진 정보
 export interface EngineProfile {

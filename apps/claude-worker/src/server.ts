@@ -36,7 +36,7 @@ app.get('/health', (_req, res) => {
     ok: true,
     service: 'claude-worker',
     timestamp: new Date().toISOString(),
-    engines: ['seo', 'baek', 'ahn', 'han', 'hong'],
+    engines: ['arko', 'noah', 'eden', 'ria', 'luka'],
   });
 });
 

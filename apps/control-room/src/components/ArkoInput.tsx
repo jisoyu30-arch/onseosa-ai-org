@@ -29,7 +29,7 @@ export function ArkoInput({ onResult }: ArkoInputProps) {
   return (
     <div className="bg-slate-800 rounded-xl p-5 border border-blue-600 mb-6">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-blue-400 text-lg font-bold">&#x1F537; 서 본부장</span>
+        <span className="text-blue-400 text-lg font-bold">&#x1F537; 아르코</span>
       </div>
       <div className="flex gap-3">
         <input

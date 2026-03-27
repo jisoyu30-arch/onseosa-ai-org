@@ -1,18 +1,18 @@
 import { Request, Response } from 'express';
 import type { WorkerPayload, WorkerResult } from '@ons/engine-contracts';
-import { runSeo } from '../engines/seo';
-import { runBaek } from '../engines/baek';
-import { runAhn } from '../engines/ahn';
-import { runHan } from '../engines/han';
-import { runHong } from '../engines/hong';
+import { runArko } from '../engines/arko';
+import { runNoah } from '../engines/noah';
+import { runEden } from '../engines/eden';
+import { runRia } from '../engines/ria';
+import { runLuka } from '../engines/luka';
 
 const ENGINE_MAP = {
-  orchestrate: { name: 'seo', handler: runSeo },
-  analyze: { name: 'baek', handler: runBaek },
-  plan: { name: 'ahn', handler: runAhn },
-  write: { name: 'han', handler: runHan },
-  review: { name: 'seo', handler: runSeo },
-  record: { name: 'hong', handler: runHong },
+  orchestrate: { name: 'arko', handler: runArko },
+  analyze: { name: 'noah', handler: runNoah },
+  plan: { name: 'eden', handler: runEden },
+  write: { name: 'ria', handler: runRia },
+  review: { name: 'arko', handler: runArko },
+  record: { name: 'luka', handler: runLuka },
 } as const;
 
 export async function executeRoute(req: Request, res: Response) {

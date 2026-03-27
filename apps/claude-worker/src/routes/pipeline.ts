@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import type { WorkerPayload, EngineOutput } from '@ons/engine-contracts';
-import { runSeo } from '../engines/seo';
-import { runBaek } from '../engines/baek';
-import { runAhn } from '../engines/ahn';
-import { runHan } from '../engines/han';
-import { runHong } from '../engines/hong';
-import { saveToNotion } from '../utils/notion';
+import { runArko } from '../engines/arko';
+import { runNoah } from '../engines/noah';
+import { runEden } from '../engines/eden';
+import { runRia } from '../engines/ria';
+import { runLuka } from '../engines/luka';
 
 // SSE 클라이언트 관리
 const sseClients = new Set<Response>();
@@ -28,7 +27,7 @@ function broadcast(event: string, data: unknown) {
   }
 }
 
-type StepName = 'baek' | 'ahn' | 'han' | 'seo-review' | 'hong';
+type StepName = 'noah' | 'eden' | 'ria' | 'arko-review' | 'luka';
 
 interface PipelineStep {
   name: StepName;
@@ -38,11 +37,11 @@ interface PipelineStep {
 }
 
 const PIPELINE_STEPS: PipelineStep[] = [
-  { name: 'baek', label: '백박사 분석', taskType: 'analyze', run: runBaek },
-  { name: 'ahn', label: '정수석 기획', taskType: 'plan', run: runAhn },
-  { name: 'han', label: '한강작가 창작', taskType: 'write', run: runHan },
-  { name: 'seo-review', label: '서본부장 검수', taskType: 'review', run: runSeo },
-  { name: 'hong', label: '홍사서 기록', taskType: 'record', run: runHong },
+  { name: 'noah', label: '노아 분석', taskType: 'analyze', run: runNoah },
+  { name: 'eden', label: '이든 기획', taskType: 'plan', run: runEden },
+  { name: 'ria', label: '리아 창작', taskType: 'write', run: runRia },
+  { name: 'arko-review', label: '아르코 검수', taskType: 'review', run: runArko },
+  { name: 'luka', label: '루카 기록', taskType: 'record', run: runLuka },
 ];
 
 export async function pipelineRoute(req: Request, res: Response) {
@@ -58,22 +57,22 @@ export async function pipelineRoute(req: Request, res: Response) {
 
   broadcast('pipeline:start', { projectId, projectName, projectType, goal });
 
-  // Step 0: 서 본부장 오케스트레이션 (프로젝트 타입 판별)
-  broadcast('engine:status', { engine: 'seo', status: 'working', task: '프로젝트 분석' });
+  // Step 0: 아르코 총괄 분석 (프로젝트 타입 판별 + 방향 설정)
+  broadcast('engine:status', { engine: 'arko', status: 'working', task: '프로젝트 분석' });
   try {
-    const seoResult = await runSeo({
+    const arkoResult = await runArko({
       projectId,
       projectName,
       projectType: projectType || 'playlist',
       taskType: 'orchestrate',
       instruction: goal,
     });
-    results['orchestrate'] = seoResult;
-    broadcast('engine:done', { engine: 'seo', step: 'orchestrate', result: seoResult });
+    results['orchestrate'] = arkoResult;
+    broadcast('engine:done', { engine: 'arko', step: 'orchestrate', result: arkoResult });
   } catch (err) {
-    broadcast('engine:error', { engine: 'seo', error: String(err) });
+    broadcast('engine:error', { engine: 'arko', error: String(err) });
   }
-  broadcast('engine:status', { engine: 'seo', status: 'idle' });
+  broadcast('engine:status', { engine: 'arko', status: 'idle' });
 
   // 파이프라인 실행
   let upstream: Record<string, unknown> = results['orchestrate']?.data || {};
@@ -81,7 +80,7 @@ export async function pipelineRoute(req: Request, res: Response) {
 
   for (let i = 0; i < PIPELINE_STEPS.length; i++) {
     const step = PIPELINE_STEPS[i];
-    const engineName = step.name === 'seo-review' ? 'seo' : step.name;
+    const engineName = step.name === 'arko-review' ? 'arko' : step.name;
 
     broadcast('engine:status', { engine: engineName, status: 'working', task: step.label });
 
@@ -94,7 +93,16 @@ export async function pipelineRoute(req: Request, res: Response) {
         instruction: goal,
         context: {
           ...upstream,
-          retry_count: step.name === 'seo-review' ? retryCount : undefined,
+          retry_count: step.name === 'arko-review' ? retryCount : undefined,
+          // luka에게 전체 결과 전달
+          ...(step.name === 'luka' ? {
+            allResults: results,
+            score: results['arko-review']?.score,
+            outputData: results['ria']?.data,
+            engineName: 'ria',
+            resultStatus: results['arko-review']?.status,
+            feedback: results['arko-review']?.summary,
+          } : {}),
         },
       };
 
@@ -104,16 +112,16 @@ export async function pipelineRoute(req: Request, res: Response) {
       broadcast('engine:done', { engine: engineName, step: step.name, result: output });
       broadcast('engine:status', { engine: engineName, status: 'idle' });
 
-      // 검수에서 revise → 한강작가로 돌아가기 (최대 2회)
-      if (step.name === 'seo-review' && output.status === 'revise' && retryCount < 2) {
+      // 검수에서 revise → 리아로 돌아가기 (최대 2회)
+      if (step.name === 'arko-review' && output.status === 'revise' && retryCount < 2) {
         retryCount++;
         upstream = {
           ...upstream,
           weak_point: (output.data as Record<string, unknown>).weak_point,
           fix_instruction: (output.data as Record<string, unknown>).fix_instruction,
         };
-        // han 단계로 되돌아가기 (index 2)
-        i = 1; // 루프 끝에서 i++되면 2(han)가 됨
+        // ria 단계로 되돌아가기 (index 2)
+        i = 1; // 루프 끝에서 i++되면 2(ria)가 됨
         broadcast('pipeline:retry', { retryCount, reason: output.summary });
         continue;
       }
@@ -125,23 +133,6 @@ export async function pipelineRoute(req: Request, res: Response) {
       broadcast('engine:status', { engine: engineName, status: 'idle' });
     }
   }
-
-  // 파이프라인 완료 후 Notion 자동 저장
-  broadcast('engine:status', { engine: 'system', status: 'working', task: 'Notion 저장' });
-  try {
-    const hanData = results['han']?.data || {};
-    const reviewData = results['seo-review']?.data || {};
-    await saveToNotion({
-      projectName,
-      projectType: projectType || 'playlist',
-      results: { ...hanData, score: reviewData.score },
-    });
-    broadcast('engine:done', { engine: 'system', step: 'notion', result: { summary: 'Notion 저장 완료' } });
-  } catch (err) {
-    console.warn('[Pipeline] Notion save failed:', (err as Error).message);
-    broadcast('engine:error', { engine: 'system', step: 'notion', error: String(err) });
-  }
-  broadcast('engine:status', { engine: 'system', status: 'idle' });
 
   broadcast('pipeline:done', { projectId, results });
 

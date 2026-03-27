@@ -1,6 +1,20 @@
 version: "3.8"
 
 services:
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://n8n:5678
+      - GENERIC_TIMEZONE=Asia/Seoul
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
   worker:
     build:
       context: .
@@ -12,6 +26,9 @@ services:
     environment:
       - NODE_ENV=production
       - CLAUDE_WORKER_PORT=3001
+      - N8N_BASE_URL=http://n8n:5678
+    depends_on:
+      - n8n
     restart: unless-stopped
 
   control-room:
@@ -23,3 +40,6 @@ services:
     depends_on:
       - worker
     restart: unless-stopped
+
+volumes:
+  n8n_data:

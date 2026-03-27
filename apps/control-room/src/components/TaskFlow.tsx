@@ -5,9 +5,9 @@ interface TaskFlowProps {
 }
 
 export function TaskFlow({ engines }: TaskFlowProps) {
-  const flowOrder = ['baek', 'ahn', 'han', 'seo', 'hong'];
+  const flowOrder = ['noah', 'eden', 'ria', 'arko', 'luka'];
   const flowLabels: Record<string, string> = {
-    baek: '백박사', ahn: '정수석', han: '한강작가', seo: '서본부장(검수)', hong: '홍사서',
+    noah: '노아(분석)', eden: '이든(기획)', ria: '리아(창작)', arko: '아르코(검수)', luka: '루카(기록)',
   };
 
   return (

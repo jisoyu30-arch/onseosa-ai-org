@@ -1,0 +1,6 @@
+- [AI 별명](user_ai_names.md) - 사용자가 각 AI에게 붙인 별명 (클로이, 팡팡이, 제제)
+- [Drive 저장 구조](project_drive_structure.md) - Phase 2 Google Drive 폴더 구조 및 저장 규칙
+- [영상 엔진](project_video_engine.md) - Phase 2 Remotion 영상 엔진 결정사항
+- [유통사 발매 패키지](reference_release_package.md) - 음원 유통사 등록용 Release Package 7종 세트 및 기술 규격
+- [Drive 연동 방식](project_drive_method.md) - Google Drive는 n8n OAuth로 업로드
+- [파이프라인 품질](feedback_pipeline_quality.md) - 칼 검수 개선: 노아 분석 근거 전달 + 상위 모델 사용

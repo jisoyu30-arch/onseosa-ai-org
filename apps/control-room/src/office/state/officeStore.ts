@@ -78,6 +78,10 @@ interface OfficeState {
   setDocumentReview: (docId: string, score: number, outcome: ReviewOutcome, feedback?: string) => void;
   rejectDocument: (docId: string, reason: string, feedback: string) => void;
 
+  // 회의
+  createMeeting: (meeting: Omit<MeetingEntity, 'status' | 'conclusion' | 'actionItems' | 'startedAt' | 'endedAt'>) => void;
+  concludeMeeting: (meetingId: string, conclusion: string, actionItems: MeetingEntity['actionItems']) => void;
+
   // 이벤트 로그
   addEvent: (event: Omit<OfficeEvent, 'id' | 'timestamp'>) => void;
 
@@ -309,6 +313,34 @@ export const useOfficeStore = create<OfficeState>((set, get) => ({
           rejectFeedback: feedback,
           version: d.version + 1,
         } : d
+      ),
+    }));
+  },
+
+  // ── 회의 ──────────────────────────────────
+  createMeeting(meeting: Omit<MeetingEntity, 'status' | 'conclusion' | 'actionItems' | 'startedAt' | 'endedAt'>) {
+    set(state => ({
+      meetings: [...state.meetings, {
+        ...meeting,
+        status: 'in_progress' as const,
+        conclusion: null,
+        actionItems: [],
+        startedAt: Date.now(),
+        endedAt: null,
+      }],
+    }));
+  },
+
+  concludeMeeting(meetingId: string, conclusion: string, actionItems: MeetingEntity['actionItems']) {
+    set(state => ({
+      meetings: state.meetings.map(m =>
+        m.id === meetingId ? {
+          ...m,
+          status: 'concluded' as const,
+          conclusion,
+          actionItems,
+          endedAt: Date.now(),
+        } : m
       ),
     }));
   },

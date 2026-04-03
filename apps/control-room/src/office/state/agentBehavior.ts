@@ -65,11 +65,39 @@ function onPipelineStart(event: SSEEvent) {
   });
 
   store.setAgentStatus('arko', 'thinking', '프로젝트 분석');
+
+  // orchestrate 회의 소집
+  const projectName = (event as Record<string, unknown>).projectName as string || '프로젝트';
+  store.createMeeting({
+    id: `meet_${Date.now()}`,
+    pipelineId: store.pipeline?.id || '',
+    trigger: 'orchestrate',
+    triggerReason: `새 프로젝트: ${projectName}`,
+    calledBy: 'arko',
+    attendees: ['arko', 'noah', 'eden', 'ria', 'mika', 'luka'],
+    agenda: `${projectName} 브리프 공유 및 역할 분배`,
+  });
+
+  // 3초 후 회의 종료 + 역할 확정
+  setTimeout(() => {
+    const s = useOfficeStore.getState();
+    const meeting = s.meetings.find(m => m.status === 'in_progress');
+    if (meeting) {
+      s.concludeMeeting(meeting.id, '역할 분배 완료. 노아부터 분석 시작.', [
+        { agentId: 'noah', action: '자료 분석', newStatus: 'waiting' },
+        { agentId: 'eden', action: '기획 대기', newStatus: 'waiting' },
+        { agentId: 'ria', action: '창작 대기', newStatus: 'waiting' },
+        { agentId: 'mika', action: '미디어 대기', newStatus: 'waiting' },
+        { agentId: 'luka', action: '기록 대기', newStatus: 'waiting' },
+      ]);
+    }
+  }, 3000);
+
   store.addEvent({
     type: 'pipeline:start',
     agentId: 'arko',
     documentId: null,
-    message: `파이프라인 시작: ${(event as Record<string, unknown>).projectName || ''}`,
+    message: `파이프라인 시작: ${projectName}`,
     data: event as Record<string, unknown>,
   });
 }
@@ -249,6 +277,29 @@ function onPipelineRetry(event: SSEEvent) {
 
   // 아르코 검수존에서 빨간 마크
   store.setAgentSpeech('arko', `반려: ${reason}`, 5000);
+
+  // 2회 연속 반려 시 품질 개선 회의
+  if (retryCount >= 2) {
+    store.createMeeting({
+      id: `meet_retry_${Date.now()}`,
+      pipelineId: store.pipeline?.id || '',
+      trigger: 'review_reject',
+      triggerReason: `초안 ${retryCount}회 연속 반려`,
+      calledBy: 'arko',
+      attendees: ['arko', 'ria', 'eden'],
+      agenda: `초안 품질 개선: ${reason}`,
+    });
+    setTimeout(() => {
+      const s = useOfficeStore.getState();
+      const m = s.meetings.find(mt => mt.status === 'in_progress' && mt.trigger === 'review_reject');
+      if (m) {
+        s.concludeMeeting(m.id, '리아 톤 변경 재작성, 이든 기획 보완', [
+          { agentId: 'ria', action: '톤 변경 재작성', newStatus: 'writing' },
+          { agentId: 'eden', action: '기획 보완', newStatus: 'thinking' },
+        ]);
+      }
+    }, 3000);
+  }
 
   store.addEvent({
     type: 'pipeline:retry',

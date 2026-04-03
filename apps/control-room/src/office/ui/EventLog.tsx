@@ -1,75 +1,64 @@
-import { Terminal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Terminal, ChevronUp } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useOfficeStore } from '../state/officeStore';
 import { AGENT_NAMES } from '../state/spatialConfig';
 
-const EVENT_COLORS: Record<string, string> = {
-  'pipeline:start': 'text-cyan-400',
-  'engine:working': 'text-emerald-400',
-  'engine:done': 'text-green-400',
-  'engine:error': 'text-red-400',
-  'pipeline:retry': 'text-amber-400',
-  'pipeline:soft_pass': 'text-yellow-400',
-  'pipeline:done': 'text-green-300',
-  'pipeline:failed': 'text-red-300',
+const COLORS: Record<string, string> = {
+  'pipeline:start': 'text-cyan-500/60',
+  'engine:working': 'text-emerald-500/50',
+  'engine:done': 'text-emerald-500/40',
+  'engine:error': 'text-red-400/60',
+  'pipeline:retry': 'text-amber-400/60',
+  'pipeline:soft_pass': 'text-amber-400/50',
+  'pipeline:done': 'text-emerald-400/50',
+  'pipeline:failed': 'text-red-400/50',
+  'review:score': 'text-cyan-400/50',
 };
 
 export function EventLog() {
   const events = useOfficeStore(s => s.events);
-  const [collapsed, setCollapsed] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
-  // 자동 스크롤
   useEffect(() => {
-    if (scrollRef.current && !collapsed) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [events.length, collapsed]);
+    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
+  }, [events.length]);
+
+  const visible = expanded ? events : events.slice(-4);
 
   return (
-    <div className={`border-t border-slate-700/50 bg-slate-900/90 backdrop-blur-sm transition-all ${
-      collapsed ? 'h-8' : 'h-36'
-    }`}>
-      {/* 헤더 */}
+    <div className={`border-t border-white/[0.03] bg-[#060910]/90 backdrop-blur-md transition-all ${expanded ? 'h-40' : 'h-[88px]'}`}>
       <div
-        className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-slate-800/50"
-        onClick={() => setCollapsed(!collapsed)}
+        className="flex items-center gap-2 px-4 py-1.5 cursor-pointer hover:bg-white/[0.02]"
+        onClick={() => setExpanded(!expanded)}
       >
-        <Terminal size={12} className="text-cyan-400" />
-        <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Event Log</span>
-        <span className="text-[10px] text-slate-600 ml-1">{events.length}</span>
+        <Terminal size={10} className="text-slate-600" />
+        <span className="text-[9px] font-semibold text-slate-600 tracking-widest uppercase">Log</span>
+        <span className="text-[9px] text-slate-700 ml-0.5">{events.length}</span>
         <div className="ml-auto">
-          {collapsed
-            ? <ChevronUp size={12} className="text-slate-500" />
-            : <ChevronDown size={12} className="text-slate-500" />
-          }
+          <ChevronUp size={10} className={`text-slate-700 transition-transform ${expanded ? '' : 'rotate-180'}`} />
         </div>
       </div>
 
-      {/* 로그 내용 */}
-      {!collapsed && (
-        <div ref={scrollRef} className="overflow-y-auto h-[calc(100%-28px)] px-3 pb-2 font-mono">
-          {events.length === 0 ? (
-            <p className="text-slate-600 text-[10px] py-2">이벤트 대기 중...</p>
-          ) : (
-            events.map(evt => {
-              const time = new Date(evt.timestamp).toLocaleTimeString('ko-KR');
-              const colorClass = EVENT_COLORS[evt.type] || 'text-slate-400';
-              const agentName = evt.agentId ? AGENT_NAMES[evt.agentId] || evt.agentId : '';
-
-              return (
-                <div key={evt.id} className="flex gap-2 text-[10px] leading-relaxed mb-0.5">
-                  <span className="text-slate-600 flex-shrink-0">{time}</span>
-                  {agentName && (
-                    <span className="text-slate-500 flex-shrink-0 w-12 truncate">{agentName}</span>
-                  )}
-                  <span className={colorClass}>{evt.message}</span>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+      <div ref={ref} className="overflow-y-auto h-[calc(100%-26px)] px-4 pb-1.5">
+        {visible.length === 0 ? (
+          <p className="text-[10px] text-slate-700 py-1">대기 중...</p>
+        ) : (
+          visible.map(e => (
+            <div key={e.id} className="flex gap-2 text-[10px] leading-[18px]">
+              <span className="text-slate-700 flex-shrink-0 font-mono tabular-nums">
+                {new Date(e.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+              {e.agentId && (
+                <span className="text-slate-600 flex-shrink-0 w-10 truncate font-medium">
+                  {AGENT_NAMES[e.agentId]}
+                </span>
+              )}
+              <span className={COLORS[e.type] || 'text-slate-500'}>{e.message}</span>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

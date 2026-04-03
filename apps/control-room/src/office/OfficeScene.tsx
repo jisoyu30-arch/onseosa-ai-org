@@ -4,7 +4,7 @@ import { SCENE_WIDTH, SCENE_HEIGHT, tileToScreen, AGENT_COLORS, AGENT_NAMES, TIL
 
 const HANDOFF_ANIM_MS = 800;
 
-// 사무실 타일맵 (0=빈, 1=작업공간, 2=로비, 3=회의실, 4=검수존)
+// 타일맵
 const MAP = [
   [2,2,1,1,1,1,1,1,0,0,3,3],
   [2,2,1,1,1,1,1,1,0,0,3,3],
@@ -16,63 +16,59 @@ const MAP = [
   [0,0,4,4,4,4,4,4,4,4,0,0],
   [0,0,4,4,4,4,4,4,4,4,0,0],
 ];
+const FILLS: Record<number, string> = { 0:'#060910', 1:'#0c1018', 2:'#0a0e16', 3:'#0a0d18', 4:'#0e0a14' };
+const STROKES: Record<number, string> = { 0:'#0e1220', 1:'#151e30', 2:'#151e30', 3:'#152035', 4:'#1e1530' };
 
-const ZONE_FILLS: Record<number, string> = {
-  0: '#080c16', 1: '#111827', 2: '#0f172a', 3: '#0c1220', 4: '#150f20',
-};
-const ZONE_BORDERS: Record<number, string> = {
-  0: '#1a2030', 1: '#1e293b', 2: '#1e293b', 3: '#1e3045', 4: '#2a1f38',
-};
-
-function drawDiamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number) {
+function diamond(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number) {
   ctx.beginPath();
-  ctx.moveTo(cx, cy - h / 2);
-  ctx.lineTo(cx + w / 2, cy);
-  ctx.lineTo(cx, cy + h / 2);
-  ctx.lineTo(cx - w / 2, cy);
-  ctx.closePath();
+  ctx.moveTo(cx, cy - h/2); ctx.lineTo(cx + w/2, cy);
+  ctx.lineTo(cx, cy + h/2); ctx.lineTo(cx - w/2, cy); ctx.closePath();
 }
 
-// 에이전트 이미지 캐시
-const agentImages = new Map<string, HTMLImageElement>();
-function getAgentImage(id: string, expression: string): HTMLImageElement | null {
-  const suffix = (expression === 'focused' || expression === 'stressed' || expression === 'reviewing')
-    ? '-working' : expression === 'celebrating' ? '-done' : '';
-  const key = `${id}${suffix}`;
-  if (agentImages.has(key)) return agentImages.get(key)!;
-
-  const img = new Image();
-  img.src = `/assets/chars/${key}.png`;
-  img.onload = () => agentImages.set(key, img);
-  agentImages.set(key, img); // placeholder until loaded
-  return img.complete ? img : null;
+// 이미지 캐시
+const imgs = new Map<string, HTMLImageElement>();
+function loadImg(key: string): HTMLImageElement | null {
+  if (imgs.has(key)) { const i = imgs.get(key)!; return i.complete && i.naturalWidth > 0 ? i : null; }
+  const i = new Image(); i.src = `/assets/chars/${key}.png`; imgs.set(key, i); return null;
+}
+function agentImg(id: string, expr: string) {
+  const s = (expr==='focused'||expr==='stressed'||expr==='reviewing') ? '-working' : expr==='celebrating' ? '-done' : '';
+  return loadImg(`${id}${s}`);
 }
 
-// 책상 그리기
-function drawDesk(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
-  // 책상 상판 (아이소메트릭)
-  ctx.save();
-  drawDiamond(ctx, x, y + 28, 52, 22);
-  ctx.fillStyle = '#1e293b';
+// 아이소메트릭 책상 (프리미엄)
+function drawDesk(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, isActive: boolean) {
+  const alpha = isActive ? 1 : 0.35;
+  ctx.save(); ctx.globalAlpha = alpha;
+
+  // 책상 상판
+  diamond(ctx, x, y + 30, 56, 24);
+  ctx.fillStyle = '#141c28';
   ctx.fill();
-  ctx.strokeStyle = '#334155';
+  ctx.strokeStyle = isActive ? color + '40' : '#1a2438';
   ctx.lineWidth = 0.8;
   ctx.stroke();
 
+  // 모니터 스탠드
+  ctx.fillStyle = '#0c1018';
+  ctx.fillRect(x - 1.5, y + 16, 3, 14);
+
   // 모니터
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(x - 10, y + 8, 20, 14);
-  ctx.strokeStyle = color + '60';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(x - 10, y + 8, 20, 14);
+  ctx.fillStyle = '#080c14';
+  ctx.fillRect(x - 12, y + 4, 24, 14);
+  ctx.strokeStyle = isActive ? color + '50' : '#1a2438';
+  ctx.lineWidth = 0.6;
+  ctx.strokeRect(x - 12, y + 4, 24, 14);
 
   // 모니터 스크린 빛
-  ctx.fillStyle = color + '20';
-  ctx.fillRect(x - 8, y + 10, 16, 10);
+  if (isActive) {
+    ctx.fillStyle = color + '12';
+    ctx.fillRect(x - 10, y + 6, 20, 10);
+    // 미세한 글로우
+    ctx.beginPath(); ctx.ellipse(x, y + 11, 16, 6, 0, 0, Math.PI * 2);
+    ctx.fillStyle = color + '06'; ctx.fill();
+  }
 
-  // 모니터 받침대
-  ctx.fillStyle = '#334155';
-  ctx.fillRect(x - 2, y + 22, 4, 6);
   ctx.restore();
 }
 
@@ -93,335 +89,289 @@ export function OfficeScene() {
     canvas.style.height = SCENE_HEIGHT + 'px';
     ctx.scale(dpr, dpr);
 
-    // 에이전트 이미지 프리로드
-    ['arko','noah','eden','ria','mika','luka'].forEach(id => {
-      ['', '-working', '-done'].forEach(s => {
-        const img = new Image();
-        img.src = `/assets/chars/${id}${s}.png`;
-        img.onload = () => agentImages.set(`${id}${s}`, img);
-      });
-    });
+    // 프리로드
+    ['arko','noah','eden','ria','mika','luka'].forEach(id =>
+      ['','-working','-done'].forEach(s => loadImg(`${id}${s}`))
+    );
 
     function render() {
       if (!ctx) return;
       const state = useOfficeStore.getState();
       const t = Date.now() / 1000;
 
-      // 배경
-      ctx.fillStyle = '#060a12';
+      // 현재 active 에이전트 (시선 중심)
+      const activeAgent = state.agents.find(a =>
+        a.status === 'writing' || a.status === 'thinking' || a.status === 'reviewing'
+      );
+      const activeId = activeAgent?.id || null;
+
+      // === 배경 ===
+      ctx.fillStyle = '#040608';
       ctx.fillRect(0, 0, SCENE_WIDTH, SCENE_HEIGHT);
 
-      // 미세한 그리드 패턴
-      ctx.strokeStyle = '#ffffff03';
-      ctx.lineWidth = 0.5;
-      for (let gx = 0; gx < SCENE_WIDTH; gx += 40) {
+      // 미세 그리드 (거의 안 보이게)
+      ctx.strokeStyle = '#ffffff02';
+      ctx.lineWidth = 0.3;
+      for (let gx = 0; gx < SCENE_WIDTH; gx += 48) {
         ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, SCENE_HEIGHT); ctx.stroke();
       }
-      for (let gy = 0; gy < SCENE_HEIGHT; gy += 40) {
+      for (let gy = 0; gy < SCENE_HEIGHT; gy += 48) {
         ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(SCENE_WIDTH, gy); ctx.stroke();
       }
 
-      // ── 타일 ──
-      for (let row = 0; row < MAP.length; row++) {
-        for (let col = 0; col < MAP[row].length; col++) {
-          const type = MAP[row][col];
-          if (type === 0) continue; // 빈 타일 스킵
-          const { x, y } = tileToScreen(col, row);
-          drawDiamond(ctx, x, y, TILE_WIDTH, TILE_HEIGHT);
-          ctx.fillStyle = ZONE_FILLS[type];
-          ctx.fill();
-          ctx.strokeStyle = ZONE_BORDERS[type];
-          ctx.lineWidth = 0.6;
-          ctx.globalAlpha = 0.5;
-          ctx.stroke();
-          ctx.globalAlpha = 1;
+      // === 타일 ===
+      for (let r = 0; r < MAP.length; r++) {
+        for (let c = 0; c < MAP[r].length; c++) {
+          const ty = MAP[r][c];
+          if (ty === 0) continue;
+          const { x, y } = tileToScreen(c, r);
+          diamond(ctx, x, y, TILE_WIDTH, TILE_HEIGHT);
+          ctx.fillStyle = FILLS[ty]; ctx.fill();
+          ctx.strokeStyle = STROKES[ty]; ctx.lineWidth = 0.4; ctx.globalAlpha = 0.35;
+          ctx.stroke(); ctx.globalAlpha = 1;
         }
       }
 
-      // ── 영역 라벨 ──
+      // === 영역 라벨 (극도로 절제) ===
+      ctx.font = '600 7px Inter, system-ui, sans-serif';
       ctx.textAlign = 'center';
+      ctx.letterSpacing = '2px';
       const zones = [
-        { text: 'LOBBY', pos: tileToScreen(1, 0.5), color: '#334155' },
-        { text: 'WORKSPACE', pos: tileToScreen(5, 0.5), color: '#334155' },
-        { text: 'MEETING ROOM', pos: tileToScreen(10.5, 1), color: '#1e3045' },
-        { text: 'REVIEW ZONE', pos: tileToScreen(5.5, 7), color: '#2a1f38' },
+        { t: 'LOBBY', p: tileToScreen(1, 0.3) },
+        { t: 'WORKSPACE', p: tileToScreen(5, 0.3) },
+        { t: 'MEETING', p: tileToScreen(10.5, 0.8) },
+        { t: 'REVIEW', p: tileToScreen(5.5, 6.8) },
       ];
-      ctx.font = '700 8px Inter, sans-serif';
       for (const z of zones) {
-        ctx.fillStyle = z.color;
-        ctx.globalAlpha = 0.6;
-        ctx.fillText(z.text, z.pos.x, z.pos.y - 2);
-        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#1e293b'; ctx.globalAlpha = 0.4;
+        ctx.fillText(z.t, z.p.x, z.p.y); ctx.globalAlpha = 1;
       }
 
-      // ── 가구 (책상) ──
+      // === 가구 ===
       for (const agent of state.agents) {
-        const color = AGENT_COLORS[agent.id];
-        drawDesk(ctx, agent.position.x, agent.position.y, color);
+        const isActive = agent.id === activeId;
+        drawDesk(ctx, agent.position.x, agent.position.y, AGENT_COLORS[agent.id], isActive);
       }
 
-      // ── 회의 테이블 ──
+      // 회의 테이블
       const mt = tileToScreen(ZONES.meeting.x, ZONES.meeting.y);
-      ctx.save();
-      ctx.beginPath();
-      ctx.ellipse(mt.x, mt.y + 12, 44, 16, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#1a2235';
-      ctx.fill();
-      ctx.strokeStyle = '#2d3a50';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      ctx.save(); ctx.globalAlpha = 0.3;
+      ctx.beginPath(); ctx.ellipse(mt.x, mt.y + 12, 44, 16, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#0c1220'; ctx.fill();
+      ctx.strokeStyle = '#1a2438'; ctx.lineWidth = 1; ctx.stroke();
       ctx.restore();
 
-      // ── 검수존 게이지 ──
+      // === 검수존 ===
       const reviewDoc = state.documents.find(d => d.type === 'draft' && d.reviewScore !== null);
       const rz = tileToScreen(5.5, 7.5);
       if (reviewDoc && reviewDoc.reviewScore !== null) {
         const score = reviewDoc.reviewScore;
         const rzy = rz.y + 18;
-        const barColor = score >= 75 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+        const barColor = score >= 75 ? '#22c55e' : score >= 50 ? '#eab308' : '#ef4444';
 
-        // 게이지 배경
-        ctx.fillStyle = '#0f0a1880';
-        ctx.fillRect(rz.x - 45, rzy - 6, 90, 12);
-        ctx.strokeStyle = barColor + '40';
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(rz.x - 45, rzy - 6, 90, 12);
-
+        // 게이지 트랙
+        ctx.fillStyle = '#0a0814';
+        ctx.fillRect(rz.x - 40, rzy - 4, 80, 8);
         // 게이지 바
-        ctx.fillStyle = barColor;
-        ctx.fillRect(rz.x - 45, rzy - 6, Math.min(score, 100) * 0.9, 12);
-
+        ctx.fillStyle = barColor + '90';
+        ctx.fillRect(rz.x - 40, rzy - 4, Math.min(score, 100) * 0.8, 8);
         // 점수
-        ctx.font = 'bold 10px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(`${score}`, rz.x, rzy);
-
-        // 결과 마크
-        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.font = 'bold 9px Inter, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#e2e8f0'; ctx.fillText(`${score}`, rz.x, rzy);
+        // 마크
+        ctx.font = '600 10px Inter, system-ui';
         if (reviewDoc.reviewOutcome === 'pass') {
-          ctx.fillStyle = '#22c55e';
-          ctx.fillText('✓ PASS', rz.x, rzy - 18);
+          ctx.fillStyle = '#22c55e80'; ctx.fillText('PASS', rz.x, rzy - 14);
         } else if (reviewDoc.reviewOutcome === 'soft_pass') {
-          ctx.fillStyle = '#f59e0b';
-          ctx.fillText('⚠ CONDITIONAL', rz.x, rzy - 18);
+          ctx.fillStyle = '#eab30880'; ctx.fillText('CONDITIONAL', rz.x, rzy - 14);
         } else if (reviewDoc.reviewOutcome === 'reject') {
-          ctx.fillStyle = '#ef4444';
-          ctx.fillText('✗ REJECT', rz.x, rzy - 18);
+          ctx.fillStyle = '#ef444480'; ctx.fillText('REJECT', rz.x, rzy - 14);
         }
-
         if (reviewDoc.rejectFeedback) {
-          ctx.font = '8px Malgun Gothic, sans-serif';
-          ctx.fillStyle = '#ef444480';
-          ctx.fillText(reviewDoc.rejectFeedback.slice(0, 30), rz.x, rzy + 14);
+          ctx.font = '7px system-ui'; ctx.fillStyle = '#ef444440';
+          ctx.fillText(reviewDoc.rejectFeedback.slice(0, 28), rz.x, rzy + 12);
         }
       }
 
-      // ── 에이전트 ──
+      // === 에이전트 (핵심: active 1명 강조, 나머지 dim) ===
       for (const agent of state.agents) {
         const color = AGENT_COLORS[agent.id];
         const { x, y } = agent.position;
-        const bobY = (agent.status === 'idle' || agent.status === 'waiting')
-          ? Math.sin(t * 1.8 + agent.id.charCodeAt(0) * 0.5) * 3
-          : (agent.status === 'writing' || agent.status === 'thinking')
-            ? Math.sin(t * 4) * 2
-            : 0;
+        const isActive = agent.id === activeId;
+        const isBlocked = agent.status === 'blocked';
+        const isDone = agent.status === 'done';
+        const dimAlpha = isActive ? 1 : isBlocked ? 0.7 : isDone ? 0.6 : 0.3;
 
-        // 바닥 글로우
+        const bobY = isActive
+          ? Math.sin(t * 3) * 2.5
+          : Math.sin(t * 1.2 + agent.id.charCodeAt(0) * 0.7) * 1.5;
+
         ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(x, y + 24, 24, 8, 0, 0, Math.PI * 2);
-        if (agent.status === 'writing' || agent.status === 'thinking') {
-          ctx.fillStyle = color + (Math.sin(t * 3) > 0 ? '35' : '20');
-        } else if (agent.status === 'blocked') {
-          ctx.fillStyle = '#ef4444' + (Math.sin(t * 6) > 0 ? '50' : '15');
-        } else if (agent.status === 'done') {
-          ctx.fillStyle = '#22c55e35';
-        } else {
-          ctx.fillStyle = '#00000020';
-        }
-        ctx.fill();
-        ctx.restore();
+        ctx.globalAlpha = dimAlpha;
 
-        // 3D 캐릭터 이미지
-        const img = getAgentImage(agent.id, agent.expression);
-        if (img && img.complete && img.naturalWidth > 0) {
-          const imgSize = 52;
+        // 바닥 글로우 (active만 확실히)
+        if (isActive) {
+          ctx.beginPath(); ctx.ellipse(x, y + 26, 28, 10, 0, 0, Math.PI * 2);
+          ctx.fillStyle = color + '18'; ctx.fill();
+        } else if (isBlocked) {
+          ctx.beginPath(); ctx.ellipse(x, y + 26, 22, 7, 0, 0, Math.PI * 2);
+          const blink = Math.sin(t * 5) > 0;
+          ctx.fillStyle = blink ? '#ef444420' : '#ef444408'; ctx.fill();
+        }
+
+        // 캐릭터
+        const img = agentImg(agent.id, agent.expression);
+        const sz = isActive ? 56 : 46;
+        if (img) {
           ctx.save();
-          // 원형 클리핑
-          ctx.beginPath();
-          ctx.arc(x, y - 4 + bobY, imgSize / 2 + 2, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(img, x - imgSize / 2, y - imgSize / 2 - 4 + bobY, imgSize, imgSize);
+          ctx.beginPath(); ctx.arc(x, y - 2 + bobY, sz / 2, 0, Math.PI * 2); ctx.clip();
+          ctx.drawImage(img, x - sz / 2, y - sz / 2 - 2 + bobY, sz, sz);
           ctx.restore();
-
-          // 원형 테두리
-          ctx.beginPath();
-          ctx.arc(x, y - 4 + bobY, imgSize / 2 + 2, 0, Math.PI * 2);
-          ctx.strokeStyle = agent.status === 'idle' ? '#1e293b' : color;
-          ctx.lineWidth = agent.status === 'idle' ? 1 : 2;
+          // 테두리
+          ctx.beginPath(); ctx.arc(x, y - 2 + bobY, sz / 2, 0, Math.PI * 2);
+          ctx.strokeStyle = isActive ? color + '80' : isBlocked ? '#ef444460' : '#1e293b40';
+          ctx.lineWidth = isActive ? 2 : 1;
           ctx.stroke();
         } else {
-          // 폴백: 원 + 이니셜
-          ctx.beginPath();
-          ctx.arc(x, y + bobY, 18, 0, Math.PI * 2);
-          ctx.fillStyle = color + '25';
-          ctx.fill();
-          ctx.strokeStyle = agent.status === 'idle' ? '#334155' : color;
-          ctx.lineWidth = 2;
-          ctx.stroke();
-          ctx.font = 'bold 14px Malgun Gothic, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = color;
-          ctx.fillText(AGENT_NAMES[agent.id].charAt(0), x, y + bobY);
+          // 폴백
+          ctx.beginPath(); ctx.arc(x, y + bobY, sz / 2 - 4, 0, Math.PI * 2);
+          ctx.fillStyle = color + '15'; ctx.fill();
+          ctx.strokeStyle = isActive ? color : '#1e293b';
+          ctx.lineWidth = 1; ctx.stroke();
+          ctx.font = `bold ${isActive ? 14 : 11}px system-ui`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillStyle = color; ctx.fillText(AGENT_NAMES[agent.id][0], x, y + bobY);
         }
 
-        // 이름
-        ctx.font = 'bold 9px Malgun Gothic, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = agent.status === 'idle' ? '#475569' : color;
-        ctx.fillText(AGENT_NAMES[agent.id], x, y + 34);
+        // 이름 (작게, 절제)
+        ctx.font = `${isActive ? '600 9px' : '400 8px'} system-ui`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillStyle = isActive ? '#e2e8f0' : '#475569';
+        ctx.fillText(AGENT_NAMES[agent.id], x, y + sz / 2 + 4);
 
-        // 작업 카드
+        // 작업 카드 (active만 크게, 나머지는 한 줄)
         const task = state.tasks.find(tk => tk.ownerAgentId === agent.id && tk.status === 'working');
-        if (task && agent.status !== 'idle') {
+        if (isActive && task) {
           const labels: Record<string, string> = {
-            thinking: '분석 중', writing: '작업 중', reviewing: '검수 중',
-            waiting: '대기 중', blocked: '오류', done: '완료',
+            thinking:'분석 중', writing:'작업 중', reviewing:'검수 중',
           };
-          const label = labels[agent.status] || '';
-          const cardText = label ? `${label}` : task.title.slice(0, 8);
-
-          ctx.save();
-          ctx.font = 'bold 8px Malgun Gothic, sans-serif';
-          const cw = cardText.length * 7 + 12;
-          ctx.fillStyle = color + '18';
-          ctx.fillRect(x - cw / 2, y + 44, cw, 14);
-          ctx.strokeStyle = color + '30';
+          const label = labels[agent.status] || '처리 중';
+          ctx.font = '600 9px system-ui';
+          const cardW = label.length * 9 + 16;
+          // glass card
+          ctx.fillStyle = color + '12';
+          ctx.fillRect(x - cardW / 2, y + sz / 2 + 16, cardW, 18);
+          ctx.strokeStyle = color + '25';
           ctx.lineWidth = 0.5;
-          ctx.strokeRect(x - cw / 2, y + 44, cw, 14);
+          ctx.strokeRect(x - cardW / 2, y + sz / 2 + 16, cardW, 18);
           ctx.fillStyle = color;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(cardText, x, y + 51);
-          ctx.restore();
-        } else if (agent.status === 'idle') {
-          ctx.font = '7px Malgun Gothic, sans-serif';
-          ctx.fillStyle = '#334155';
-          ctx.textAlign = 'center';
-          ctx.fillText('대기', x, y + 46);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(label, x, y + sz / 2 + 25);
+        } else if (isBlocked) {
+          ctx.font = '600 8px system-ui';
+          ctx.fillStyle = '#ef4444';
+          ctx.fillText('BLOCKED', x, y + sz / 2 + 18);
+        } else if (isDone && !isActive) {
+          ctx.font = '400 7px system-ui';
+          ctx.fillStyle = '#22c55e60';
+          ctx.fillText('완료', x, y + sz / 2 + 16);
         }
 
-        // 말풍선
-        if (agent.speechBubble) {
-          const txt = agent.speechBubble.text.slice(0, 22);
-          const bx = x + 35, by = y - 20;
+        // 말풍선 (active만)
+        if (agent.speechBubble && (isActive || isBlocked)) {
+          const txt = agent.speechBubble.text.slice(0, 20);
+          const bx = x + (isActive ? 40 : 30), by = y - 15;
           ctx.save();
-          ctx.font = '9px Malgun Gothic, sans-serif';
-          const tw = txt.length * 7 + 16;
-          ctx.fillStyle = '#0d1117ee';
+          ctx.font = '8px system-ui';
+          const tw = txt.length * 6 + 14;
+          ctx.fillStyle = '#0a0e16e0';
           ctx.strokeStyle = '#1e293b';
-          ctx.lineWidth = 1;
-          ctx.fillRect(bx - tw / 2, by - 10, tw, 20);
-          ctx.strokeRect(bx - tw / 2, by - 10, tw, 20);
-          ctx.fillStyle = '#e2e8f0';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
+          ctx.lineWidth = 0.5;
+          ctx.fillRect(bx - tw / 2, by - 9, tw, 18);
+          ctx.strokeRect(bx - tw / 2, by - 9, tw, 18);
+          ctx.fillStyle = '#94a3b8';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(txt, bx, by);
           ctx.restore();
         }
+
+        ctx.restore();
       }
 
-      // ── 문서 ──
+      // === 문서 (절제된 표현) ===
       for (const doc of state.documents) {
         let dx: number, dy: number;
         const from = state.agents.find(a => a.id === doc.currentHolder);
         const to = doc.moveTarget ? state.agents.find(a => a.id === doc.moveTarget) : null;
 
         if (doc.isMoving && from && to) {
-          const progress = Math.min((Date.now() % HANDOFF_ANIM_MS) / HANDOFF_ANIM_MS * 1.2, 1);
-          const arc = Math.sin(progress * Math.PI) * 30;
-          dx = from.position.x + (to.position.x - from.position.x) * progress;
-          dy = (from.position.y - 35) + ((to.position.y - 35) - (from.position.y - 35)) * progress - arc;
+          const p = Math.min((Date.now() % HANDOFF_ANIM_MS) / HANDOFF_ANIM_MS * 1.3, 1);
+          const arc = Math.sin(p * Math.PI) * 25;
+          dx = from.position.x + (to.position.x - from.position.x) * p;
+          dy = (from.position.y - 32) + ((to.position.y - 32) - (from.position.y - 32)) * p - arc;
         } else if (from) {
-          dx = from.position.x + 25;
-          dy = from.position.y - 20 + Math.sin(t * 1.5 + doc.id.charCodeAt(4)) * 2;
+          dx = from.position.x + 22;
+          dy = from.position.y - 18 + Math.sin(t * 1.2 + doc.id.charCodeAt(4)) * 1.5;
         } else continue;
 
         const isRejected = doc.status === 'rejected';
-        const isSoftPass = doc.reviewOutcome === 'soft_pass';
-        const docColor = isRejected ? '#ef4444' : isSoftPass ? '#f59e0b' : '#06b6d4';
+        const docColor = isRejected ? '#ef4444' : doc.reviewOutcome === 'soft_pass' ? '#eab308' : '#06b6d4';
+        const isMoving = doc.isMoving;
 
         ctx.save();
-        ctx.globalAlpha = doc.isMoving ? 0.95 : 0.8;
+        ctx.globalAlpha = isMoving ? 0.9 : 0.5;
 
-        // 이동 트레일
-        if (doc.isMoving) {
-          for (let i = 1; i <= 3; i++) {
-            ctx.beginPath();
-            ctx.arc(dx - i * 4, dy + i * 2, 2.5 - i * 0.5, 0, Math.PI * 2);
-            ctx.fillStyle = docColor + (20 - i * 5).toString(16).padStart(2, '0');
-            ctx.fill();
+        // 트레일
+        if (isMoving) {
+          for (let i = 1; i <= 2; i++) {
+            ctx.beginPath(); ctx.arc(dx - i * 3, dy + i, 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = docColor + '15'; ctx.fill();
           }
         }
 
-        // 문서 본체
-        const s = doc.isMoving ? 1.4 : 1;
-        ctx.save();
-        ctx.translate(dx, dy);
-        ctx.scale(s, s);
-        ctx.fillStyle = docColor;
-        ctx.fillRect(-7, -9, 14, 18);
-        ctx.fillStyle = '#ffffff30';
-        ctx.beginPath();
-        ctx.moveTo(3, -9); ctx.lineTo(7, -9); ctx.lineTo(7, -5); ctx.closePath();
-        ctx.fill();
+        // 문서 아이콘 (미니멀)
+        const s = isMoving ? 1.2 : 0.9;
+        ctx.save(); ctx.translate(dx, dy); ctx.scale(s, s);
+        ctx.fillStyle = docColor + (isMoving ? 'cc' : '60');
+        ctx.fillRect(-5, -7, 10, 14);
+        // 접힌 모서리
+        ctx.fillStyle = '#ffffff20';
+        ctx.beginPath(); ctx.moveTo(2, -7); ctx.lineTo(5, -7); ctx.lineTo(5, -4); ctx.closePath(); ctx.fill();
+        // 반려 X
         if (isRejected) {
-          ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-          ctx.beginPath(); ctx.moveTo(-3, -3); ctx.lineTo(3, 5); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(3, -3); ctx.lineTo(-3, 5); ctx.stroke();
+          ctx.strokeStyle = '#fff8'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(2, 4); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(2, -2); ctx.lineTo(-2, 4); ctx.stroke();
         }
+        // 승인 체크
         if (doc.reviewOutcome === 'pass') {
-          ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.moveTo(-3, 1); ctx.lineTo(-1, 4); ctx.lineTo(4, -2); ctx.stroke();
+          ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.moveTo(-2, 1); ctx.lineTo(0, 3); ctx.lineTo(3, -1); ctx.stroke();
         }
         ctx.restore();
 
-        // 라벨
-        ctx.font = '7px Malgun Gothic, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = docColor;
-        ctx.fillText(doc.label.slice(0, 8) + (doc.version > 1 ? ` v${doc.version}` : ''), dx, dy + 14);
-
-        if (doc.isMoving && doc.moveTarget) {
-          ctx.font = 'bold 8px Malgun Gothic, sans-serif';
-          ctx.fillStyle = '#cce4ff';
-          ctx.fillText('→ ' + (AGENT_NAMES[doc.moveTarget] || ''), dx, dy + 23);
-        }
-
-        if (doc.reviewScore !== null && !doc.isMoving) {
-          ctx.font = 'bold 8px sans-serif';
-          ctx.fillStyle = docColor;
-          ctx.fillText(`${doc.reviewScore}점`, dx, dy - 14);
+        // 이동 라벨
+        if (isMoving && doc.moveTarget) {
+          ctx.font = '600 7px system-ui';
+          ctx.fillStyle = '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.fillText('→ ' + AGENT_NAMES[doc.moveTarget], dx, dy + 12);
         }
 
         ctx.restore();
       }
 
-      frameRef.current = requestAnimationFrame(render);
+      frameRef.current = window.setTimeout(render, 33) as unknown as number; // ~30fps, 프리뷰 도구 호환
     }
 
-    frameRef.current = requestAnimationFrame(render);
-    return () => cancelAnimationFrame(frameRef.current);
+    frameRef.current = window.setTimeout(render, 33) as unknown as number;
+    return () => clearTimeout(frameRef.current);
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ display: 'block', maxWidth: '100%', maxHeight: '100%' }}
+      style={{ display: 'block', maxWidth: '100%', maxHeight: '100%', margin: 'auto' }}
     />
   );
 }

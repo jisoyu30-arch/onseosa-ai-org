@@ -1,20 +1,11 @@
-import { Activity, Clock, AlertTriangle, Pause, Play } from 'lucide-react';
+import { Activity, AlertTriangle, Pause, Play } from 'lucide-react';
 import { useOfficeStore } from '../state/officeStore';
 import { AGENT_NAMES, DEFAULT_STEP_DURATION_MS, TOTAL_PIPELINE_MS } from '../state/spatialConfig';
 
-function formatETA(eta: number | null): string {
-  if (!eta) return '--';
-  const remaining = Math.max(0, eta - Date.now());
-  const sec = Math.round(remaining / 1000);
-  if (sec < 60) return `${sec}초`;
-  return `${Math.floor(sec / 60)}분 ${sec % 60}초`;
-}
-
-function calculateProgress(pipeline: ReturnType<typeof useOfficeStore.getState>['pipeline']): number {
-  if (!pipeline) return 0;
-  const completedMs = pipeline.completedStages
-    .reduce((sum, stage) => sum + (DEFAULT_STEP_DURATION_MS[stage] || 10_000), 0);
-  return Math.min(Math.round((completedMs / TOTAL_PIPELINE_MS) * 100), 100);
+function calcProgress(p: ReturnType<typeof useOfficeStore.getState>['pipeline']): number {
+  if (!p) return 0;
+  const done = p.completedStages.reduce((s, st) => s + (DEFAULT_STEP_DURATION_MS[st] || 10000), 0);
+  return Math.min(Math.round((done / TOTAL_PIPELINE_MS) * 100), 100);
 }
 
 export function MonitorBoard() {
@@ -23,91 +14,78 @@ export function MonitorBoard() {
   const paused = useOfficeStore(s => s.paused);
   const togglePause = useOfficeStore(s => s.togglePause);
 
-  const activeAgents = agents.filter(a => a.status !== 'idle' && a.status !== 'waiting');
-  const blockedAgents = agents.filter(a => a.status === 'blocked');
-  const progress = calculateProgress(pipeline);
+  const blocked = agents.filter(a => a.status === 'blocked');
+  const progress = calcProgress(pipeline);
+
+  if (!pipeline) {
+    return (
+      <div className="flex items-center gap-3 px-5 py-2.5 border-b border-white/[0.04] bg-[#060910]/90">
+        <Activity size={13} className="text-slate-600" />
+        <span className="text-[11px] text-slate-500 tracking-wide">대기 중</span>
+      </div>
+    );
+  }
+
+  const statusColors: Record<string, string> = {
+    running: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
+    done: 'bg-green-500/15 text-green-400 border-green-500/20',
+    failed: 'bg-red-500/15 text-red-400 border-red-500/20',
+    paused: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+    orchestrating: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
+    review: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/20',
+    blocked: 'bg-red-500/15 text-red-400 border-red-500/20',
+  };
 
   return (
-    <div className="flex items-center gap-4 px-4 py-2 bg-slate-900/90 border-b border-slate-700/50 backdrop-blur-sm text-xs">
-      {/* 파이프라인 상태 */}
-      <div className="flex items-center gap-2">
-        <Activity size={14} className={pipeline?.status === 'running' ? 'text-emerald-400' : 'text-slate-500'} />
-        <span className="text-slate-400 font-medium">
-          {pipeline ? pipeline.projectName : '대기 중'}
-        </span>
-        {pipeline && (
-          <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-            pipeline.status === 'running' ? 'bg-emerald-500/20 text-emerald-400' :
-            pipeline.status === 'done' ? 'bg-green-500/20 text-green-400' :
-            pipeline.status === 'failed' ? 'bg-red-500/20 text-red-400' :
-            pipeline.status === 'paused' ? 'bg-yellow-500/20 text-yellow-400' :
-            'bg-slate-700 text-slate-400'
-          }`}>
-            {pipeline.status.toUpperCase()}
-          </span>
-        )}
-      </div>
+    <div className="flex items-center gap-4 px-5 py-2.5 border-b border-white/[0.04] bg-[#060910]/90 backdrop-blur-md">
+      {/* 프로젝트명 */}
+      <span className="text-[11px] text-slate-400 font-medium truncate max-w-[120px]">
+        {pipeline.projectName}
+      </span>
 
-      {/* 진행률 바 */}
-      {pipeline && pipeline.status !== 'done' && pipeline.status !== 'failed' && (
-        <div className="flex items-center gap-2 flex-1 max-w-xs">
-          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
+      {/* 상태 뱃지 */}
+      <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider border ${statusColors[pipeline.status] || 'bg-slate-800 text-slate-500'}`}>
+        {pipeline.status.toUpperCase()}
+      </span>
+
+      {/* 진행률 */}
+      {pipeline.status !== 'done' && pipeline.status !== 'failed' && (
+        <div className="flex items-center gap-2 flex-1 max-w-[140px]">
+          <div className="flex-1 h-[3px] bg-white/[0.04] rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500/60 rounded-full transition-all duration-700" style={{ width: `${progress}%` }} />
           </div>
-          <span className="text-slate-500 font-mono w-8 text-right">{progress}%</span>
+          <span className="text-[10px] text-slate-500 font-mono w-7 text-right">{progress}%</span>
         </div>
       )}
 
-      {/* 현재 스테이지 */}
-      {pipeline?.currentStage && (
-        <div className="flex items-center gap-1.5">
-          <span className="text-slate-500">현재:</span>
-          <span className="text-cyan-400 font-medium">
-            {AGENT_NAMES[pipeline.currentStage] || pipeline.currentStage}
-          </span>
-        </div>
+      {/* 현재 단계 */}
+      {pipeline.currentStage && pipeline.status === 'running' && (
+        <span className="text-[10px] text-slate-500">
+          <span className="text-slate-600">현재 </span>
+          <span className="text-slate-300 font-medium">{AGENT_NAMES[pipeline.currentStage] || pipeline.currentStage}</span>
+        </span>
       )}
 
-      {/* ETA */}
-      {pipeline?.eta && (
-        <div className="flex items-center gap-1">
-          <Clock size={12} className="text-slate-500" />
-          <span className="text-slate-400 font-mono">{formatETA(pipeline.eta)}</span>
-        </div>
-      )}
-
-      {/* 에러/병목 */}
-      {blockedAgents.length > 0 && (
-        <div className="flex items-center gap-1 text-red-400">
-          <AlertTriangle size={12} />
-          <span>{blockedAgents.map(a => a.name).join(', ')} blocked</span>
+      {/* blocked 경고 */}
+      {blocked.length > 0 && (
+        <div className="flex items-center gap-1 text-[10px] text-red-400/70">
+          <AlertTriangle size={10} />
+          <span>{blocked.length} blocked</span>
         </div>
       )}
 
       {/* retry */}
-      {pipeline && pipeline.retryCount > 0 && (
-        <span className="text-amber-400">재시도 #{pipeline.retryCount}</span>
+      {pipeline.retryCount > 0 && (
+        <span className="text-[10px] text-amber-400/60">retry #{pipeline.retryCount}</span>
       )}
 
-      {/* 활성 에이전트 수 */}
-      <div className="flex items-center gap-1 ml-auto">
-        <span className="text-slate-500">{activeAgents.length}/{agents.length} 가동</span>
-      </div>
+      {/* 스페이서 */}
+      <div className="flex-1" />
 
-      {/* 일시정지/재개 */}
-      {pipeline && pipeline.status !== 'done' && pipeline.status !== 'failed' && (
-        <button
-          onClick={togglePause}
-          className="p-1 rounded hover:bg-slate-700 transition-colors"
-          title={paused ? '재개' : '일시정지'}
-        >
-          {paused
-            ? <Play size={14} className="text-emerald-400" />
-            : <Pause size={14} className="text-slate-400" />
-          }
+      {/* 일시정지 */}
+      {pipeline.status !== 'done' && pipeline.status !== 'failed' && (
+        <button onClick={togglePause} className="p-1 rounded hover:bg-white/[0.04] transition-colors">
+          {paused ? <Play size={12} className="text-emerald-400/60" /> : <Pause size={12} className="text-slate-600" />}
         </button>
       )}
     </div>

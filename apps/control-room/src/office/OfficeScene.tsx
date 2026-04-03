@@ -42,7 +42,7 @@ function drawDesk(ctx: CanvasRenderingContext2D, x: number, y: number, color: st
   ctx.save(); ctx.globalAlpha = alpha;
 
   // 책상 상판
-  diamond(ctx, x, y + 30, 56, 24);
+  diamond(ctx, x, y + 36, 68, 28);
   ctx.fillStyle = '#141c28';
   ctx.fill();
   ctx.strokeStyle = isActive ? color + '40' : '#1a2438';
@@ -51,21 +51,20 @@ function drawDesk(ctx: CanvasRenderingContext2D, x: number, y: number, color: st
 
   // 모니터 스탠드
   ctx.fillStyle = '#0c1018';
-  ctx.fillRect(x - 1.5, y + 16, 3, 14);
+  ctx.fillRect(x - 2, y + 18, 4, 16);
 
   // 모니터
   ctx.fillStyle = '#080c14';
-  ctx.fillRect(x - 12, y + 4, 24, 14);
+  ctx.fillRect(x - 15, y + 2, 30, 18);
   ctx.strokeStyle = isActive ? color + '50' : '#1a2438';
   ctx.lineWidth = 0.6;
-  ctx.strokeRect(x - 12, y + 4, 24, 14);
+  ctx.strokeRect(x - 15, y + 2, 30, 18);
 
   // 모니터 스크린 빛
   if (isActive) {
     ctx.fillStyle = color + '12';
-    ctx.fillRect(x - 10, y + 6, 20, 10);
-    // 미세한 글로우
-    ctx.beginPath(); ctx.ellipse(x, y + 11, 16, 6, 0, 0, Math.PI * 2);
+    ctx.fillRect(x - 13, y + 4, 26, 14);
+    ctx.beginPath(); ctx.ellipse(x, y + 12, 20, 8, 0, 0, Math.PI * 2);
     ctx.fillStyle = color + '06'; ctx.fill();
   }
 
@@ -156,7 +155,7 @@ export function OfficeScene() {
       // 회의 테이블
       const mt = tileToScreen(ZONES.meeting.x, ZONES.meeting.y);
       ctx.save(); ctx.globalAlpha = 0.3;
-      ctx.beginPath(); ctx.ellipse(mt.x, mt.y + 12, 44, 16, 0, 0, Math.PI * 2);
+      ctx.beginPath(); ctx.ellipse(mt.x, mt.y + 14, 56, 20, 0, 0, Math.PI * 2);
       ctx.fillStyle = '#0c1220'; ctx.fill();
       ctx.strokeStyle = '#1a2438'; ctx.lineWidth = 1; ctx.stroke();
       ctx.restore();
@@ -221,7 +220,7 @@ export function OfficeScene() {
 
         // 캐릭터
         const img = agentImg(agent.id, agent.expression);
-        const sz = isActive ? 56 : 46;
+        const sz = isActive ? 64 : 52;
         if (img) {
           ctx.save();
           ctx.beginPath(); ctx.arc(x, y - 2 + bobY, sz / 2, 0, Math.PI * 2); ctx.clip();
@@ -371,7 +370,12 @@ export function OfficeScene() {
   return (
     <canvas
       ref={canvasRef}
-      style={{ display: 'block', maxWidth: '100%', maxHeight: '100%', margin: 'auto' }}
+      style={{
+        display: 'block',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+      }}
     />
   );
 }

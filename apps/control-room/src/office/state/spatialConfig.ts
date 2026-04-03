@@ -1,18 +1,18 @@
 import type { Position } from './types';
 
 // ── 씬 크기 ──────────────────────────────────────
-export const SCENE_WIDTH = 1200;
-export const SCENE_HEIGHT = 700;
+export const SCENE_WIDTH = 1400;
+export const SCENE_HEIGHT = 750;
 
 // ── 아이소메트릭 타일 ──────────────────────────────
-export const TILE_WIDTH = 64;
-export const TILE_HEIGHT = 32;
+export const TILE_WIDTH = 80;
+export const TILE_HEIGHT = 40;
 
 // 타일 좌표 → 화면 좌표
 export function tileToScreen(tx: number, ty: number): Position {
   return {
     x: (tx - ty) * (TILE_WIDTH / 2) + SCENE_WIDTH / 2,
-    y: (tx + ty) * (TILE_HEIGHT / 2) + 80,
+    y: (tx + ty) * (TILE_HEIGHT / 2) + 120,
   };
 }
 

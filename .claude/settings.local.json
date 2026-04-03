@@ -296,7 +296,11 @@
       "Bash(tasklist /FI 'PID eq 224576')",
       "Bash(git status:*)",
       "Bash(git diff:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git push:*)",
+      "Bash(ls -la apps/desktop/assets/chars/*.png)",
+      "Bash(ls apps/desktop/assets/chars/*.png)",
+      "Bash(sort -k2)"
     ]
   }
 }

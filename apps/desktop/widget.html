@@ -8,70 +8,84 @@ html,body{width:1100px;height:300px;background:transparent;overflow:hidden;user-
 .nd{-webkit-app-region:no-drag}
 
 /* ── 카드 모드 ── */
-#logo-card{position:absolute;right:0;bottom:0;width:84px;height:84px;border-radius:18px;background:linear-gradient(145deg,rgba(22,14,6,0.97),rgba(48,28,8,0.97));border:1.5px solid rgba(190,148,72,0.45);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;z-index:500;box-shadow:0 6px 28px rgba(0,0,0,0.65),inset 0 1px 0 rgba(220,180,100,0.12);-webkit-app-region:no-drag;transition:transform 0.15s,box-shadow 0.15s}
-#logo-card:hover{transform:scale(1.05);box-shadow:0 8px 32px rgba(200,140,40,0.35),inset 0 1px 0 rgba(220,180,100,0.18)}
-#logo-card .card-label{font-size:8px;font-weight:700;letter-spacing:0.08em;color:rgba(200,165,90,0.85)}
-/* 카드 모드일 때 위젯 본체 숨기기 */
-body.card-mode>svg,body.card-mode .cw,body.card-mode #tooltip,body.card-mode #arko-bubble,body.card-mode #chat-panel,body.card-mode #arko-bar{display:none!important}
-/* 전체 위젯일 때 카드 숨기기 */
+#logo-card{position:absolute;right:0;bottom:0;width:84px;height:84px;border-radius:18px;background:linear-gradient(145deg,#0d1117,#161b22);border:1.5px solid rgba(6,182,212,0.3);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;z-index:500;box-shadow:0 6px 28px rgba(0,0,0,0.65),0 0 20px rgba(6,182,212,0.1);-webkit-app-region:no-drag;transition:transform 0.15s,box-shadow 0.15s}
+#logo-card:hover{transform:scale(1.05);box-shadow:0 8px 32px rgba(6,182,212,0.25),0 0 30px rgba(6,182,212,0.15)}
+#logo-card .card-label{font-size:8px;font-weight:700;letter-spacing:0.08em;color:rgba(6,182,212,0.8)}
+body.card-mode>svg,body.card-mode .cw,body.card-mode #tooltip,body.card-mode #arko-bubble,body.card-mode #chat-panel,body.card-mode #arko-bar,body.card-mode #pipeline-bar{display:none!important}
 body:not(.card-mode) #logo-card{display:none}
+
+/* 애니메이션 */
 @keyframes glow{0%,100%{filter:brightness(1)}50%{filter:brightness(3) saturate(2)}}
-@keyframes shimmer{0%,100%{opacity:0.1}50%{opacity:0.22}}
+@keyframes shimmer{0%,100%{opacity:0.08}50%{opacity:0.18}}
+@-webkit-keyframes char-bob{0%,100%{-webkit-transform:translateY(0);transform:translateY(0)}50%{-webkit-transform:translateY(-5px);transform:translateY(-5px)}}
+@keyframes char-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes char-work{0%,100%{transform:translateY(0) scale(1)}25%{transform:translateY(-3px) scale(1.02)}50%{transform:translateY(-6px) scale(1.04)}75%{transform:translateY(-3px) scale(1.02)}}
+@keyframes char-done{0%{transform:scale(1) translateY(0)}30%{transform:scale(1.1) translateY(-8px)}60%{transform:scale(1) translateY(-2px)}100%{transform:scale(1) translateY(0)}}
+@keyframes neon-ring{0%,100%{box-shadow:0 0 6px var(--glow)}50%{box-shadow:0 0 18px var(--glow),0 0 36px var(--glow)}}
+@keyframes blink{0%,92%,100%{clip-path:none}94%,98%{clip-path:inset(38% 0 58% 0)}}
+@keyframes wander{0%{transform:translateX(0)}25%{transform:translateX(12px)}50%{transform:translateX(-8px)}75%{transform:translateX(5px)}100%{transform:translateX(0)}}
 .glow-screen{animation:glow 0.85s ease-in-out infinite}
 .sun-shimmer{animation:shimmer 4s ease-in-out infinite}
 
 /* 캐릭터 래퍼 */
-.cw{position:absolute;top:48px;width:140px;height:168px;cursor:pointer;-webkit-app-region:no-drag}
+.cw{position:absolute;top:42px;width:130px;height:175px;cursor:pointer;-webkit-app-region:no-drag;display:flex;flex-direction:column;align-items:center}
+.cw img{width:108px;height:108px;object-fit:cover;object-position:center 20%;border-radius:50%;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.4));border:2px solid rgba(255,255,255,0.08)}
+.cw:hover img{filter:drop-shadow(0 4px 12px var(--glow));border-color:var(--glow)}
+/* 애니메이션은 JS requestAnimationFrame으로 처리 */
+.cw.working img{filter:drop-shadow(0 0 16px var(--glow));border-color:var(--glow)}
+.cw.working .char-ring{box-shadow:0 0 18px var(--glow),0 0 36px var(--glow)}
+.cw.done img{filter:drop-shadow(0 0 14px rgba(34,197,94,0.5));border-color:rgba(34,197,94,0.5)}
 /* 상태 점 */
-.sdot{position:absolute;top:4px;right:4px;width:11px;height:11px;border-radius:50%;background:#44dd44;border:1.5px solid rgba(0,0,0,0.18);z-index:2;pointer-events:none}
+.sdot{position:absolute;top:2px;right:12px;width:10px;height:10px;border-radius:50%;background:#44dd44;border:1.5px solid rgba(0,0,0,0.3);z-index:2;pointer-events:none;transition:background 0.3s}
 /* 명찰 */
-.badge{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);height:17px;padding:0 10px;border-radius:8.5px;display:flex;align-items:center;font-size:9px;font-weight:700;color:white;white-space:nowrap;opacity:0.92;pointer-events:none;transition:background 0.3s}
-/* lottie 컨테이너 */
-.lbox{width:100%;height:100%}
+.badge{height:18px;padding:0 10px;border-radius:9px;display:flex;align-items:center;font-size:9px;font-weight:700;color:white;white-space:nowrap;opacity:0.92;pointer-events:none;transition:background 0.3s;margin-top:4px}
+/* 캐릭터 글로우 링 */
+.char-ring{width:114px;height:114px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:box-shadow 0.3s;background:rgba(30,41,59,0.6)}
 
 /* Tooltip */
-#tooltip{position:absolute;background:rgba(8,10,22,0.96);border:1px solid rgba(70,110,200,0.4);border-radius:10px;padding:10px 13px;min-width:175px;color:#dce8f8;font-size:11px;pointer-events:none;display:none;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.6)}
+#tooltip{position:absolute;background:rgba(13,17,23,0.96);border:1px solid rgba(6,182,212,0.3);border-radius:10px;padding:10px 13px;min-width:175px;color:#dce8f8;font-size:11px;pointer-events:none;display:none;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
 #tooltip .tt-name{font-size:13px;font-weight:700;margin-bottom:5px;color:#7ab8ff}
 #tooltip .tt-task{color:#a8d0ff;margin-bottom:2px}
 #tooltip .tt-eta{color:#70e070;font-size:10px;margin-bottom:6px}
-#tooltip .tt-q{border-top:1px solid rgba(70,110,200,0.22);padding-top:5px;margin-top:2px}
+#tooltip .tt-q{border-top:1px solid rgba(6,182,212,0.2);padding-top:5px;margin-top:2px}
 #tooltip .tt-qi{color:#b8d4f0;font-size:10px;padding:3px 6px;margin:1px 0;border-radius:4px;cursor:pointer;pointer-events:all}
-#tooltip .tt-qi:hover{background:rgba(50,90,180,0.35);color:#fff}
+#tooltip .tt-qi:hover{background:rgba(6,182,212,0.2);color:#fff}
 
 /* 채팅 패널 */
-#chat-panel{position:absolute;bottom:28px;left:0;right:0;height:0;background:rgba(7,9,20,0.97);border-top:1px solid rgba(50,90,160,0.4);border-radius:12px 12px 0 0;overflow:hidden;transition:height 0.22s ease;z-index:200;display:flex;flex-direction:column}
+#chat-panel{position:absolute;bottom:28px;left:0;right:0;height:0;background:rgba(13,17,23,0.97);border-top:1px solid rgba(6,182,212,0.25);border-radius:12px 12px 0 0;overflow:hidden;transition:height 0.22s ease;z-index:200;display:flex;flex-direction:column;backdrop-filter:blur(12px)}
 #chat-panel.open{height:256px}
-#chat-header{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid rgba(50,90,160,0.22);flex-shrink:0}
-#chat-name-label{font-size:12px;font-weight:700;color:#7ab8ff}
+#chat-avatar{position:absolute;right:16px;top:40px;width:90px;height:90px;border-radius:50%;object-fit:cover;object-position:center 20%;border:2px solid rgba(6,182,212,0.3);opacity:0.85;filter:drop-shadow(0 0 12px rgba(6,182,212,0.2));pointer-events:none;z-index:1}
+#chat-header{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid rgba(6,182,212,0.15);flex-shrink:0}
+#chat-name-label{font-size:12px;font-weight:700;color:#06b6d4}
 #chat-close{background:none;border:none;color:#506880;font-size:14px;cursor:pointer;-webkit-app-region:no-drag;padding:0 4px}
 #chat-close:hover{color:#e04838}
 #chat-msgs{flex:1;overflow-y:auto;padding:7px 11px;display:flex;flex-direction:column;gap:4px}
 #chat-msgs::-webkit-scrollbar{width:3px}
-#chat-msgs::-webkit-scrollbar-thumb{background:rgba(70,110,200,0.3);border-radius:2px}
-.mu{align-self:flex-end;background:rgba(35,70,175,0.55);color:#cce4ff;padding:4px 10px;border-radius:8px 8px 2px 8px;font-size:11px;max-width:82%}
-.ma{align-self:flex-start;background:rgba(25,35,58,0.9);color:#b8d4f0;padding:4px 10px;border-radius:8px 8px 8px 2px;font-size:11px;max-width:82%;border:1px solid rgba(50,90,160,0.22)}
+#chat-msgs::-webkit-scrollbar-thumb{background:rgba(6,182,212,0.3);border-radius:2px}
+.mu{align-self:flex-end;background:rgba(6,182,212,0.25);color:#cce4ff;padding:4px 10px;border-radius:8px 8px 2px 8px;font-size:11px;max-width:82%}
+.ma{align-self:flex-start;background:rgba(30,41,59,0.9);color:#b8d4f0;padding:4px 10px;border-radius:8px 8px 8px 2px;font-size:11px;max-width:82%;border:1px solid rgba(6,182,212,0.15)}
 .mt{color:#506880;font-style:italic;font-size:10px;align-self:flex-start;padding:2px 6px}
-#chat-row{display:flex;gap:6px;padding:6px 10px;flex-shrink:0;border-top:1px solid rgba(50,90,160,0.18)}
-#chat-in{flex:1;background:rgba(15,22,42,0.9);border:1px solid rgba(50,90,160,0.32);border-radius:6px;color:#cce4ff;font-size:11px;padding:5px 10px;outline:none;font-family:'Malgun Gothic',sans-serif;-webkit-app-region:no-drag}
-#chat-in:focus{border-color:rgba(70,130,240,0.6)}
-#chat-btn{background:rgba(35,70,190,0.75);border:none;color:#7ab8ff;border-radius:6px;padding:5px 13px;cursor:pointer;font-size:11px;-webkit-app-region:no-drag}
+#chat-row{display:flex;gap:6px;padding:6px 10px;flex-shrink:0;border-top:1px solid rgba(6,182,212,0.12)}
+#chat-in{flex:1;background:rgba(30,41,59,0.8);border:1px solid rgba(6,182,212,0.25);border-radius:6px;color:#cce4ff;font-size:11px;padding:5px 10px;outline:none;font-family:'Malgun Gothic',sans-serif;-webkit-app-region:no-drag}
+#chat-in:focus{border-color:rgba(6,182,212,0.6)}
+#chat-btn{background:rgba(6,182,212,0.3);border:none;color:#06b6d4;border-radius:6px;padding:5px 13px;cursor:pointer;font-size:11px;-webkit-app-region:no-drag}
 
 /* 아르코 입력바 */
-#arko-bar{position:absolute;bottom:0;left:0;right:0;height:36px;background:rgba(5,7,20,0.93);border-top:1px solid rgba(45,85,210,0.32);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:300}
-.arko-lbl{color:#5588ff;font-size:10.5px;font-weight:700;white-space:nowrap;-webkit-app-region:no-drag}
+#arko-bar{position:absolute;bottom:0;left:0;right:0;height:36px;background:rgba(13,17,23,0.95);border-top:1px solid rgba(6,182,212,0.2);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:300}
+.arko-lbl{color:#06b6d4;font-size:10.5px;font-weight:700;white-space:nowrap;-webkit-app-region:no-drag}
 #arko-quick{flex:1;background:transparent;border:none;color:#cce4ff;font-size:11px;outline:none;-webkit-app-region:no-drag;font-family:'Malgun Gothic',sans-serif}
-#arko-quick::placeholder{color:rgba(80,120,190,0.45)}
-#arko-send{background:rgba(35,70,190,0.65);border:none;color:#7ab8ff;border-radius:5px;padding:2px 11px;cursor:pointer;font-size:11px;-webkit-app-region:no-drag;flex-shrink:0}
-#arko-send:hover{background:rgba(55,95,220,0.9)}
+#arko-quick::placeholder{color:rgba(6,182,212,0.3)}
+#arko-send{background:rgba(6,182,212,0.3);border:none;color:#06b6d4;border-radius:5px;padding:2px 11px;cursor:pointer;font-size:11px;-webkit-app-region:no-drag;flex-shrink:0}
+#arko-send:hover{background:rgba(6,182,212,0.5)}
 
 /* 아르코 말풍선 */
-#arko-bubble{position:absolute;top:24px;left:8px;max-width:230px;background:rgba(6,9,24,0.96);border:1px solid rgba(60,110,240,0.5);border-radius:10px 10px 10px 2px;padding:7px 12px;color:#cce4ff;font-size:10.5px;line-height:1.55;display:none;z-index:160;pointer-events:none;box-shadow:0 3px 16px rgba(0,0,0,0.6)}
+#arko-bubble{position:absolute;top:24px;left:8px;max-width:230px;background:rgba(13,17,23,0.96);border:1px solid rgba(6,182,212,0.4);border-radius:10px 10px 10px 2px;padding:7px 12px;color:#cce4ff;font-size:10.5px;line-height:1.55;display:none;z-index:160;pointer-events:none;box-shadow:0 3px 16px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
 #arko-bubble.thinking{color:#4466aa;font-style:italic}
 </style>
 </head>
 <body>
 
-<!-- 배경 SVG (캐릭터 없음, pointer-events:none) -->
+<!-- 모던 오피스 배경 SVG -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1100" height="300" viewBox="0 0 1100 300"
      style="position:absolute;top:0;left:0;pointer-events:none;z-index:0">
 <defs>
@@ -80,227 +94,145 @@ body:not(.card-mode) #logo-card{display:none}
   <linearGradient id="sky-day"    x1="0" y1="0" x2="0" y2="1"><stop offset="0%"  stop-color="#2ea8e8"/><stop offset="55%"  stop-color="#70c8f0"/><stop offset="100%" stop-color="#b0dff8"/></linearGradient>
   <linearGradient id="sky-sunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%"  stop-color="#b02860"/><stop offset="45%"  stop-color="#e85028"/><stop offset="100%" stop-color="#ff9858"/></linearGradient>
   <linearGradient id="sky-dusk"   x1="0" y1="0" x2="0" y2="1"><stop offset="0%"  stop-color="#181440"/><stop offset="100%" stop-color="#302050"/></linearGradient>
-  <linearGradient id="wallG"    x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stop-color="#ede5d8"/><stop offset="100%" stop-color="#f5efe4"/></linearGradient>
-  <linearGradient id="meetWallG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%"  stop-color="#e8e0d4"/><stop offset="100%" stop-color="#f0ead8"/></linearGradient>
-  <linearGradient id="deskG"    x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stop-color="#e2ba7c"/><stop offset="100%" stop-color="#c09050"/></linearGradient>
-  <linearGradient id="floorG"   x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stop-color="#d4a060"/><stop offset="100%" stop-color="#b88040"/></linearGradient>
-  <linearGradient id="tableG"   x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stop-color="#c89858"/><stop offset="100%" stop-color="#a87838"/></linearGradient>
-  <filter id="sh2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#00000020"/></filter>
+  <linearGradient id="wallG"    x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stop-color="#1a1f2e"/><stop offset="100%" stop-color="#0f1318"/></linearGradient>
+  <linearGradient id="meetWallG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%"  stop-color="#161b26"/><stop offset="100%" stop-color="#0d1117"/></linearGradient>
+  <linearGradient id="deskG"    x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stop-color="#2d3548"/><stop offset="100%" stop-color="#1e2433"/></linearGradient>
+  <linearGradient id="floorG"   x1="0" y1="0" x2="0" y2="1"><stop offset="0%"   stop-color="#151920"/><stop offset="100%" stop-color="#0d1015"/></linearGradient>
+  <filter id="sh2" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#00000040"/></filter>
   <clipPath id="mc"><rect width="1100" height="300" rx="16"/></clipPath>
 </defs>
 <g clip-path="url(#mc)">
+<!-- 벽 -->
 <rect width="760" height="300" fill="url(#wallG)"/>
 <rect x="760" width="340" height="300" fill="url(#meetWallG)"/>
-<!-- 천장 -->
-<rect width="1100" height="56" fill="#e0d8c8"/>
-<rect x="0" y="8" width="1100" height="10" fill="#c8b090" rx="2"/>
-<rect x="55"  y="8" width="7" height="40" fill="#b89060"/>
-<rect x="222" y="8" width="7" height="40" fill="#b89060"/>
-<rect x="389" y="8" width="7" height="40" fill="#b89060"/>
-<rect x="556" y="8" width="7" height="40" fill="#b89060"/>
-<rect x="723" y="8" width="7" height="40" fill="#b89060"/>
-<rect x="0" y="46" width="760" height="6" fill="#aaa898" rx="3"/>
-<!-- 펜던트 조명 -->
-<line x1="138" y1="0" x2="138" y2="23" stroke="#6a6050" stroke-width="1.5"/>
-<path d="M124,23 Q138,40 152,23Z" fill="#ddd0a8"/>
-<ellipse cx="138" cy="24" rx="14" ry="4.5" fill="#ede0b8"/>
-<ellipse cx="138" cy="24" rx="9"  ry="3"   fill="#fff8e0" opacity="0.9"/>
-<ellipse cx="138" cy="56" rx="30" ry="8"   fill="#fffbe0" opacity="0.22" class="sun-shimmer"/>
-<line x1="305" y1="0" x2="305" y2="23" stroke="#6a6050" stroke-width="1.5"/>
-<path d="M291,23 Q305,40 319,23Z" fill="#ddd0a8"/>
-<ellipse cx="305" cy="24" rx="14" ry="4.5" fill="#ede0b8"/>
-<ellipse cx="305" cy="24" rx="9"  ry="3"   fill="#fff8e0" opacity="0.9"/>
-<ellipse cx="305" cy="56" rx="30" ry="8"   fill="#fffbe0" opacity="0.22" class="sun-shimmer"/>
-<line x1="472" y1="0" x2="472" y2="23" stroke="#6a6050" stroke-width="1.5"/>
-<path d="M458,23 Q472,40 486,23Z" fill="#ddd0a8"/>
-<ellipse cx="472" cy="24" rx="14" ry="4.5" fill="#ede0b8"/>
-<ellipse cx="472" cy="24" rx="9"  ry="3"   fill="#fff8e0" opacity="0.9"/>
-<ellipse cx="472" cy="56" rx="30" ry="8"   fill="#fffbe0" opacity="0.22" class="sun-shimmer"/>
-<line x1="639" y1="0" x2="639" y2="23" stroke="#6a6050" stroke-width="1.5"/>
-<path d="M625,23 Q639,40 653,23Z" fill="#ddd0a8"/>
-<ellipse cx="639" cy="24" rx="14" ry="4.5" fill="#ede0b8"/>
-<ellipse cx="639" cy="24" rx="9"  ry="3"   fill="#fff8e0" opacity="0.9"/>
-<ellipse cx="639" cy="56" rx="30" ry="8"   fill="#fffbe0" opacity="0.22" class="sun-shimmer"/>
-<line x1="940" y1="0" x2="940" y2="23" stroke="#6a6050" stroke-width="1.5"/>
-<path d="M926,23 Q940,40 954,23Z" fill="#ddd0a8"/>
-<ellipse cx="940" cy="24" rx="14" ry="4.5" fill="#ede0b8"/>
-<ellipse cx="940" cy="24" rx="9"  ry="3"   fill="#fff8e0" opacity="0.9"/>
-<ellipse cx="940" cy="58" rx="36" ry="10"  fill="#fffbe0" opacity="0.26" class="sun-shimmer"/>
-<!-- 창문 -->
-<rect class="sky-bg" x="8"   y="56" width="132" height="82" fill="url(#sky-day)" rx="2"/>
-<rect x="12"  y="100" width="14" height="38" fill="#6a8098" opacity="0.5"/>
-<rect x="28"  y="90"  width="20" height="48" fill="#5a7088" opacity="0.55"/>
-<rect x="51"  y="96"  width="13" height="42" fill="#6a8098" opacity="0.45"/>
-<rect x="67"  y="84"  width="24" height="54" fill="#527080" opacity="0.6"/>
-<rect x="8"   y="56"  width="132" height="82" fill="none" stroke="#1a1a1a" stroke-width="2.5" rx="2"/>
-<line x1="74"  y1="56" x2="74"  y2="138" stroke="#1a1a1a" stroke-width="2"/>
-<line x1="8"   y1="97" x2="140" y2="97"  stroke="#1a1a1a" stroke-width="2"/>
-<rect class="sky-bg" x="152" y="56" width="132" height="82" fill="url(#sky-day)" rx="2"/>
-<rect x="154" y="98"  width="16" height="40" fill="#6a8098" opacity="0.5"/>
-<rect x="173" y="87"  width="22" height="51" fill="#5a7088" opacity="0.56"/>
-<rect x="215" y="82"  width="26" height="56" fill="#527080" opacity="0.6"/>
-<rect x="152" y="56"  width="132" height="82" fill="none" stroke="#1a1a1a" stroke-width="2.5" rx="2"/>
-<line x1="218" y1="56" x2="218" y2="138" stroke="#1a1a1a" stroke-width="2"/>
-<line x1="152" y1="97" x2="284" y2="97"  stroke="#1a1a1a" stroke-width="2"/>
-<rect class="sky-bg" x="296" y="56" width="132" height="82" fill="url(#sky-day)" rx="2"/>
-<rect x="298" y="96"  width="18" height="42" fill="#6a8098" opacity="0.5"/>
-<rect x="319" y="85"  width="21" height="53" fill="#5a7088" opacity="0.56"/>
-<rect x="361" y="82"  width="26" height="56" fill="#527080" opacity="0.6"/>
-<rect x="296" y="56"  width="132" height="82" fill="none" stroke="#1a1a1a" stroke-width="2.5" rx="2"/>
-<line x1="362" y1="56" x2="362" y2="138" stroke="#1a1a1a" stroke-width="2"/>
-<line x1="296" y1="97" x2="428" y2="97"  stroke="#1a1a1a" stroke-width="2"/>
-<rect class="sky-bg" x="440" y="56" width="132" height="82" fill="url(#sky-day)" rx="2"/>
-<rect x="442" y="98"  width="15" height="40" fill="#6a8098" opacity="0.5"/>
-<rect x="505" y="81"  width="28" height="57" fill="#527080" opacity="0.6"/>
-<rect x="440" y="56"  width="132" height="82" fill="none" stroke="#1a1a1a" stroke-width="2.5" rx="2"/>
-<line x1="506" y1="56" x2="506" y2="138" stroke="#1a1a1a" stroke-width="2"/>
-<line x1="440" y1="97" x2="572" y2="97"  stroke="#1a1a1a" stroke-width="2"/>
-<rect class="sky-bg" x="584" y="56" width="162" height="82" fill="url(#sky-day)" rx="2"/>
-<rect x="586" y="94"  width="18" height="44" fill="#6a8098" opacity="0.5"/>
-<rect x="654" y="79"  width="30" height="59" fill="#527080" opacity="0.6"/>
-<rect x="584" y="56"  width="162" height="82" fill="none" stroke="#1a1a1a" stroke-width="2.5" rx="2"/>
-<line x1="665" y1="56" x2="665" y2="138" stroke="#1a1a1a" stroke-width="2"/>
-<line x1="584" y1="97" x2="746" y2="97"  stroke="#1a1a1a" stroke-width="2"/>
-<rect x="0" y="136" width="760" height="7" fill="#c8b898" rx="1"/>
+<!-- 천장 LED 라인 -->
+<rect width="1100" height="8" fill="#0d1117"/>
+<rect x="0" y="8" width="760" height="2" fill="#06b6d4" opacity="0.15"/>
+<rect x="800" y="8" width="300" height="2" fill="#06b6d4" opacity="0.12"/>
+<!-- LED 다운라이트 -->
+<ellipse cx="138" cy="14" rx="24" ry="4" fill="#06b6d4" opacity="0.06" class="sun-shimmer"/>
+<ellipse cx="305" cy="14" rx="24" ry="4" fill="#06b6d4" opacity="0.06" class="sun-shimmer"/>
+<ellipse cx="472" cy="14" rx="24" ry="4" fill="#06b6d4" opacity="0.06" class="sun-shimmer"/>
+<ellipse cx="639" cy="14" rx="24" ry="4" fill="#06b6d4" opacity="0.06" class="sun-shimmer"/>
+<ellipse cx="940" cy="14" rx="28" ry="5" fill="#06b6d4" opacity="0.08" class="sun-shimmer"/>
+<!-- 창문 (시간대별 하늘) -->
+<rect class="sky-bg" x="10"  y="18" width="165" height="100" fill="url(#sky-day)" rx="4"/>
+<rect x="10"  y="18" width="165" height="100" fill="none" stroke="#2d3548" stroke-width="2" rx="4"/>
+<line x1="92" y1="18" x2="92" y2="118" stroke="#2d3548" stroke-width="1.5"/>
+<line x1="10" y1="68" x2="175" y2="68" stroke="#2d3548" stroke-width="1.5"/>
+<rect class="sky-bg" x="190" y="18" width="165" height="100" fill="url(#sky-day)" rx="4"/>
+<rect x="190" y="18" width="165" height="100" fill="none" stroke="#2d3548" stroke-width="2" rx="4"/>
+<line x1="272" y1="18" x2="272" y2="118" stroke="#2d3548" stroke-width="1.5"/>
+<line x1="190" y1="68" x2="355" y2="68" stroke="#2d3548" stroke-width="1.5"/>
+<rect class="sky-bg" x="370" y="18" width="165" height="100" fill="url(#sky-day)" rx="4"/>
+<rect x="370" y="18" width="165" height="100" fill="none" stroke="#2d3548" stroke-width="2" rx="4"/>
+<line x1="452" y1="18" x2="452" y2="118" stroke="#2d3548" stroke-width="1.5"/>
+<line x1="370" y1="68" x2="535" y2="68" stroke="#2d3548" stroke-width="1.5"/>
+<rect class="sky-bg" x="550" y="18" width="195" height="100" fill="url(#sky-day)" rx="4"/>
+<rect x="550" y="18" width="195" height="100" fill="none" stroke="#2d3548" stroke-width="2" rx="4"/>
+<line x1="647" y1="18" x2="647" y2="118" stroke="#2d3548" stroke-width="1.5"/>
+<line x1="550" y1="68" x2="745" y2="118" stroke="#2d3548" stroke-width="0"/>
+<!-- 벽 하단 라인 -->
+<rect x="0" y="118" width="760" height="2" fill="#2d3548" opacity="0.5"/>
+<!-- 책상 (모던 화이트/그레이) -->
+<rect x="0" y="200" width="760" height="38" fill="url(#deskG)" rx="0"/>
+<rect x="0" y="200" width="760" height="3" fill="#3d4558" opacity="0.6"/>
+<rect x="0" y="235" width="760" height="2" fill="#0d1117" opacity="0.5"/>
+<!-- 작업 표시등 (네온 바) -->
+<rect id="scr-arko" x="45"  y="197" width="54" height="3" fill="#06b6d4" rx="1.5" opacity="0.2"/>
+<rect id="scr-noah" x="185" y="197" width="54" height="3" fill="#f59e0b" rx="1.5" opacity="0.2"/>
+<rect id="scr-eden" x="325" y="197" width="54" height="3" fill="#10b981" rx="1.5" opacity="0.2"/>
+<rect id="scr-ria"  x="465" y="197" width="54" height="3" fill="#f43f5e" rx="1.5" opacity="0.2"/>
+<rect id="scr-mika" x="605" y="197" width="54" height="3" fill="#8b5cf6" rx="1.5" opacity="0.2"/>
+<rect id="scr-luka" x="920" y="197" width="40" height="3" fill="#3b82f6" rx="1.5" opacity="0.2"/>
 <!-- 바닥 -->
-<rect x="0" y="240" width="760" height="60" fill="url(#floorG)"/>
-<line x1="0"   y1="248" x2="760" y2="248" stroke="#a07030" stroke-width="0.8" opacity="0.32"/>
-<line x1="180" y1="240" x2="208" y2="300" stroke="#a07030" stroke-width="0.6" opacity="0.28"/>
-<line x1="380" y1="240" x2="408" y2="300" stroke="#a07030" stroke-width="0.6" opacity="0.28"/>
-<line x1="580" y1="240" x2="608" y2="300" stroke="#a07030" stroke-width="0.6" opacity="0.28"/>
-<!-- 책상 -->
-<rect x="0" y="198" width="760" height="42" fill="url(#deskG)"/>
-<rect x="0" y="198" width="760" height="5"  fill="#e8c080" opacity="0.65"/>
-<rect x="0" y="237" width="760" height="3"  fill="#8a6028" opacity="0.4"/>
-<rect x="28"  y="238" width="9" height="24" fill="#9a6830" rx="2"/>
-<rect x="188" y="238" width="9" height="24" fill="#9a6830" rx="2"/>
-<rect x="378" y="238" width="9" height="24" fill="#9a6830" rx="2"/>
-<rect x="568" y="238" width="9" height="24" fill="#9a6830" rx="2"/>
-<rect x="722" y="238" width="9" height="24" fill="#9a6830" rx="2"/>
-<!-- 작업 표시등 -->
-<rect id="scr-arko"      x="45"  y="194" width="54" height="4" fill="#1e30c0" rx="1.5" opacity="0.35"/>
-<rect id="scr-noah"      x="190" y="194" width="54" height="4" fill="#0a5020" rx="1.5" opacity="0.35"/>
-<rect id="scr-eden"      x="335" y="194" width="54" height="4" fill="#400880" rx="1.5" opacity="0.35"/>
-<rect id="scr-ria"       x="480" y="194" width="54" height="4" fill="#800818" rx="1.5" opacity="0.35"/>
-<rect id="scr-secretary" x="620" y="194" width="60" height="4" fill="#806000" rx="1.5" opacity="0.35"/>
-<rect id="scr-luka"      x="928" y="207" width="34" height="4" fill="#803000" rx="1.5" opacity="0.35"/>
-<!-- 화분 -->
-<g><rect x="-4" y="178" width="12" height="24" fill="#9a7850" rx="2"/>
-<ellipse cx="2"   cy="177" rx="12" ry="14" fill="#5a9838"/>
-<ellipse cx="-6"  cy="172" rx="8"  ry="10" fill="#4a8830"/>
-<ellipse cx="10"  cy="169" rx="9"  ry="11" fill="#3a7828"/></g>
-<g><rect x="146" y="185" width="10" height="17" fill="#9a7850" rx="2"/>
-<ellipse cx="151" cy="182" rx="11" ry="13" fill="#5a9838"/>
-<ellipse cx="143" cy="177" rx="8"  ry="9"  fill="#4a8830"/>
-<ellipse cx="159" cy="175" rx="8"  ry="10" fill="#3a7828"/></g>
-<g><rect x="293" y="183" width="10" height="19" fill="#9a7850" rx="2"/>
-<ellipse cx="298" cy="180" rx="12" ry="14" fill="#5a9838"/>
-<ellipse cx="290" cy="175" rx="9"  ry="10" fill="#4a8830"/>
-<ellipse cx="306" cy="173" rx="9"  ry="11" fill="#3a7828"/></g>
-<g><rect x="437" y="182" width="10" height="20" fill="#9a7850" rx="2"/>
-<ellipse cx="442" cy="179" rx="11" ry="13" fill="#5a9838"/>
-<ellipse cx="434" cy="174" rx="8"  ry="10" fill="#4a8830"/>
-<ellipse cx="450" cy="172" rx="9"  ry="11" fill="#3a7828"/></g>
-<g><rect x="599" y="184" width="10" height="18" fill="#9a7850" rx="2"/>
-<ellipse cx="604" cy="181" rx="11" ry="13" fill="#5a9838"/>
-<ellipse cx="596" cy="176" rx="8"  ry="9"  fill="#4a8830"/>
-<ellipse cx="612" cy="174" rx="9"  ry="11" fill="#3a7828"/></g>
-<g><rect x="747" y="178" width="10" height="24" fill="#9a7850" rx="2"/>
-<ellipse cx="752" cy="175" rx="12" ry="14" fill="#5a9838"/>
-<ellipse cx="760" cy="168" rx="9"  ry="12" fill="#3a7828"/></g>
+<rect x="0" y="237" width="760" height="63" fill="url(#floorG)"/>
+<line x1="0" y1="245" x2="760" y2="245" stroke="#1e2433" stroke-width="0.5" opacity="0.4"/>
 <!-- 유리 파티션 -->
-<rect x="757" y="0"   width="5"  height="300" fill="#2a2a3a"/>
-<rect x="762" y="2"   width="38" height="90"  fill="#c8e8f8" opacity="0.16" rx="1"/>
-<rect x="762" y="95"  width="38" height="108" fill="#c8e8f8" opacity="0.16" rx="1"/>
-<rect x="762" y="206" width="38" height="90"  fill="#c8e8f8" opacity="0.16" rx="1"/>
-<rect x="757" y="93"  width="43" height="4"   fill="#2a2a3a"/>
-<rect x="757" y="203" width="43" height="4"   fill="#2a2a3a"/>
-<rect x="800" y="0"   width="5"  height="300" fill="#2a2a3a"/>
+<rect x="757" y="0" width="4" height="300" fill="#1e2433"/>
+<rect x="761" y="12" width="36" height="92" fill="#06b6d4" opacity="0.04" rx="1"/>
+<rect x="761" y="108" width="36" height="92" fill="#06b6d4" opacity="0.04" rx="1"/>
+<rect x="761" y="204" width="36" height="90" fill="#06b6d4" opacity="0.04" rx="1"/>
+<rect x="757" y="104" width="40" height="2" fill="#2d3548"/>
+<rect x="757" y="202" width="40" height="2" fill="#2d3548"/>
+<rect x="797" y="0" width="4" height="300" fill="#1e2433"/>
 <!-- 회의실 -->
-<rect x="805" y="0"  width="295" height="56" fill="#e4dcd0"/>
-<rect x="805" y="46" width="295" height="6"  fill="#aaa898" rx="3"/>
-<rect class="sky-bg" x="820" y="60" width="260" height="76" fill="url(#sky-day)" rx="2"/>
-<rect x="822" y="94"  width="22" height="42" fill="#6a8098" opacity="0.5"/>
-<rect x="900" y="78"  width="33" height="58" fill="#527080" opacity="0.6"/>
-<rect x="1004" y="84" width="20" height="52" fill="#6a8098" opacity="0.48"/>
-<rect x="820" y="60"  width="260" height="76" fill="none" stroke="#1a1a1a" stroke-width="2.5" rx="2"/>
-<line x1="950"  y1="60" x2="950"  y2="136" stroke="#1a1a1a" stroke-width="2"/>
-<line x1="820"  y1="98" x2="1080" y2="98"  stroke="#1a1a1a" stroke-width="2"/>
-<rect x="815" y="134" width="275" height="7"  fill="#c8b898" rx="1"/>
-<rect x="805" y="240" width="295" height="60" fill="#c8b888"/>
-<ellipse cx="958" cy="215" rx="96" ry="38" fill="#a07838" opacity="0.3" filter="url(#sh2)"/>
-<ellipse cx="958" cy="210" rx="96" ry="38" fill="url(#tableG)"/>
-<ellipse cx="958" cy="210" rx="96" ry="38" fill="none" stroke="#8a6020" stroke-width="2.5"/>
-<rect x="808" y="78"  width="11" height="112" fill="#f4f0e8" rx="2" stroke="#aaa890" stroke-width="1.5"/>
-<rect x="810" y="107" width="7" height="7" fill="#f8d820" rx="0.5" opacity="0.9"/>
-<rect x="810" y="117" width="7" height="7" fill="#60c060" rx="0.5" opacity="0.9"/>
-<rect x="810" y="127" width="7" height="7" fill="#f06060" rx="0.5" opacity="0.9"/>
-<g><rect x="1077" y="212" width="14" height="16" fill="#8a7050" rx="3"/>
-<ellipse cx="1084" cy="205" rx="13" ry="16" fill="#5a9838"/>
-<ellipse cx="1074" cy="200" rx="9"  ry="12" fill="#4a8830"/>
-<ellipse cx="1094" cy="198" rx="10" ry="13" fill="#3a7828"/></g>
-<text x="958" y="54" text-anchor="middle" font-family="'Malgun Gothic',Arial,sans-serif" font-size="10" fill="#7a7060" opacity="0.6">회의실</text>
-<text x="550" y="297" text-anchor="middle" font-family="'Malgun Gothic',Arial,sans-serif" font-size="7" fill="#8a7868" opacity="0.4" letter-spacing="2">ONS  STUDIO</text>
+<rect x="805" y="0" width="295" height="8" fill="#0d1117"/>
+<rect class="sky-bg" x="820" y="18" width="260" height="96" fill="url(#sky-day)" rx="4"/>
+<rect x="820" y="18" width="260" height="96" fill="none" stroke="#2d3548" stroke-width="2" rx="4"/>
+<line x1="950" y1="18" x2="950" y2="114" stroke="#2d3548" stroke-width="1.5"/>
+<line x1="820" y1="66" x2="1080" y2="66" stroke="#2d3548" stroke-width="1.5"/>
+<rect x="805" y="114" width="295" height="2" fill="#2d3548" opacity="0.5"/>
+<rect x="805" y="237" width="295" height="63" fill="#111520"/>
+<!-- 회의 테이블 -->
+<ellipse cx="955" cy="218" rx="88" ry="30" fill="#1e2433" filter="url(#sh2)"/>
+<ellipse cx="955" cy="214" rx="88" ry="30" fill="#252d3d" stroke="#2d3548" stroke-width="1.5"/>
+<!-- 상태 표시등 (회의실) -->
+<rect x="808" y="84" width="8" height="28" fill="#1e2433" rx="2" stroke="#2d3548" stroke-width="1"/>
+<rect x="810" y="90" width="4" height="4" fill="#06b6d4" rx="0.5" opacity="0.6"/>
+<rect x="810" y="98" width="4" height="4" fill="#22c55e" rx="0.5" opacity="0.6"/>
+<rect x="810" y="106" width="4" height="4" fill="#f43f5e" rx="0.5" opacity="0.4"/>
+<text x="550" y="295" text-anchor="middle" font-family="'Malgun Gothic',Arial,sans-serif" font-size="7" fill="#2d3548" opacity="0.5" letter-spacing="3">ONS  STUDIO</text>
 </g>
 </svg>
 
-<!-- 컨트롤 버튼 (HTML) -->
+<!-- 컨트롤 버튼 -->
 <div class="nd" style="position:absolute;top:5px;left:5px;z-index:50">
   <svg width="110" height="24" style="-webkit-app-region:no-drag">
     <circle cx="12" cy="12" r="8.5" fill="#e04838" opacity="0.88" style="cursor:pointer" onclick="window.widget&&window.widget.hide()"/>
     <line x1="8" y1="8" x2="16" y2="16" stroke="white" stroke-width="2" stroke-linecap="round" style="pointer-events:none"/>
     <line x1="16" y1="8" x2="8" y2="16" stroke="white" stroke-width="2" stroke-linecap="round" style="pointer-events:none"/>
-    <rect x="28" y="2" width="58" height="18" fill="#2a4a28" rx="9" opacity="0.85" style="cursor:pointer" onclick="openMain()"/>
-    <text x="57" y="14.5" text-anchor="middle" font-family="Malgun Gothic" font-size="9" fill="#90e870" style="pointer-events:none">운영실 열기</text>
+    <rect x="28" y="2" width="58" height="18" fill="rgba(6,182,212,0.15)" rx="9" style="cursor:pointer" onclick="openMain()"/>
+    <text x="57" y="14.5" text-anchor="middle" font-family="Malgun Gothic" font-size="9" fill="#06b6d4" style="pointer-events:none">운영실 열기</text>
   </svg>
 </div>
 
 <!-- 캐릭터: 아르코 -->
-<div id="cw-arko" class="cw nd" style="left:8px"
+<div id="cw-arko" class="cw nd" style="left:12px"
      onmouseenter="showTip('arko')" onmouseleave="hideTip()" onclick="openChat('arko')">
   <div class="sdot" id="dot-arko"></div>
-  <div id="lottie-arko" class="lbox"></div>
-  <div class="badge" id="badge-arko" style="background:#3355EE">총괄:아르코</div>
+  <div class="char-ring" style="--glow:rgba(6,182,212,0.4)"><img src="./assets/chars/arko.png" alt="arko"/></div>
+  <div class="badge" id="badge-arko" style="background:#06b6d4">총괄:아르코</div>
 </div>
 
 <!-- 캐릭터: 노아 -->
-<div id="cw-noah" class="cw nd" style="left:150px"
+<div id="cw-noah" class="cw nd" style="left:152px"
      onmouseenter="showTip('noah')" onmouseleave="hideTip()" onclick="openChat('noah')">
   <div class="sdot" id="dot-noah"></div>
-  <div id="lottie-noah" class="lbox"></div>
-  <div class="badge" id="badge-noah" style="background:#18B84A">분석:노아</div>
+  <div class="char-ring" style="--glow:rgba(245,158,11,0.4)"><img src="./assets/chars/noah.png" alt="noah"/></div>
+  <div class="badge" id="badge-noah" style="background:#f59e0b">분석:노아</div>
 </div>
 
 <!-- 캐릭터: 이든 -->
 <div id="cw-eden" class="cw nd" style="left:292px"
      onmouseenter="showTip('eden')" onmouseleave="hideTip()" onclick="openChat('eden')">
   <div class="sdot" id="dot-eden"></div>
-  <div id="lottie-eden" class="lbox"></div>
-  <div class="badge" id="badge-eden" style="background:#9922CC">기획:이든</div>
+  <div class="char-ring" style="--glow:rgba(16,185,129,0.4)"><img src="./assets/chars/eden.png" alt="eden"/></div>
+  <div class="badge" id="badge-eden" style="background:#10b981">기획:이든</div>
 </div>
 
 <!-- 캐릭터: 리아 -->
-<div id="cw-ria" class="cw nd" style="left:435px"
+<div id="cw-ria" class="cw nd" style="left:432px"
      onmouseenter="showTip('ria')" onmouseleave="hideTip()" onclick="openChat('ria')">
   <div class="sdot" id="dot-ria"></div>
-  <div id="lottie-ria" class="lbox"></div>
-  <div class="badge" id="badge-ria" style="background:#EE1155">집필:리아</div>
+  <div class="char-ring" style="--glow:rgba(244,63,94,0.4)"><img src="./assets/chars/ria.png" alt="ria"/></div>
+  <div class="badge" id="badge-ria" style="background:#f43f5e">집필:리아</div>
 </div>
 
-<!-- 캐릭터: 김비서 -->
-<div id="cw-secretary" class="cw nd" style="left:578px"
-     onmouseenter="showTip('secretary')" onmouseleave="hideTip()" onclick="openChat('secretary')">
-  <div class="sdot" id="dot-secretary"></div>
-  <div id="lottie-secretary" class="lbox"></div>
-  <div class="badge" id="badge-secretary" style="background:#EEA800">일정:김비서</div>
+<!-- 캐릭터: 미카 -->
+<div id="cw-mika" class="cw nd" style="left:572px"
+     onmouseenter="showTip('mika')" onmouseleave="hideTip()" onclick="openChat('mika')">
+  <div class="sdot" id="dot-mika"></div>
+  <div class="char-ring" style="--glow:rgba(139,92,246,0.4)"><img src="./assets/chars/mika.png" alt="mika"/></div>
+  <div class="badge" id="badge-mika" style="background:#8b5cf6">미디어:미카</div>
 </div>
 
 <!-- 캐릭터: 루카 (회의실) -->
-<div id="cw-luka" class="cw nd" style="left:888px;top:58px;width:130px;height:155px"
+<div id="cw-luka" class="cw nd" style="left:882px;top:48px;width:130px"
      onmouseenter="showTip('luka')" onmouseleave="hideTip()" onclick="openChat('luka')">
   <div class="sdot" id="dot-luka"></div>
-  <div id="lottie-luka" class="lbox"></div>
-  <div class="badge" id="badge-luka" style="background:#FF6600">기록:루카</div>
+  <div class="char-ring" style="--glow:rgba(59,130,246,0.4)"><img src="./assets/chars/luka.png" alt="luka"/></div>
+  <div class="badge" id="badge-luka" style="background:#3b82f6">기록:루카</div>
 </div>
 
 <!-- Tooltip -->
@@ -320,6 +252,7 @@ body:not(.card-mode) #logo-card{display:none}
     <span id="chat-name-label">아르코</span>
     <button id="chat-close" onclick="closeChat()">✕</button>
   </div>
+  <img id="chat-avatar" src="./assets/chars/arko.png" alt=""/>
   <div id="chat-msgs"></div>
   <div id="chat-row">
     <input id="chat-in" placeholder="메시지 입력..." onkeydown="if(event.key==='Enter')sendChat()"/>
@@ -330,50 +263,34 @@ body:not(.card-mode) #logo-card{display:none}
 <!-- 아르코 말풍선 -->
 <div id="arko-bubble" class="nd"></div>
 
-<!-- 아르코 입력바 -->
-<!-- 카드 모드 로고 카드 -->
+<!-- 카드 모드 로고 -->
 <div id="logo-card" onclick="expandWidget()">
-  <svg width="44" height="44" viewBox="0 0 60 60">
-    <defs>
-      <radialGradient id="cgBg" cx="40%" cy="35%"><stop offset="0%" stop-color="#e8a84a"/><stop offset="100%" stop-color="#b06818"/></radialGradient>
-      <linearGradient id="cgFlame" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#ffd080"/><stop offset="100%" stop-color="#c07820" stop-opacity="0"/></linearGradient>
-    </defs>
-    <!-- 원 배경 -->
-    <circle cx="28" cy="32" r="22" fill="url(#cgBg)" opacity="0.9"/>
-    <!-- 책 -->
-    <path d="M18 38 Q18 26 28 24 Q38 26 38 38 L28 40 Z" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.5)" stroke-width="0.8"/>
-    <line x1="28" y1="24" x2="28" y2="40" stroke="rgba(255,255,255,0.5)" stroke-width="0.8"/>
-    <!-- 불꽃/흐름 -->
-    <path d="M34 24 Q40 16 36 10 Q44 14 42 22 Q46 18 44 12 Q52 18 46 26 Q40 22 34 24Z" fill="url(#cgFlame)" opacity="0.85"/>
+  <svg width="40" height="40" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="16" fill="none" stroke="#06b6d4" stroke-width="1.5" opacity="0.6"/>
+    <circle cx="20" cy="20" r="8" fill="#06b6d4" opacity="0.3"/>
+    <circle cx="20" cy="20" r="3" fill="#06b6d4" opacity="0.8"/>
   </svg>
   <div class="card-label">온:서사</div>
 </div>
 
+<!-- 파이프라인 진행바 -->
+<div id="pipeline-bar" class="nd" style="position:absolute;bottom:36px;left:0;right:0;height:22px;background:rgba(13,17,23,0.92);border-top:1px solid rgba(6,182,212,0.15);display:none;align-items:center;gap:0;padding:0 14px;z-index:290">
+  <span style="color:#2d3548;font-size:8px;font-weight:700;letter-spacing:1px;margin-right:8px">PIPELINE</span>
+  <div id="pl-steps" style="display:flex;align-items:center;gap:0;flex:1"></div>
+  <span id="pl-status" style="color:#06b6d4;font-size:9px;margin-left:8px"></span>
+</div>
+
+<!-- 아르코 입력바 -->
 <div id="arko-bar" class="nd">
   <span class="arko-lbl">▶ 아르코</span>
   <input id="arko-quick" placeholder="무엇을 만들까요? (Enter)"/>
   <button id="arko-send" onclick="sendQuick()">↵</button>
-  <button onclick="collapseToCard()" title="카드로 접기" style="-webkit-app-region:no-drag;background:none;border:none;color:#445577;font-size:13px;cursor:pointer;padding:0 6px;line-height:1" onmouseover="this.style.color='#7ab8ff'" onmouseout="this.style.color='#445577'">⊟</button>
+  <button onclick="collapseToCard()" title="카드로 접기" style="-webkit-app-region:no-drag;background:none;border:none;color:#2d3548;font-size:13px;cursor:pointer;padding:0 6px;line-height:1" onmouseover="this.style.color='#06b6d4'" onmouseout="this.style.color='#2d3548'">⊟</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 <script>
-// ── Lottie 초기화 ─────────────────────────────
-const CHAR_LIST=['arko','noah','eden','ria','secretary','luka'];
-const anims={};
-
-CHAR_LIST.forEach(name=>{
-  try{
-    anims[name]=lottie.loadAnimation({
-      container:document.getElementById('lottie-'+name),
-      renderer:'svg',
-      loop:true,
-      autoplay:true,
-      path:`./assets/chars/${name}.json`,
-    });
-    anims[name].setSpeed(0.65);
-  }catch(e){console.warn('[Lottie] 로드 실패:',name,e);}
-});
+// ── 캐릭터 초기화 (PNG 기반, Lottie 불필요) ────
+const CHAR_LIST=['arko','noah','eden','ria','mika','luka'];
 
 // ── 시간대 하늘 ─────────────────────────────
 const SKY=[{h:0,g:'sky-night'},{h:5,g:'sky-dawn'},{h:8,g:'sky-day'},{h:17,g:'sky-sunset'},{h:20,g:'sky-dusk'}];
@@ -385,53 +302,81 @@ function updateSky(){
 updateSky();setInterval(updateSky,60000);
 
 // ── 엔진 상태 ────────────────────────────────
-const SCREENS  ={arko:'#1e30c0',noah:'#0a5020',eden:'#400880',ria:'#800818',luka:'#803000',secretary:'#806000'};
-const ACTIVE   ={arko:'#4488ff',noah:'#22ee66',eden:'#cc44ff',ria:'#ff2266',luka:'#ff7722',secretary:'#ffcc22'};
-const BADGE    ={arko:'#3355EE',noah:'#18B84A',eden:'#9922CC',ria:'#EE1155',luka:'#FF6600',secretary:'#EEA800'};
-const NAMES    ={arko:'아르코',noah:'노아',eden:'이든',ria:'리아',luka:'루카',secretary:'김비서'};
-const ROLES    ={arko:'총괄',noah:'분석',eden:'기획',ria:'집필',luka:'기록',secretary:'일정'};
+const SCREENS  ={arko:'#06b6d4',noah:'#f59e0b',eden:'#10b981',ria:'#f43f5e',mika:'#8b5cf6',luka:'#3b82f6'};
+const ACTIVE   ={arko:'#22d3ee',noah:'#fbbf24',eden:'#34d399',ria:'#fb7185',mika:'#a78bfa',luka:'#60a5fa'};
+const BADGE    ={arko:'#06b6d4',noah:'#f59e0b',eden:'#10b981',ria:'#f43f5e',mika:'#8b5cf6',luka:'#3b82f6'};
+const NAMES    ={arko:'아르코',noah:'노아',eden:'이든',ria:'리아',mika:'미카',luka:'루카'};
+const ROLES    ={arko:'총괄',noah:'분석',eden:'기획',ria:'집필',mika:'미디어',luka:'기록'};
 
-const S={
-  arko:{working:false,task:null,queue:[]},
-  noah:{working:false,task:null,queue:[]},
-  eden:{working:false,task:null,queue:[]},
-  ria:{working:false,task:null,queue:[]},
-  luka:{working:false,task:null,queue:[]},
-  secretary:{working:false,task:null,queue:[]},
-};
+const S={};
+CHAR_LIST.forEach(n=>S[n]={working:false,task:null,queue:[]});
+
+// 표정 이미지 교체: idle=기본, working=집중, done=기뻐
+const charState={};// 각 캐릭터의 현재 표정 상태 추적
+
+function setCharImage(name, mood){
+  const cw=document.getElementById('cw-'+name);
+  if(!cw)return;
+  const img=cw.querySelector('img');
+  if(!img)return;
+  const suffix=mood==='idle'?'':`-${mood}`;
+  const newSrc=`./assets/chars/${name}${suffix}.png`;
+  if(img.src.endsWith(newSrc))return;
+  // 부드러운 교체
+  img.style.opacity='0';
+  setTimeout(()=>{
+    img.src=newSrc;
+    img.style.opacity='1';
+  },150);
+  charState[name]=mood;
+}
 
 function setState(name,working,task){
   const scr  =document.getElementById('scr-'+name);
   const dot  =document.getElementById('dot-'+name);
   const badge=document.getElementById('badge-'+name);
+  const cw   =document.getElementById('cw-'+name);
   if(!dot)return;
+  const wasWorking=S[name].working;
   S[name].working=working;
   if(task)S[name].task=task;
   if(!working)S[name].task=null;
 
   if(working){
     if(scr){scr.setAttribute('fill',ACTIVE[name]);scr.setAttribute('opacity','0.9');scr.classList.add('glow-screen');}
-    dot.style.background='#40e8ff';
-    if(badge){badge.style.background='#40e8ff';badge.style.color='#1a1828';badge.textContent=`${ROLES[name]}:${NAMES[name]} ●`;}
-    if(anims[name])anims[name].setSpeed(1.8);
+    dot.style.background='#22d3ee';
+    if(badge){badge.style.background='#22d3ee';badge.style.color='#0d1117';badge.textContent=`${ROLES[name]}:${NAMES[name]} ●`;}
+    if(cw){cw.classList.add('working');cw.classList.remove('done');}
+    setCharImage(name,'working');
   }else{
-    if(scr){scr.setAttribute('fill',SCREENS[name]);scr.setAttribute('opacity','0.35');scr.classList.remove('glow-screen');}
+    if(scr){scr.setAttribute('fill',SCREENS[name]);scr.setAttribute('opacity','0.2');scr.classList.remove('glow-screen');}
     dot.style.background='#44dd44';
     if(badge){badge.style.background=BADGE[name];badge.style.color='white';badge.textContent=`${ROLES[name]}:${NAMES[name]}`;}
-    if(anims[name])anims[name].setSpeed(0.65);
+    // 작업 끝났으면 done 표정 → 3초 후 idle로
+    if(wasWorking){
+      if(cw){cw.classList.remove('working');cw.classList.add('done');}
+      setCharImage(name,'done');
+      setTimeout(()=>{
+        setCharImage(name,'idle');
+        if(cw)cw.classList.remove('done');
+      },3000);
+    }else{
+      if(cw){cw.classList.remove('working');cw.classList.remove('done');}
+      setCharImage(name,'idle');
+    }
   }
 }
 
 // ── Tooltip ──────────────────────────────────
 const TIP=document.getElementById('tooltip');
 let tipT;
-const CX={arko:78,noah:220,eden:362,ria:505,secretary:648,luka:953};
+const CX={arko:77,noah:217,eden:357,ria:497,mika:637,luka:947};
 
 function showTip(name){
   clearTimeout(tipT);
   const s=S[name];
   document.getElementById('tt-name').textContent=`${ROLES[name]}:${NAMES[name]}`;
-  document.getElementById('tt-task').textContent=s.working?(s.task?'🔵 '+s.task:'🔵 작업 중...'):'⬜ 대기 중';
+  document.getElementById('tt-task').textContent=s.working?(s.task?'● '+s.task:'● 작업 중...'):'○ 대기 중';
   document.getElementById('tt-eta').textContent=s.working?'처리 중...':'';
   const qd=document.getElementById('tt-q');
   const qi=document.getElementById('tt-qi');
@@ -455,6 +400,7 @@ function openChat(name){
   curEngine=name;
   if(!hist[name])hist[name]=[];
   document.getElementById('chat-name-label').textContent=`${ROLES[name]}:${NAMES[name]}`;
+  document.getElementById('chat-avatar').src=`./assets/chars/${name}.png`;
   const msgs=document.getElementById('chat-msgs');
   msgs.innerHTML='';
   hist[name].forEach(m=>addMsg(m.role,m.content));
@@ -489,7 +435,7 @@ async function sendChat(){
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         projectId:'widget-chat',projectName:'widget-chat',projectType:'chat',
-        taskType:name==='secretary'?'assist':'clarify',
+        taskType:'clarify',
         instruction:msg,context:{conversationHistory:hist[name].slice(0,-1)},
       })
     });
@@ -499,7 +445,7 @@ async function sendChat(){
     hist[name].push({role:'assistant',content:reply});
     if(name==='arko'&&d.output?.data?.action==='ready'){
       const pd=d.output.data;const ctx=pd.gatheredContext||{};
-      addMsg('agent','파이프라인 시작! 🚀');
+      addMsg('agent','파이프라인 시작!');
       fetch('http://localhost:3001/pipeline',{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({projectName:ctx.details||msg.slice(0,30),projectType:pd.projectType||'playlist',goal:pd.enrichedInstruction||msg,enrichedContext:ctx})
@@ -538,7 +484,7 @@ async function sendQuick(){
     if(data.action==='ready'){
       const ctx=data.gatheredContext||{};
       setTimeout(()=>{
-        showBubble('파이프라인 시작! 팀에게 전달할게요 🚀',false);
+        showBubble('파이프라인 시작! 팀에게 전달할게요',false);
         fetch('http://localhost:3001/pipeline',{
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({projectName:ctx.details||msg.slice(0,30),projectType:data.projectType||'playlist',goal:data.enrichedInstruction||msg,enrichedContext:ctx})
@@ -574,18 +520,66 @@ function collapseToCard(){
   document.body.classList.add('card-mode');
   if(window.widget)window.widget.resize('card');
 }
-// 시작 시 카드 모드
 document.body.classList.add('card-mode');
+
+// ── 파이프라인 진행바 ─────────────────────────
+const PL_STEPS=['noah','eden','ria','arko','mika','luka'];
+const PL_LABELS={noah:'분석',eden:'기획',ria:'창작',arko:'검수',mika:'미디어',luka:'기록'};
+const PL_COLORS={noah:'#f59e0b',eden:'#10b981',ria:'#f43f5e',arko:'#06b6d4',mika:'#8b5cf6',luka:'#3b82f6'};
+let plActive=false;
+let plDone=new Set();
+let plCurrent=null;
+
+function renderPipeline(){
+  const bar=document.getElementById('pipeline-bar');
+  const steps=document.getElementById('pl-steps');
+  const status=document.getElementById('pl-status');
+  if(!plActive){bar.style.display='none';return;}
+  bar.style.display='flex';
+  steps.innerHTML=PL_STEPS.map((s,i)=>{
+    const isDone=plDone.has(s);
+    const isCur=plCurrent===s;
+    const color=isDone||isCur?PL_COLORS[s]:'#2d3548';
+    const opacity=isDone||isCur?'1':'0.4';
+    const icon=isDone?'✓':(isCur?'●':'○');
+    const iconColor=isDone?'#22c55e':(isCur?PL_COLORS[s]:'#334155');
+    const line=i<PL_STEPS.length-1?`<div style="flex:1;height:2px;background:${isDone?PL_COLORS[s]:'#1e293b'};margin:0 2px;min-width:8px;border-radius:1px"></div>`:'';
+    return `<div style="display:flex;align-items:center;flex-direction:column;min-width:36px;opacity:${opacity}">
+      <span style="font-size:10px;color:${iconColor};line-height:1">${icon}</span>
+      <span style="font-size:7px;color:${color};margin-top:1px">${PL_LABELS[s]}</span>
+    </div>${line}`;
+  }).join('');
+  status.textContent=plCurrent?`${PL_LABELS[plCurrent]} 진행 중...`:'완료';
+}
 
 // ── SSE ──────────────────────────────────────
 try{
   const es=new EventSource('http://localhost:3001/events');
-  ['engine:status','engine:done','engine:error','pipeline:done'].forEach(t=>{
+  es.addEventListener('pipeline:start',e=>{
+    plActive=true;plDone=new Set();plCurrent=null;renderPipeline();
+  });
+  ['engine:status','engine:done','engine:error'].forEach(t=>{
     es.addEventListener(t,e=>{
       const d=JSON.parse(e.data);
-      if(t==='pipeline:done'){Object.keys(S).forEach(n=>setState(n,false));return;}
       if(d.engine)setState(d.engine,t==='engine:status'&&d.status==='working',d.task||null);
+      if(plActive&&d.engine){
+        const eng=d.step==='arko-review'?'arko':d.engine;
+        if(t==='engine:status'&&d.status==='working'){plCurrent=eng;}
+        if(t==='engine:done'){plDone.add(eng);if(plCurrent===eng)plCurrent=null;}
+        renderPipeline();
+      }
     });
+  });
+  es.addEventListener('pipeline:done',e=>{
+    Object.keys(S).forEach(n=>setState(n,false));
+    plDone=new Set(PL_STEPS);plCurrent=null;renderPipeline();
+    setTimeout(()=>{plActive=false;renderPipeline();},5000);
+  });
+  es.addEventListener('pipeline:retry',e=>{
+    const d=JSON.parse(e.data);
+    plDone.delete('arko');plDone.delete('ria');
+    document.getElementById('pl-status').textContent=`재시도 #${d.retryCount}`;
+    renderPipeline();
   });
 }catch(e){}
 </script>

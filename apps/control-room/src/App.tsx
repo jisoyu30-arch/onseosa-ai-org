@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Activity, Radio, Terminal, FileJson } from 'lucide-react';
+import { Activity, Radio, Terminal, FileJson, Building2, LayoutDashboard } from 'lucide-react';
 import { AgentCard } from './components/AgentCard';
 import { TaskFlow } from './components/TaskFlow';
 import { ArkoChat } from './components/ArkoChat';
 import { MediaPreview } from './components/MediaPreview';
+import { OfficePage } from './pages/Office';
 import { ENGINES, EngineInfo, EngineStatus } from './types';
 import { connectSSE, SSEEvent } from './services/api';
 
@@ -17,6 +18,7 @@ function logColor(msg: string): string {
 }
 
 function App() {
+  const [view, setView] = useState<'dashboard' | 'office'>('dashboard');
   const [engines, setEngines] = useState<EngineInfo[]>(ENGINES);
   const [result, setResult] = useState<string | null>(null);
   const [pipelineActive, setPipelineActive] = useState(false);
@@ -87,6 +89,22 @@ function App() {
 
   const activeCount = engines.filter(e => e.status === 'working').length;
 
+  // 오피스 뷰
+  if (view === 'office') {
+    return (
+      <div className="relative h-screen">
+        <OfficePage />
+        <button
+          onClick={() => setView('dashboard')}
+          className="absolute top-2 right-4 z-50 flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/90 border border-slate-700/50 rounded-lg text-xs text-slate-400 hover:text-white hover:border-slate-600 transition-all backdrop-blur-sm"
+        >
+          <LayoutDashboard size={12} />
+          대시보드
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-grid" style={{ backgroundColor: '#0a0f1a' }}>
 
@@ -113,6 +131,13 @@ function App() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setView('office')}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/60 border border-slate-700/50 rounded-lg text-xs text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all"
+            >
+              <Building2 size={12} />
+              운영실
+            </button>
             {pipelineActive && (
               <span className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-500/20">
                 <Radio size={12} className="animate-pulse" />

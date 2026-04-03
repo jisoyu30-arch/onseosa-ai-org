@@ -11,10 +11,10 @@ export type ProjectStatus = 'planning' | 'analyzing' | 'producing' | 'reviewing'
 export type ProjectType = 'playlist' | 'webnovel' | 'marketing' | 'letterbrick';
 
 // 태스크 타입
-export type TaskType = 'analyze' | 'plan' | 'write' | 'review' | 'record' | 'orchestrate';
+export type TaskType = 'analyze' | 'plan' | 'write' | 'review' | 'record' | 'orchestrate' | 'render';
 
 // 엔진 이름 (2세대)
-export type EngineName = 'arko' | 'noah' | 'eden' | 'ria' | 'luka';
+export type EngineName = 'arko' | 'noah' | 'eden' | 'ria' | 'luka' | 'mika';
 
 // 엔진 정보
 export interface EngineProfile {

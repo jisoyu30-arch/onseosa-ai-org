@@ -7,7 +7,7 @@ export async function runAhn(payload: WorkerPayload): Promise<EngineOutput> {
   const systemPrompt = loadPrompt('ahn');
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     messages: [
       { role: 'system', content: systemPrompt },
       {
@@ -23,7 +23,7 @@ export async function runAhn(payload: WorkerPayload): Promise<EngineOutput> {
     ],
     response_format: { type: 'json_object' },
     temperature: 0.4,
-    max_tokens: 1500,
+    max_completion_tokens: 800,
   });
 
   const content = response.choices[0]?.message?.content || '{}';

@@ -29,7 +29,7 @@ export interface WorkerPayload {
   projectId: string;
   projectName: string;
   projectType: string;
-  taskType: 'analyze' | 'plan' | 'write' | 'review' | 'record' | 'orchestrate';
+  taskType: 'analyze' | 'plan' | 'write' | 'review' | 'record' | 'orchestrate' | 'clarify' | 'render';
   instruction: string;
   context?: Record<string, unknown>;
   priorMemory?: Record<string, unknown>;

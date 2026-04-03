@@ -8,7 +8,7 @@ export async function runSeo(payload: WorkerPayload): Promise<EngineOutput> {
   const systemPrompt = loadPrompt(isReview ? 'seo-review' : 'seo');
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     messages: [
       { role: 'system', content: systemPrompt },
       {
@@ -24,7 +24,7 @@ export async function runSeo(payload: WorkerPayload): Promise<EngineOutput> {
     ],
     response_format: { type: 'json_object' },
     temperature: isReview ? 0.1 : 0.3,
-    max_tokens: isReview ? 800 : 1000,
+    max_completion_tokens: isReview ? 800 : 1000,
   });
 
   const content = response.choices[0]?.message?.content || '{}';

@@ -1,0 +1,51 @@
+{
+  "name": "ons-desktop",
+  "version": "1.0.0",
+  "description": "ONS Studio 운영실 데스크톱 앱",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.ons.studio",
+    "productName": "ONS Studio",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "assets/**",
+      "ui/**",
+      "node_modules/**"
+    ],
+    "extraResources": [
+      {
+        "from": "../claude-worker",
+        "to": "worker",
+        "filter": ["src/**", "package.json", "tsconfig.json"]
+      },
+      {
+        "from": "../../automations",
+        "to": "automations"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["electron", "esbuild"]
+  }
+}

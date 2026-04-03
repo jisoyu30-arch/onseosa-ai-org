@@ -82,6 +82,66 @@ async function uploadFile(fileName: string, content: string, folderId: string) {
   }
 }
 
+// 바이너리 파일 업로드 (n8n OAuth 경유 — base64 인코딩)
+export async function uploadBinaryViaN8n(fileName: string, filePath: string, folderId: string) {
+  const fs = await import('fs');
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`파일 없음: ${filePath}`);
+  }
+
+  const buffer = fs.readFileSync(filePath);
+  const base64 = buffer.toString('base64');
+  const n8nBase = process.env.N8N_BASE_URL || 'http://localhost:5678';
+  const secret = process.env.N8N_WEBHOOK_SECRET || '';
+
+  const res = await fetch(`${n8nBase}/webhook/drive-upload-binary`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(secret ? { 'x-secret': secret } : {}),
+    },
+    body: JSON.stringify({ fileName, base64Content: base64, folderId }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`n8n binary upload failed: ${res.status}`);
+  }
+  console.log(`[Drive/n8n] Binary uploaded: ${fileName} (${(buffer.length / 1024).toFixed(0)}KB)`);
+}
+
+// 범용 결과물 Google Drive 저장
+export async function saveResultsToDrive(data: {
+  projectName: string;
+  projectType: string;
+  date: string;
+  files: Array<{ name: string; content: string }>;
+}): Promise<{ folderId: string; uploadedCount: number; totalFiles: number } | undefined> {
+  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootId) {
+    console.log('[Drive] GOOGLE_DRIVE_ROOT_FOLDER_ID not set, skipping');
+    return;
+  }
+
+  const drive = getDriveClient();
+  const typeFolderId = await findOrCreateFolder(drive, data.projectType, rootId);
+  const projectFolderId = await findOrCreateFolder(drive, data.projectName, typeFolderId);
+  const dateFolderId = await findOrCreateFolder(drive, data.date, projectFolderId);
+
+  const validFiles = data.files.filter(f => f.content);
+  let uploadedCount = 0;
+  for (const f of validFiles) {
+    try {
+      await uploadFile(f.name, f.content, dateFolderId);
+      uploadedCount++;
+    } catch {
+      // 개별 파일 실패해도 계속 진행
+    }
+  }
+
+  console.log(`[Drive] ${data.projectType}/${data.projectName}/${data.date}/ — ${uploadedCount}/${validFiles.length} files`);
+  return { folderId: dateFolderId, uploadedCount, totalFiles: validFiles.length };
+}
+
 // 플레이리스트 결과 Google Drive 저장
 export async function savePlaylistToDrive(data: {
   channelName: string;

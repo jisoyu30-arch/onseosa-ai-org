@@ -9,21 +9,26 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@ons/engine-contracts": "workspace:*",
-    "@ons/shared-types": "workspace:*",
-    "@ons/memory-schema": "workspace:*",
-    "@supabase/supabase-js": "^2.49.0",
-    "openai": "^4.77.0",
     "@anthropic-ai/sdk": "^0.39.0",
     "@google/generative-ai": "^0.21.0",
-    "express": "^4.21.0",
+    "@ons/engine-contracts": "workspace:*",
+    "@ons/memory-schema": "workspace:*",
+    "@ons/shared-types": "workspace:*",
+    "@ons/video-renderer": "workspace:*",
+    "@remotion/bundler": "^4.0.443",
+    "@remotion/renderer": "^4.0.443",
+    "@supabase/supabase-js": "^2.49.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "googleapis": "^144.0.0"
+    "express": "^4.21.0",
+    "googleapis": "^144.0.0",
+    "openai": "^4.77.0",
+    "remotion": "^4.0.443",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
     "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"

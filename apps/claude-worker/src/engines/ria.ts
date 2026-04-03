@@ -21,8 +21,8 @@ export async function runRia(payload: WorkerPayload): Promise<EngineOutput> {
   }
 
   const response = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 3000,
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 4096,
     system: systemPrompt,
     messages: [
       { role: 'user', content: userInstruction },
@@ -30,15 +30,29 @@ export async function runRia(payload: WorkerPayload): Promise<EngineOutput> {
   });
 
   const text = response.content[0]?.type === 'text' ? response.content[0].text : '';
+  console.log(`[ria] 응답 토큰: ${response.usage?.output_tokens ?? '?'}, 텍스트 길이: ${text.length}, domain: ${(payload.context?.domain ?? payload.projectType) || '?'}`);
 
   // JSON 추출
+  let data: Record<string, unknown>;
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  const data = jsonMatch ? JSON.parse(jsonMatch[0]) : { raw: text };
+  if (jsonMatch) {
+    try {
+      data = JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      // JSON 파싱 실패 시 텍스트 그대로 저장 (응답 잘림 가능성)
+      console.error('[ria] JSON 파싱 실패 — 응답이 잘렸을 수 있음:', (e as Error).message);
+      console.error('[ria] 텍스트 끝부분:', text.slice(-200));
+      data = { raw: text, description: text };
+    }
+  } else {
+    console.error('[ria] JSON 블록 없음 — raw 저장');
+    data = { raw: text, description: text };
+  }
 
   return {
     engine: 'ria',
     status: 'pass',
-    summary: data.title_options?.[0] || '창작 완료',
+    summary: (data.title_options as string[])?.[0] || '창작 완료',
     data,
     nextHints: data.tone_used ? [`톤: ${data.tone_used}`] : [],
   };

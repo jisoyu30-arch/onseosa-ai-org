@@ -4,6 +4,7 @@ export async function runPipeline(payload: {
   projectName: string;
   projectType: string;
   goal: string;
+  enrichedContext?: Record<string, unknown>;
 }) {
   const res = await fetch(`${WORKER_URL}/pipeline`, {
     method: 'POST',
@@ -42,6 +43,7 @@ export type SSEEvent = {
   projectId?: string;
   retryCount?: number;
   reason?: string;
+  score?: number;
   results?: Record<string, unknown>;
 };
 
@@ -57,7 +59,7 @@ export function connectSSE(
     } catch { /* ignore */ }
   };
 
-  const eventTypes = ['engine:status', 'engine:done', 'engine:error', 'pipeline:start', 'pipeline:done', 'pipeline:retry'];
+  const eventTypes = ['engine:status', 'engine:done', 'engine:error', 'pipeline:start', 'pipeline:done', 'pipeline:retry', 'pipeline:failed'];
   for (const type of eventTypes) {
     es.addEventListener(type, (e: MessageEvent) => {
       try {

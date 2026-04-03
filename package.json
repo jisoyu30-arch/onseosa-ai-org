@@ -6,10 +6,24 @@
   "scripts": {
     "dev:worker": "pnpm --filter claude-worker dev",
     "dev:ui": "pnpm --filter control-room dev",
+    "dev:desktop": "pnpm --filter ons-desktop start -- --dev",
     "build": "pnpm -r build",
-    "clean": "pnpm -r clean"
+    "build:desktop": "pnpm --filter control-room build && pnpm --filter ons-desktop dist",
+    "clean": "pnpm -r clean",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "sharp"
+    ]
   }
 }

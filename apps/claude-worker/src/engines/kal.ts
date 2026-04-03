@@ -7,7 +7,7 @@ export async function runKal(payload: WorkerPayload): Promise<EngineOutput> {
   const systemPrompt = loadPrompt('kal');
 
   const response = await openai.chat.completions.create({
-    model: 'o1',
+    model: 'gpt-4o-mini',
     messages: [
       { role: 'system', content: systemPrompt },
       {
@@ -22,7 +22,7 @@ export async function runKal(payload: WorkerPayload): Promise<EngineOutput> {
     ],
     response_format: { type: 'json_object' },
     temperature: 0.1,
-    max_tokens: 800,
+    max_completion_tokens: 800,
   });
 
   const content = response.choices[0]?.message?.content || '{}';

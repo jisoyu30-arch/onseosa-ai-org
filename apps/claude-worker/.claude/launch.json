@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "control-room",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:ui"],
+      "port": 5173
+    },
+    {
+      "name": "claude-worker",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:worker"],
+      "port": 3001
+    }
+  ]
+}

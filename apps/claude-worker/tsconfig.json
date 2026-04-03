@@ -16,5 +16,6 @@
       "@ons/*": ["packages/*/src"]
     }
   },
-  "include": ["src/**/*", "../../packages/*/src/**/*"]
+  "include": ["src/**/*", "../../packages/*/src/**/*"],
+  "exclude": ["../../packages/video-renderer/**/*"]
 }

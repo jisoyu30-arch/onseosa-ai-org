@@ -5,6 +5,7 @@ import { runNoah } from '../engines/noah';
 import { runEden } from '../engines/eden';
 import { runRia } from '../engines/ria';
 import { runLuka } from '../engines/luka';
+import { runMika } from '../engines/mika';
 
 const ENGINE_MAP = {
   orchestrate: { name: 'arko', handler: runArko },
@@ -13,6 +14,8 @@ const ENGINE_MAP = {
   write: { name: 'ria', handler: runRia },
   review: { name: 'arko', handler: runArko },
   record: { name: 'luka', handler: runLuka },
+  render: { name: 'mika', handler: runMika },
+  clarify: { name: 'arko', handler: runArko },
 } as const;
 
 export async function executeRoute(req: Request, res: Response) {

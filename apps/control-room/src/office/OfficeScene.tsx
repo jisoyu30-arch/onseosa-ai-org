@@ -3,6 +3,7 @@ import * as PIXI from 'pixi.js';
 import { useOfficeStore } from './state/officeStore';
 import { loadOfficeMap } from './scene/mapLoader';
 import { AGENT_COLORS, AGENT_NAMES } from './state/spatialConfig';
+import { setAnchors, getWaypoints } from './state/anchorRegistry';
 
 // Singleton — React strict mode에서 2번 실행 방지
 let pixiApp: PIXI.Application | null = null;
@@ -31,6 +32,9 @@ export function OfficeScene() {
 
         // Tiled JSON 로드
         const map = await loadOfficeMap('/maps/office.json');
+
+        // anchor 등록 (handoff waypoint용)
+        setAnchors(map.anchors.map(a => ({ from: a.from, to: a.to, pos: a.screenPos })));
 
         // desk 좌표로 에이전트 위치 업데이트
         const store = useOfficeStore.getState();
@@ -178,9 +182,24 @@ export function OfficeScene() {
             const from = state.agents.find(a => a.id === doc.currentHolder);
             const to = doc.moveTarget ? state.agents.find(a => a.id === doc.moveTarget) : null;
             if (doc.isMoving && from && to) {
-              const p = Math.min(((Date.now() % 800) / 800) * 1.3, 1);
-              sprite.x = from.position.x + (to.position.x - from.position.x) * p;
-              sprite.y = from.position.y + (to.position.y - from.position.y) * p - Math.sin(p * Math.PI) * 28;
+              // waypoint 경유 이동: from → [anchors] → to
+              const waypoints = getWaypoints(from.id, to.id);
+              const path = [from.position, ...waypoints, to.position];
+              const totalSegments = path.length - 1;
+              const totalTime = 800 * Math.max(totalSegments, 1);
+              const elapsed = Date.now() % totalTime;
+              const globalP = Math.min(elapsed / totalTime * 1.2, 1);
+
+              // 현재 세그먼트 계산
+              const segFloat = globalP * totalSegments;
+              const segIdx = Math.min(Math.floor(segFloat), totalSegments - 1);
+              const segP = segFloat - segIdx;
+              const segFrom = path[segIdx];
+              const segTo = path[segIdx + 1];
+
+              const arc = Math.sin(segP * Math.PI) * 20;
+              sprite.x = segFrom.x + (segTo.x - segFrom.x) * segP;
+              sprite.y = segFrom.y + (segTo.y - segFrom.y) * segP - arc;
               sprite.scale.set(1.5); sprite.alpha = 0.95;
             } else if (from) {
               sprite.x = from.position.x + 30;

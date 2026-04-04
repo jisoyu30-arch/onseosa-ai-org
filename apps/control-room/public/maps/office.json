@@ -328,6 +328,82 @@
               "value": "mika"
             }
           ]
+        },
+        {
+          "id": 34,
+          "name": "handoff_arko_noah",
+          "type": "handoff_anchor",
+          "x": 352,
+          "y": 160,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "arko"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "noah"
+            }
+          ]
+        },
+        {
+          "id": 35,
+          "name": "handoff_ria_arko",
+          "type": "handoff_anchor",
+          "x": 560,
+          "y": 160,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "ria"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "arko"
+            }
+          ]
+        },
+        {
+          "id": 36,
+          "name": "handoff_arko_mika",
+          "type": "handoff_anchor",
+          "x": 416,
+          "y": 288,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "arko"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "mika"
+            }
+          ]
+        },
+        {
+          "id": 37,
+          "name": "handoff_mika_luka",
+          "type": "handoff_anchor",
+          "x": 768,
+          "y": 384,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "mika"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "luka"
+            }
+          ]
         }
       ]
     }

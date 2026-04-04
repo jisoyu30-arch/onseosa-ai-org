@@ -300,7 +300,9 @@
       "Bash(git push:*)",
       "Bash(ls -la apps/desktop/assets/chars/*.png)",
       "Bash(ls apps/desktop/assets/chars/*.png)",
-      "Bash(sort -k2)"
+      "Bash(sort -k2)",
+      "Bash(node -e \"console.log\\(require\\(''./apps/control-room/node_modules/pixi.js/package.json''\\).version\\)\")",
+      "Bash(node -e \"const j=require\\(''''./apps/control-room/public/maps/office.json''''\\); j.layers.forEach\\(l => console.log\\(l.name, l.objects?.length || 0, ''''objects''''\\)\\)\")"
     ]
   }
 }

@@ -120,6 +120,30 @@
     <property name="to" value="mika"/>
    </properties>
   </object>
+  <object id="34" name="handoff_arko_noah" type="handoff_anchor" x="352" y="160">
+   <properties>
+    <property name="from" value="arko"/>
+    <property name="to" value="noah"/>
+   </properties>
+  </object>
+  <object id="35" name="handoff_ria_arko" type="handoff_anchor" x="560" y="160">
+   <properties>
+    <property name="from" value="ria"/>
+    <property name="to" value="arko"/>
+   </properties>
+  </object>
+  <object id="36" name="handoff_arko_mika" type="handoff_anchor" x="416" y="288">
+   <properties>
+    <property name="from" value="arko"/>
+    <property name="to" value="mika"/>
+   </properties>
+  </object>
+  <object id="37" name="handoff_mika_luka" type="handoff_anchor" x="768" y="384">
+   <properties>
+    <property name="from" value="mika"/>
+    <property name="to" value="luka"/>
+   </properties>
+  </object>
  </objectgroup>
 
 </map>

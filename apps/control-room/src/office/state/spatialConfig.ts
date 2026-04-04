@@ -1,18 +1,18 @@
 import type { Position } from './types';
 
 // ── 씬 크기 ──────────────────────────────────────
-export const SCENE_WIDTH = 1400;
-export const SCENE_HEIGHT = 750;
+export const SCENE_WIDTH = 1600;
+export const SCENE_HEIGHT = 900;
 
 // ── 아이소메트릭 타일 ──────────────────────────────
-export const TILE_WIDTH = 80;
-export const TILE_HEIGHT = 40;
+export const TILE_WIDTH = 100;
+export const TILE_HEIGHT = 50;
 
-// 타일 좌표 → 화면 좌표
+// 타일 좌표 → 화면 좌표 (중앙 정렬, 수직으로 더 내림)
 export function tileToScreen(tx: number, ty: number): Position {
   return {
     x: (tx - ty) * (TILE_WIDTH / 2) + SCENE_WIDTH / 2,
-    y: (tx + ty) * (TILE_HEIGHT / 2) + 120,
+    y: (tx + ty) * (TILE_HEIGHT / 2) + 140,
   };
 }
 
@@ -28,12 +28,12 @@ export function screenToTile(sx: number, sy: number): Position {
 
 // ── 에이전트 홈 좌표 (타일 기준) ──────────────────
 export const AGENT_HOME: Record<string, Position> = {
-  arko: { x: 1, y: 1 },   // 로비 근처 (총괄)
-  noah: { x: 3, y: 2 },   // 작업 공간 좌측
-  eden: { x: 5, y: 2 },   // 작업 공간 중앙
-  ria:  { x: 7, y: 2 },   // 작업 공간 우측
-  mika: { x: 3, y: 5 },   // 작업 공간 하단 좌
-  luka: { x: 5, y: 5 },   // 작업 공간 하단 우
+  arko: { x: 1, y: 1 },   // 로비 (총괄)
+  noah: { x: 3, y: 1 },   // 작업 공간 상단 좌
+  eden: { x: 5, y: 1 },   // 작업 공간 상단 중
+  ria:  { x: 7, y: 1 },   // 작업 공간 상단 우
+  mika: { x: 4, y: 4 },   // 작업 공간 하단 좌
+  luka: { x: 6, y: 4 },   // 작업 공간 하단 우
 };
 
 // ── 영역 좌표 ──────────────────────────────────

@@ -1,0 +1,335 @@
+{
+  "width": 20,
+  "height": 14,
+  "tilewidth": 128,
+  "tileheight": 64,
+  "orientation": "isometric",
+  "layers": [
+    {
+      "name": "zones",
+      "type": "objectgroup",
+      "objects": [
+        {
+          "id": 1,
+          "name": "lobby",
+          "type": "zone",
+          "x": 0,
+          "y": 0,
+          "width": 256,
+          "height": 256,
+          "properties": [
+            {
+              "name": "label",
+              "type": "string",
+              "value": "LOBBY"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "name": "workspace",
+          "type": "zone",
+          "x": 256,
+          "y": 0,
+          "width": 896,
+          "height": 576,
+          "properties": [
+            {
+              "name": "label",
+              "type": "string",
+              "value": "WORKSPACE"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "name": "meeting",
+          "type": "zone",
+          "x": 1408,
+          "y": 128,
+          "width": 384,
+          "height": 384,
+          "properties": [
+            {
+              "name": "label",
+              "type": "string",
+              "value": "MEETING ROOM"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "name": "review",
+          "type": "zone",
+          "x": 256,
+          "y": 640,
+          "width": 896,
+          "height": 256,
+          "properties": [
+            {
+              "name": "label",
+              "type": "string",
+              "value": "REVIEW ZONE"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "desks",
+      "type": "objectgroup",
+      "objects": [
+        {
+          "id": 10,
+          "name": "desk_arko",
+          "type": "desk",
+          "x": 192,
+          "y": 192,
+          "properties": [
+            {
+              "name": "agentId",
+              "type": "string",
+              "value": "arko"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "총괄석"
+            }
+          ]
+        },
+        {
+          "id": 11,
+          "name": "desk_noah",
+          "type": "desk",
+          "x": 512,
+          "y": 128,
+          "properties": [
+            {
+              "name": "agentId",
+              "type": "string",
+              "value": "noah"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "분석석"
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "name": "desk_eden",
+          "type": "desk",
+          "x": 768,
+          "y": 128,
+          "properties": [
+            {
+              "name": "agentId",
+              "type": "string",
+              "value": "eden"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "기획석"
+            }
+          ]
+        },
+        {
+          "id": 13,
+          "name": "desk_ria",
+          "type": "desk",
+          "x": 1024,
+          "y": 128,
+          "properties": [
+            {
+              "name": "agentId",
+              "type": "string",
+              "value": "ria"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "창작석"
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "name": "desk_mika",
+          "type": "desk",
+          "x": 640,
+          "y": 384,
+          "properties": [
+            {
+              "name": "agentId",
+              "type": "string",
+              "value": "mika"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "미디어석"
+            }
+          ]
+        },
+        {
+          "id": 15,
+          "name": "desk_luka",
+          "type": "desk",
+          "x": 896,
+          "y": 384,
+          "properties": [
+            {
+              "name": "agentId",
+              "type": "string",
+              "value": "luka"
+            },
+            {
+              "name": "label",
+              "type": "string",
+              "value": "기록석"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "furniture",
+      "type": "objectgroup",
+      "objects": [
+        {
+          "id": 20,
+          "name": "meeting_table",
+          "type": "furniture",
+          "x": 1600,
+          "y": 320,
+          "properties": [
+            {
+              "name": "shape",
+              "type": "string",
+              "value": "ellipse"
+            },
+            {
+              "name": "rx",
+              "type": "int",
+              "value": 64
+            },
+            {
+              "name": "ry",
+              "type": "int",
+              "value": 24
+            }
+          ]
+        },
+        {
+          "id": 21,
+          "name": "review_desk",
+          "type": "furniture",
+          "x": 704,
+          "y": 768,
+          "properties": [
+            {
+              "name": "shape",
+              "type": "string",
+              "value": "diamond"
+            },
+            {
+              "name": "width",
+              "type": "int",
+              "value": 150
+            },
+            {
+              "name": "height",
+              "type": "int",
+              "value": 36
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "anchors",
+      "type": "objectgroup",
+      "objects": [
+        {
+          "id": 30,
+          "name": "handoff_noah_eden",
+          "type": "handoff_anchor",
+          "x": 640,
+          "y": 128,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "noah"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "eden"
+            }
+          ]
+        },
+        {
+          "id": 31,
+          "name": "handoff_eden_ria",
+          "type": "handoff_anchor",
+          "x": 896,
+          "y": 128,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "eden"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "ria"
+            }
+          ]
+        },
+        {
+          "id": 32,
+          "name": "handoff_ria_review",
+          "type": "handoff_anchor",
+          "x": 704,
+          "y": 512,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "ria"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "review"
+            }
+          ]
+        },
+        {
+          "id": 33,
+          "name": "review_to_mika",
+          "type": "handoff_anchor",
+          "x": 960,
+          "y": 768,
+          "properties": [
+            {
+              "name": "from",
+              "type": "string",
+              "value": "review"
+            },
+            {
+              "name": "to",
+              "type": "string",
+              "value": "mika"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

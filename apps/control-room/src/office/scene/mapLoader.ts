@@ -1,5 +1,7 @@
-import { tileToScreen } from '../state/spatialConfig';
 import type { Position } from '../state/types';
+
+// Tiled isometric 맵에서 오브젝트 좌표는 픽셀 단위로 저장됨.
+// tileToScreen 변환 없이 그대로 사용.
 
 // Tiled JSON 타입
 interface TiledObject {
@@ -98,7 +100,7 @@ export async function loadOfficeMap(url: string): Promise<OfficeMapData> {
           tileY: obj.y,
           width: obj.width || 0,
           height: obj.height || 0,
-          screenCenter: tileToScreen(cx, cy),
+          screenCenter: { x: cx, y: cy },
         });
       }
 
@@ -108,7 +110,7 @@ export async function loadOfficeMap(url: string): Promise<OfficeMapData> {
           agentId: String(getProp(obj, 'agentId') || ''),
           label: String(getProp(obj, 'label') || ''),
           tilePos: { x: obj.x, y: obj.y },
-          screenPos: tileToScreen(obj.x, obj.y),
+          screenPos: { x: obj.x, y: obj.y },
         });
       }
 
@@ -117,7 +119,7 @@ export async function loadOfficeMap(url: string): Promise<OfficeMapData> {
           name: obj.name,
           shape: String(getProp(obj, 'shape') || 'rect'),
           tilePos: { x: obj.x, y: obj.y },
-          screenPos: tileToScreen(obj.x, obj.y),
+          screenPos: { x: obj.x, y: obj.y },
           rx: Number(getProp(obj, 'rx') || 0),
           ry: Number(getProp(obj, 'ry') || 0),
           width: Number(getProp(obj, 'width') || 0),
@@ -130,7 +132,7 @@ export async function loadOfficeMap(url: string): Promise<OfficeMapData> {
           name: obj.name,
           from: String(getProp(obj, 'from') || ''),
           to: String(getProp(obj, 'to') || ''),
-          screenPos: tileToScreen(obj.x, obj.y),
+          screenPos: { x: obj.x, y: obj.y },
         });
       }
     }

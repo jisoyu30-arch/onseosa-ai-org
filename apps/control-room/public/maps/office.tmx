@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.12.1" orientation="isometric" renderorder="right-down" width="20" height="14" tilewidth="128" tileheight="64" infinite="0" nextlayerid="6" nextobjectid="40">
+
+ <tileset firstgid="1" name="office-tileset" tilewidth="128" tileheight="64" tilecount="0" columns="0">
+  <image source="office-tileset.png" width="1024" height="1024"/>
+ </tileset>
+
+ <layer id="1" name="floor" width="20" height="14">
+  <data encoding="csv">
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+</data>
+ </layer>
+
+ <objectgroup id="2" name="zones">
+  <object id="1" name="lobby" type="zone" x="0" y="0" width="256" height="256">
+   <properties><property name="label" value="LOBBY"/></properties>
+  </object>
+  <object id="2" name="workspace" type="zone" x="256" y="0" width="896" height="576">
+   <properties><property name="label" value="WORKSPACE"/></properties>
+  </object>
+  <object id="3" name="meeting" type="zone" x="1408" y="128" width="384" height="384">
+   <properties><property name="label" value="MEETING ROOM"/></properties>
+  </object>
+  <object id="4" name="review" type="zone" x="256" y="640" width="896" height="256">
+   <properties><property name="label" value="REVIEW ZONE"/></properties>
+  </object>
+ </objectgroup>
+
+ <objectgroup id="3" name="desks">
+  <object id="10" name="desk_arko" type="desk" x="192" y="192">
+   <properties>
+    <property name="agentId" value="arko"/>
+    <property name="label" value="총괄석"/>
+   </properties>
+  </object>
+  <object id="11" name="desk_noah" type="desk" x="512" y="128">
+   <properties>
+    <property name="agentId" value="noah"/>
+    <property name="label" value="분석석"/>
+   </properties>
+  </object>
+  <object id="12" name="desk_eden" type="desk" x="768" y="128">
+   <properties>
+    <property name="agentId" value="eden"/>
+    <property name="label" value="기획석"/>
+   </properties>
+  </object>
+  <object id="13" name="desk_ria" type="desk" x="1024" y="128">
+   <properties>
+    <property name="agentId" value="ria"/>
+    <property name="label" value="창작석"/>
+   </properties>
+  </object>
+  <object id="14" name="desk_mika" type="desk" x="640" y="384">
+   <properties>
+    <property name="agentId" value="mika"/>
+    <property name="label" value="미디어석"/>
+   </properties>
+  </object>
+  <object id="15" name="desk_luka" type="desk" x="896" y="384">
+   <properties>
+    <property name="agentId" value="luka"/>
+    <property name="label" value="기록석"/>
+   </properties>
+  </object>
+ </objectgroup>
+
+ <objectgroup id="4" name="furniture">
+  <object id="20" name="meeting_table" type="furniture" x="1600" y="320">
+   <properties>
+    <property name="shape" value="ellipse"/>
+    <property name="rx" type="int" value="64"/>
+    <property name="ry" type="int" value="24"/>
+   </properties>
+  </object>
+  <object id="21" name="review_desk" type="furniture" x="704" y="768">
+   <properties>
+    <property name="shape" value="diamond"/>
+    <property name="width" type="int" value="150"/>
+    <property name="height" type="int" value="36"/>
+   </properties>
+  </object>
+ </objectgroup>
+
+ <objectgroup id="5" name="anchors">
+  <object id="30" name="handoff_noah_eden" type="handoff_anchor" x="640" y="128">
+   <properties>
+    <property name="from" value="noah"/>
+    <property name="to" value="eden"/>
+   </properties>
+  </object>
+  <object id="31" name="handoff_eden_ria" type="handoff_anchor" x="896" y="128">
+   <properties>
+    <property name="from" value="eden"/>
+    <property name="to" value="ria"/>
+   </properties>
+  </object>
+  <object id="32" name="handoff_ria_review" type="handoff_anchor" x="704" y="512">
+   <properties>
+    <property name="from" value="ria"/>
+    <property name="to" value="review"/>
+   </properties>
+  </object>
+  <object id="33" name="review_to_mika" type="handoff_anchor" x="960" y="768">
+   <properties>
+    <property name="from" value="review"/>
+    <property name="to" value="mika"/>
+   </properties>
+  </object>
+ </objectgroup>
+
+</map>

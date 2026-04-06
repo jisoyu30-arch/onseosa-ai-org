@@ -8,7 +8,7 @@ interface AgentCardProps {
   onClick?: () => void;
 }
 
-const LOTTIE_ENGINES = new Set(['arko', 'noah', 'eden', 'ria', 'luka']);
+const LOTTIE_ENGINES = new Set(['arko', 'noah', 'eden', 'ria', 'mika', 'luka']);
 
 const ICON_MAP: Record<string, typeof Shield> = {
   arko: Shield, noah: BarChart3, eden: Lightbulb,
@@ -25,7 +25,7 @@ export function AgentCard({ engine, onClick }: AgentCardProps) {
 
   useEffect(() => {
     if (!hasLottie || !lottieRef.current) return;
-    const lottiePath = engine.name === 'arko' ? '/lottie/ceo.json' : `/chars/${engine.name}.json`;
+    const lottiePath = `/chars/${engine.name}.json`;
     const anim = lottie.loadAnimation({
       container: lottieRef.current,
       renderer: 'svg',

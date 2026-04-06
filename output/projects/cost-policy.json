@@ -1,0 +1,67 @@
+{
+  "version": "1.0",
+  "description": "ONSEOSA cost control policy - expensive operations require user approval",
+  
+  "approval_required": {
+    "rules": [
+      {
+        "trigger": "model_tier_3",
+        "description": "Claude Opus, GPT-5.4, Gemini 3.1 Pro/Ultra usage",
+        "action": "ask_user_before_running",
+        "message": "This task uses a premium model ({model}). Estimated cost: ~${cost}. Proceed?"
+      },
+      {
+        "trigger": "long_context_over_200k",
+        "description": "Any request using more than 200K tokens input",
+        "action": "ask_user_before_running",
+        "message": "This task sends {tokens} tokens (~${cost}). This is a large context operation. Proceed?"
+      },
+      {
+        "trigger": "video_generation",
+        "description": "Any AI video generation (Runway, Veo, Nano Banana)",
+        "action": "ask_user_before_running",
+        "message": "Video generation: {duration}s at {resolution}. Estimated cost: ~${cost}. Proceed?"
+      },
+      {
+        "trigger": "image_batch_over_10",
+        "description": "Generating more than 10 images in one task",
+        "action": "ask_user_before_running",
+        "message": "Batch image generation: {count} images. Estimated cost: ~${cost}. Proceed?"
+      }
+    ],
+    
+    "auto_approve": [
+      "Claude Sonnet (standard tasks)",
+      "Claude Haiku (any task)",
+      "Gemini Flash (any task)",
+      "GPT-4o (standard tasks under 50K tokens)",
+      "Gemma 4 local (always free)",
+      "Suno (included in subscription)",
+      "Canva Pro (included in subscription)",
+      "Adobe Firefly (included in subscription)",
+      "Single image generation (DALL-E, Firefly)",
+      "CapCut (free)"
+    ]
+  },
+
+  "model_tiers": {
+    "tier_0_free": ["Gemma 4 local", "Gemini Flash free", "Perplexity free", "CapCut", "Edge TTS", "Ideogram free"],
+    "tier_1_cheap": ["Claude Haiku", "GPT-4o-mini"],
+    "tier_2_standard": ["Claude Sonnet", "GPT-4o", "Gemini Flash paid"],
+    "tier_3_premium": ["Claude Opus", "GPT-5.4", "Gemini 3.1 Pro", "Gemini 3.1 Ultra"],
+    "tier_included": ["Suno Pro", "Canva Pro", "Adobe Firefly", "Gemini Advanced"]
+  },
+
+  "cost_estimates": {
+    "claude_opus_10k": "$1.50",
+    "claude_opus_50k": "$7.50",
+    "gpt54_500k_review": "$4.75",
+    "gemini31pro_500k_review": "$3.80",
+    "gemini31pro_1m_review": "$8.00",
+    "runway_10s_video": "$2.00",
+    "veo_lite_8s_720p": "$0.40",
+    "veo_lite_8s_1080p": "$0.64",
+    "dalle3_single": "$0.04",
+    "dalle3_batch_10": "$0.40"
+  }
+}

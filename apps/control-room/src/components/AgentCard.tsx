@@ -25,12 +25,13 @@ export function AgentCard({ engine, onClick }: AgentCardProps) {
 
   useEffect(() => {
     if (!hasLottie || !lottieRef.current) return;
+    const lottiePath = engine.name === 'arko' ? '/lottie/ceo.json' : `/chars/${engine.name}.json`;
     const anim = lottie.loadAnimation({
       container: lottieRef.current,
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      path: `/chars/${engine.name}.json`,
+      path: lottiePath,
     });
     animRef.current = anim;
     anim.setSpeed(0.65);

@@ -302,7 +302,11 @@
       "Bash(ls apps/desktop/assets/chars/*.png)",
       "Bash(sort -k2)",
       "Bash(node -e \"console.log\\(require\\(''./apps/control-room/node_modules/pixi.js/package.json''\\).version\\)\")",
-      "Bash(node -e \"const j=require\\(''''./apps/control-room/public/maps/office.json''''\\); j.layers.forEach\\(l => console.log\\(l.name, l.objects?.length || 0, ''''objects''''\\)\\)\")"
+      "Bash(node -e \"const j=require\\(''''./apps/control-room/public/maps/office.json''''\\); j.layers.forEach\\(l => console.log\\(l.name, l.objects?.length || 0, ''''objects''''\\)\\)\")",
+      "Bash(COMPANY_ID=\"f0233cc0-704c-4b94-b16d-15b1af04410d\" curl -s \"http://127.0.0.1:3100/api/companies/$COMPANY_ID/issues\")",
+      "Bash(COMPANY_ID=\"f0233cc0-704c-4b94-b16d-15b1af04410d\")",
+      "Bash(ISSUE_ID=\"31efde74-0333-4320-8607-c848ed0437ee\")",
+      "Bash(__NEW_LINE_96df64a3985956db__ curl -s -X POST \"http://127.0.0.1:3100/api/companies/$COMPANY_ID/issues/$ISSUE_ID/comments\" -H \"Content-Type: application/json\" -d '{:*)"
     ]
   }
 }

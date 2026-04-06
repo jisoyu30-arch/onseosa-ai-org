@@ -4,7 +4,7 @@
     {
       "name": "control-room",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "control-room", "dev"],
+      "runtimeArgs": ["dev:ui"],
       "port": 5173
     }
   ]

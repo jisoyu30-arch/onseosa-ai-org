@@ -1,0 +1,249 @@
+{
+  "album": "독서 플레이리스트",
+  "pipeline_date": "2026-03-27T07:24:23.090Z",
+  "pipeline_elapsed": "67.8s",
+  "eden": {
+    "album_title_main": "Whispers Between Pages",
+    "album_title_sub": "책장 사이의 속삭임",
+    "album_concept": "이 앨범은 책장을 넘길 때 느껴지는 고요한 순간과 그 속에 담긴 감정들을 음악으로 표현합니다. 피아노와 현악기의 섬세한 조화가 청취자에게 평온함과 깊은 사색의 시간을 선사합니다. 각 트랙은 문학적 상상력을 자극하며, 듣는 이로 하여금 마음 속 깊은 곳의 감정을 탐구하게 합니다.",
+    "target_audience": "문학과 음악을 사랑하는 성인 청취자, 명상과 휴식을 찾는 이들",
+    "positioning": "웰니스와 사색을 위한 음악, 감성적이고 문학적인 경험을 원하는 청취자에게 적합",
+    "cover_concept": {
+      "image": "책장 사이로 비치는 부드러운 빛",
+      "color_palette": "따뜻한 베이지와 부드러운 파스텔 톤",
+      "typography": "우아하고 세련된 세리프체",
+      "style": "미니멀리즘과 자연스러운 조화"
+    },
+    "track_grouping": "트랙은 감정의 흐름에 따라 세 부분으로 나눌 수 있습니다: 시작은 고요하고 사색적인 분위기로, 중반부는 감정의 깊이를 더하며, 마지막은 희망적이고 평화로운 마무리로 구성됩니다.",
+    "promo_hooks": [
+      "책장 사이의 속삭임, 마음의 평온을 찾아서",
+      "음악으로 만나는 문학적 상상력",
+      "고요한 순간, 깊은 감정의 여정"
+    ],
+    "use_cases": [
+      "조용한 독서 시간",
+      "명상과 휴식의 순간",
+      "카페에서의 여유로운 시간",
+      "창밖을 바라보며 사색할 때",
+      "감성적인 저녁 시간"
+    ],
+    "metadata": {
+      "genre": "Neoclassical, Ambient",
+      "mood_tags": [
+        "reflective",
+        "melancholic",
+        "serene",
+        "calm",
+        "emotional"
+      ],
+      "artist_name": "Ethereal Pages"
+    }
+  },
+  "ria": {
+    "album_intro": "책장을 넘기는 순간, 종이 위에 남겨진 고요한 흔적들이 음표가 되어 흘러나옵니다. 『Whispers Between Pages』는 독서와 사색의 시간을 위한 피아노와 현악의 서정적 여행으로, 문학적 상상력과 음악적 감수성이 만나는 지점을 탐구합니다. 마치 오래된 도서관의 먼지 냄새와 따스한 램프 불빛 사이에서 발견하는 잊혀진 메모처럼, 각 선율은 당신의 내면 깊숙한 곳에 잠들어 있던 감정들을 부드럽게 깨워냅니다.",
+    "album_intro_en": "When pages turn in the quiet corners of memory, whispers emerge between the lines of forgotten stories. 'Whispers Between Pages' captures the intimate moments of literary contemplation through delicate piano and string arrangements. Each of the 23 compositions serves as a gentle companion for reading, meditation, and introspective evenings. From the melancholic beauty of 'Scribbles in the Dark' to the serene conclusion of 'Ombra e Pagina,' this album transforms the act of reading into a deeply emotional musical journey. Designed for book lovers and seekers of tranquility, these pieces create the perfect soundscape for quiet cafes, moonlit studies, and moments when words meet silence in perfect harmony.",
+    "track_descriptions": [
+      {
+        "trackNumber": 1,
+        "title": "Scribbles in the Dark",
+        "copy_ko": "어둠 속에서 펜끝이 남긴 흔적들이 피아노 선율로 되살아납니다. 깊은 밤, 촛불 아래 쓰여진 일기장의 고백 같은 곡입니다.",
+        "copy_en": "Piano melodies emerge like pen strokes written by candlelight in the depth of night."
+      },
+      {
+        "trackNumber": 2,
+        "title": "Flowing Parchment",
+        "copy_ko": "양피지 위를 흐르는 잉크처럼 부드러운 현악기가 마음을 적셔냅니다. 시간이 멈춘 듯한 오후의 평화를 담았습니다.",
+        "copy_en": "Strings flow like ink across ancient parchment, creating moments of suspended tranquility."
+      },
+      {
+        "trackNumber": 3,
+        "title": "Lento Lucis",
+        "copy_ko": "느린 빛이라는 뜻의 제목처럼, 창문 사이로 스며드는 햇살을 음표로 그려낸 곡입니다. 신디사이저 패드가 더하는 몽환적 여운이 인상적입니다.",
+        "copy_en": "Light moves slowly through windowpanes, captured in gentle piano and ethereal synth textures."
+      },
+      {
+        "trackNumber": 4,
+        "title": "Luce tra le Righe",
+        "copy_ko": "행간 사이의 빛. 글자와 글자 사이에 숨겨진 의미를 찾아가는 피아노 독주곡입니다.",
+        "copy_en": "A solo piano piece exploring the light hidden between written lines."
+      },
+      {
+        "trackNumber": 5,
+        "title": "Dust on the Margin",
+        "copy_ko": "책의 여백에 쌓인 먼지마저 아름다운 추억이 되는 순간. 첼로의 깊은 울림이 시간의 무게를 노래합니다.",
+        "copy_en": "Cello's deep resonance transforms even dust-covered margins into beautiful memories."
+      },
+      {
+        "trackNumber": 6,
+        "title": "Sous la Lampe",
+        "copy_ko": "램프 아래에서 보내는 낭만적인 밤. 프랑스어 제목이 암시하듯 우아하고 서정적인 피아노 선율이 돋보입니다.",
+        "copy_en": "Romantic nocturne capturing intimate moments spent reading under lamplight."
+      },
+      {
+        "trackNumber": 7,
+        "title": "Biblioteca del Vento",
+        "copy_ko": "바람의 도서관에서 페이지들이 스스로 넘어가며 들려주는 이야기. 자연과 문학이 만나는 상상의 공간을 그렸습니다.",
+        "copy_en": "An imaginary library where wind turns pages and tells stories through gentle piano."
+      },
+      {
+        "trackNumber": 8,
+        "title": "The Annotator's Hour",
+        "copy_ko": "주석을 다는 이의 시간. 책의 여백에 생각을 적어가는 조용한 순간들을 피아노와 현악기로 표현했습니다.",
+        "copy_en": "Piano and strings capture the quiet moments of writing thoughts in book margins."
+      },
+      {
+        "trackNumber": 9,
+        "title": "Turning Pages",
+        "copy_ko": "페이지를 넘기는 소리가 음악이 되는 순간. 오케스트라 현악기가 만들어내는 서사적 흐름이 아름답습니다.",
+        "copy_en": "The simple act of turning pages becomes a narrative journey through orchestral strings."
+      },
+      {
+        "trackNumber": 10,
+        "title": "Fading Ink",
+        "copy_ko": "시간이 흘러 바래가는 잉크처럼, 기억들도 천천히 변해갑니다. 피아노, 첼로, 바이올린의 삼중주가 그 과정을 섬세하게 그려냅니다.",
+        "copy_en": "A piano, cello, and violin trio delicately portrays how memories fade like old ink."
+      },
+      {
+        "trackNumber": 11,
+        "title": "Carta e Silenzio",
+        "copy_ko": "종이와 침묵. 글이 쓰이기 전 빈 종이 위의 무한한 가능성을 노래한 곡입니다. 희망적인 여운이 마음에 남습니다.",
+        "copy_en": "Paper and silence meet, celebrating the infinite possibilities of blank pages."
+      },
+      {
+        "trackNumber": 12,
+        "title": "Moonlit Manuscript",
+        "copy_ko": "달빛 아래 원고. 신비로운 밤에 쓰여진 글들이 현악 오중주와 신디사이저의 조화 속에서 생명을 얻습니다.",
+        "copy_en": "Manuscripts come alive under moonlight through the blend of string quintet and synthesizer."
+      },
+      {
+        "trackNumber": 13,
+        "title": "Petals in the Gutter",
+        "copy_ko": "하수구에 떨어진 꽃잎들. 아름다움과 허무함이 공존하는 순간을 목관악기의 서정적 선율로 그려냈습니다.",
+        "copy_en": "Woodwinds paint the bittersweet beauty of flower petals fallen in forgotten places."
+      },
+      {
+        "trackNumber": 14,
+        "title": "The Long Afternoon",
+        "copy_ko": "긴 오후의 여유로움. 브러시 드럼이 더하는 재즈적 감성이 독서의 여유로운 시간을 완벽하게 표현합니다.",
+        "copy_en": "Jazz-tinged brushes and strings create the perfect soundtrack for leisurely afternoon reading."
+      },
+      {
+        "trackNumber": 15,
+        "title": "The Annotated Fall",
+        "copy_ko": "주석이 달린 가을. 풀 오케스트라가 그려내는 가을날의 서정적 풍경 속에서 책장을 넘기는 소리가 들려옵니다.",
+        "copy_en": "Full orchestra paints autumn landscapes filled with the whispered sounds of turning pages."
+      },
+      {
+        "trackNumber": 16,
+        "title": "Cartae Veteres",
+        "copy_ko": "오래된 종이들. 라틴어 제목이 암시하듯 고전적 아름다움과 현대적 감성이 만나는 지점을 탐구합니다.",
+        "copy_en": "Ancient papers speak through modern harmonies, bridging classical beauty with contemporary emotion."
+      },
+      {
+        "trackNumber": 17,
+        "title": "Le Jardin des Phrases",
+        "copy_ko": "문장들의 정원. 아름다운 글들이 모여 만든 상상의 정원에서 피어나는 선율들을 만나보세요.",
+        "copy_en": "An imaginary garden where beautiful sentences bloom into melodic flowers."
+      },
+      {
+        "trackNumber": 18,
+        "title": "Fenêtre Ouverte",
+        "copy_ko": "열린 창. 바깥 세상과 책 속 세상이 만나는 경계에서 들려오는 조용한 대화를 담았습니다.",
+        "copy_en": "Open window frames the quiet conversation between the world outside and stories within."
+      },
+      {
+        "trackNumber": 19,
+        "title": "Sotto la Neve",
+        "copy_ko": "눈 아래에서. 하얀 눈이 덮인 조용한 풍경 속에서 발견하는 내면의 평화를 현악기로 그려냈습니다.",
+        "copy_en": "Strings discover inner peace beneath snow-covered landscapes of quiet contemplation."
+      },
+      {
+        "trackNumber": 20,
+        "title": "Silence entre les Mots",
+        "copy_ko": "단어들 사이의 침묵. 말하지 않은 것들이 때로는 가장 큰 울림을 준다는 진실을 음악으로 증명합니다.",
+        "copy_en": "The silence between words often speaks louder than the words themselves."
+      },
+      {
+        "trackNumber": 21,
+        "title": "Before the Next Sentence",
+        "copy_ko": "다음 문장이 시작되기 전 잠깐의 멈춤. 그 찰나의 순간에 담긴 무한한 가능성을 피아노로 표현했습니다.",
+        "copy_en": "Piano captures the infinite possibilities held in the pause before the next sentence begins."
+      },
+      {
+        "trackNumber": 22,
+        "title": "What Remains When the Story Ends",
+        "copy_ko": "이야기가 끝난 후 남는 것들. 책을 덮은 후에도 마음 속에 머무는 여운을 현악 앙상블로 아름답게 그려냅니다.",
+        "copy_en": "String ensemble beautifully portrays the lasting echoes that remain after a story ends."
+      },
+      {
+        "trackNumber": 23,
+        "title": "Ombra e Pagina",
+        "copy_ko": "그림자와 페이지. 마지막 곡답게 책장을 덮는 순간의 고요함과 만족감을 단순하고 아름다운 피아노 선율로 마무리합니다.",
+        "copy_en": "A simple, beautiful piano melody closes the album like gently closing a well-loved book."
+      }
+    ],
+    "credit_note": "이 앨범의 모든 음원은 인공지능 기술을 활용하여 제작되었습니다. 작곡, 편곡, 연주 모두 AI 시스템에 의해 생성된 결과물이며, 상업적 이용이 가능합니다. 본 음원에 대한 모든 권리는 제작자에게 있으며, 저작권법에 따라 보호받습니다."
+  },
+  "arko": {
+    "score": 88,
+    "breakdown": {
+      "방향일치": 18,
+      "시장성": 17,
+      "감정전달": 18,
+      "명확성": 18,
+      "완성도": 17
+    },
+    "decision": "pass",
+    "market_analysis": "이 앨범은 문학과 음악을 사랑하는 성인 청취자를 대상으로 하며, 최근 스트리밍 플랫폼에서 웰니스와 명상 음악의 인기가 증가하고 있는 트렌드에 부합합니다. 경쟁 앨범으로는 Max Richter의 'Sleep'이나 Ludovico Einaudi의 'Seven Days Walking' 등이 있으며, 이들은 감성적이고 사색적인 음악을 통해 청취자에게 깊은 감정적 경험을 제공합니다. 'Whispers Between Pages'는 이러한 시장에서 차별화된 문학적 테마와 감성적 깊이를 통해 경쟁력을 가질 수 있습니다.",
+    "strong_points": [
+      "기획 컨셉과 카피가 일관되며, 문학적 상상력과 음악적 감수성을 잘 결합함.",
+      "타겟 청취자에게 어필할 수 있는 명확한 포지셔닝과 활용 장면 제시.",
+      "감정 전달력이 뛰어나며, 청취자에게 깊은 사색의 시간을 제공할 수 있음."
+    ],
+    "weak_points": [
+      "앨범 커버 디자인에 대한 구체적인 설명이 부족하여 시각적 요소의 매력도가 다소 약할 수 있음.",
+      "프로모션 훅이 다소 일반적이며, 더 독창적인 표현이 필요할 수 있음."
+    ],
+    "confirm_reason": "이 앨범은 문학적 테마와 음악적 감수성을 결합하여 독특한 청취 경험을 제공합니다. 기획 컨셉과 카피가 일관되며, 감정 전달력이 뛰어나 청취자에게 깊은 사색의 시간을 제공할 수 있습니다. 시장성 측면에서도 최근 웰니스와 명상 음악의 인기가 증가하고 있는 트렌드에 부합하며, 경쟁 앨범과 비교해도 차별화된 테마와 감성적 깊이를 통해 경쟁력을 가질 수 있습니다. 다만, 앨범 커버 디자인과 프로모션 훅에서 약간의 개선 여지가 있지만, 전체적으로 발매 패키지로서 충분히 완성도가 높아 'pass'로 결정합니다."
+  },
+  "analysis_overview": {
+    "total_tracks": 23,
+    "successful": 23,
+    "failed": 0,
+    "all_instruments": [
+      "piano",
+      "strings",
+      "synth pad",
+      "cello",
+      "orchestral strings",
+      "violin",
+      "viola",
+      "contrabass",
+      "synthesizer pad",
+      "flute",
+      "oboe",
+      "upright bass",
+      "drums (brushes)",
+      "string orchestra",
+      "woodwinds",
+      "brass",
+      "double bass",
+      "string section"
+    ],
+    "all_moods": [
+      "reflective",
+      "melancholic",
+      "serene",
+      "melancholy",
+      "peaceful",
+      "emotional",
+      "poignant",
+      "calm",
+      "expressive",
+      "romantic",
+      "nostalgic",
+      "hopeful"
+    ],
+    "average_bpm": 64
+  }
+}

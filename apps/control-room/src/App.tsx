@@ -4,6 +4,7 @@ import { AgentCard } from './components/AgentCard';
 import { TaskFlow } from './components/TaskFlow';
 import { ArkoChat } from './components/ArkoChat';
 import { MediaPreview } from './components/MediaPreview';
+import { PaperClipWidget } from './components/PaperClipWidget';
 import { OfficePage } from './pages/Office';
 import { ENGINES, EngineInfo, EngineStatus } from './types';
 import { connectSSE, SSEEvent } from './services/api';
@@ -167,6 +168,11 @@ function App() {
           {engines.map(engine => (
             <AgentCard key={engine.name} engine={engine} />
           ))}
+        </div>
+
+        {/* Paper Clip 위젯 */}
+        <div className="mb-6">
+          <PaperClipWidget />
         </div>
 
         {/* 미디어 프리뷰 */}

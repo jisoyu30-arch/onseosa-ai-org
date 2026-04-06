@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Send, RefreshCw, Circle, CheckCircle, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Send, RefreshCw, Circle, CheckCircle, AlertCircle, Clock, Loader2, Paperclip, X } from 'lucide-react';
 import {
   getHealth,
   getCompanyId,
@@ -32,6 +32,8 @@ export function PaperClipWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<'issues' | 'agents'>('issues');
+  const [attachedFiles, setAttachedFiles] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -53,17 +55,34 @@ export function PaperClipWidget() {
     return () => clearInterval(interval);
   }, [refresh]);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const paths = Array.from(files).map(f => (f as any).path || f.name);
+    setAttachedFiles(prev => [...prev, ...paths]);
+    e.target.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async () => {
     if (!input.trim() || !companyId) return;
     setLoading(true);
     try {
-      // Find CEO agent
       const ceo = agents.find(a => a.role === 'ceo');
+      let description = '';
+      if (attachedFiles.length > 0) {
+        description = `\n\nAttached reference files:\n${attachedFiles.map(f => `- ${f}`).join('\n')}`;
+      }
       await createIssue(companyId, {
         title: input.trim(),
+        description: description || undefined,
         assigneeAgentId: ceo?.id,
       });
       setInput('');
+      setAttachedFiles([]);
       await refresh();
     } catch (e) {
       console.error('Issue creation failed:', e);
@@ -105,6 +124,14 @@ export function PaperClipWidget() {
             placeholder="Issue to CEO... (e.g. 로파이 앨범 만들어줘)"
             className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50"
           />
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} accept="image/*,.json,.wav,.mp3,.pdf" />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="px-2.5 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all"
+            title="Attach files"
+          >
+            <Paperclip size={16} />
+          </button>
           <button
             onClick={handleSubmit}
             disabled={loading || !input.trim()}
@@ -113,6 +140,17 @@ export function PaperClipWidget() {
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           </button>
         </div>
+        {attachedFiles.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {attachedFiles.map((file, i) => (
+              <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-900/30 border border-cyan-700/30 rounded text-[10px] text-cyan-300">
+                <Paperclip size={10} />
+                {file.split(/[/\\]/).pop()}
+                <button onClick={() => removeFile(i)} className="hover:text-red-400 ml-0.5"><X size={10} /></button>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

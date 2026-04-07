@@ -5,6 +5,7 @@ import { resolve } from 'path';
 import { executeRoute } from './routes/execute';
 import { pipelineRoute, sseRoute } from './routes/pipeline';
 import { analyzeAlbumRoute, analyzeAlbumSSE, analyzeAlbumPreview } from './routes/analyze-album';
+import { generateImage } from './services/image-generator';
 
 // .env 파일은 프로젝트 루트에서 로드
 dotenv.config({ path: resolve(__dirname, '../../../.env'), override: true });
@@ -37,6 +38,20 @@ app.get('/events', sseRoute);
 app.post('/analyze-album', analyzeAlbumRoute);
 app.get('/analyze-album/events', analyzeAlbumSSE);
 app.get('/analyze-album/preview', analyzeAlbumPreview);
+
+// 이미지 생성
+app.post('/generate-image', async (req, res) => {
+  const { prompt, size, quality, style, project, filename } = req.body;
+  if (!prompt) {
+    res.status(400).json({ ok: false, error: 'prompt is required' });
+    return;
+  }
+  const outputDir = project
+    ? `./output/projects/${project}/design`
+    : './output/design';
+  const result = await generateImage({ prompt, size, quality, style, outputDir, filename });
+  res.json({ ok: result.success, ...result });
+});
 
 // 헬스 체크
 app.get('/health', (_req, res) => {

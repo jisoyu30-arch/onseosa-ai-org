@@ -59,6 +59,25 @@ export async function createIssue(companyId: string, payload: {
   });
 }
 
+// Image generation via claude-worker
+const WORKER_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
+export async function generateImage(payload: {
+  prompt: string;
+  size?: string;
+  quality?: string;
+  style?: string;
+  project?: string;
+  filename?: string;
+}): Promise<{ ok: boolean; url?: string; localPath?: string; revisedPrompt?: string; cost?: string; error?: string }> {
+  const res = await fetch(`${WORKER_URL}/generate-image`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
 // Auto-detect company ID on first load
 let cachedCompanyId: string | null = null;
 

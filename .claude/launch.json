@@ -6,6 +6,25 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev:ui"],
       "port": 5173
+    },
+    {
+      "name": "letterbrick",
+      "runtimeExecutable": "C:\\Users\\njell\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "runtimeArgs": ["-m", "http.server", "3478", "-d", "C:\\Users\\njell\\LetterBrick\\public"],
+      "port": 3478
+    }
+    ,{
+      "name": "mockup",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "3479", "-d", "C:\\Users\\njell\\onseosa-agent\\packages\\video-renderer\\public"],
+      "port": 3479
+    }
+    ,{
+      "name": "tango-lingo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--web", "--port", "8081"],
+      "port": 8081,
+      "cwd": "tango-lingo"
     }
   ]
 }

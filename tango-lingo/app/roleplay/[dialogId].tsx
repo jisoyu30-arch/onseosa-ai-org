@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { roleplays } from '../../data/roleplays';
 import { ProgressBar } from '../../components/lesson/ProgressBar';
 import { Button } from '../../components/common/Button';
+import { RoleplayPronunciation } from '../../components/couple/RoleplayPronunciation';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
 
 export default function RoleplayScreen() {
@@ -110,14 +111,23 @@ export default function RoleplayScreen() {
         </Text>
       </View>
 
-      {/* 대사 카드 */}
-      <View style={styles.lineCard}>
-        <View style={[styles.roleTag, { backgroundColor: line.role === 'A' ? colors.primary : colors.secondary }]}>
-          <Text style={styles.roleTagText}>{line.roleLabel}</Text>
+      {/* 대사 카드 + 발음 */}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.lineCard}>
+          <View style={[styles.roleTag, { backgroundColor: line.role === 'A' ? colors.primary : colors.secondary }]}>
+            <Text style={styles.roleTagText}>{line.roleLabel}</Text>
+          </View>
+          <Text style={styles.lineSpanish}>{line.spanish}</Text>
+          <Text style={styles.lineKorean}>{line.korean}</Text>
         </View>
-        <Text style={styles.lineSpanish}>{line.spanish}</Text>
-        <Text style={styles.lineKorean}>{line.korean}</Text>
-      </View>
+
+        {/* 발음 연습 */}
+        <RoleplayPronunciation
+          key={`${dialog.id}-${currentLine}`}
+          spanish={line.spanish}
+          isMyTurn={isMyTurn}
+        />
+      </ScrollView>
 
       {/* 다음 버튼 */}
       <View style={styles.bottomAction}>
@@ -216,9 +226,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.borderLight,
     color: colors.textSecondary,
   },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   // 대사 카드
   lineCard: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,

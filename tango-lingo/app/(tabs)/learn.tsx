@@ -28,6 +28,11 @@ export default function LearnScreen() {
                 const unitLessons = lessons.filter((l) => unit.lessonIds.includes(l.id));
                 const doneCount = unitLessons.filter((l) => completedLessons.includes(l.id)).length;
 
+                // 같은 레벨의 모든 레슨 ID를 순서대로 수집
+                const allLevelLessonIds = levelUnits.flatMap((u) =>
+                  lessons.filter((l) => u.lessonIds.includes(l.id)).map((l) => l.id)
+                );
+
                 return (
                   <View key={unit.id} style={styles.unitCard}>
                     <View style={styles.unitHeader}>
@@ -37,25 +42,35 @@ export default function LearnScreen() {
 
                     {unitLessons.map((lesson) => {
                       const done = completedLessons.includes(lesson.id);
+                      // 레벨 내에서 이전 레슨이 모두 완료되었는지 확인
+                      const lessonIndexInLevel = allLevelLessonIds.indexOf(lesson.id);
+                      const isFirstInLevel = lessonIndexInLevel === 0;
+                      const previousLessons = allLevelLessonIds.slice(0, lessonIndexInLevel);
+                      const allPreviousDone = previousLessons.every((id) => completedLessons.includes(id));
+                      const locked = !isFirstInLevel && !allPreviousDone && !done;
+
                       return (
                         <TouchableOpacity
                           key={lesson.id}
-                          style={[styles.lessonRow, done && styles.lessonDone]}
-                          onPress={() => router.push(`/lesson/${lesson.id}`)}
-                          activeOpacity={0.7}
+                          style={[styles.lessonRow, done && styles.lessonDone, locked && styles.lessonLocked]}
+                          onPress={() => { if (!locked) router.push(`/lesson/${lesson.id}`); }}
+                          activeOpacity={locked ? 1 : 0.7}
+                          disabled={locked}
                         >
-                          <View style={[styles.lessonDot, done && styles.dotDone]}>
+                          <View style={[styles.lessonDot, done && styles.dotDone, locked && styles.dotLocked]}>
                             {done ? (
                               <Ionicons name="checkmark" size={14} color="#FFF" />
+                            ) : locked ? (
+                              <Ionicons name="lock-closed" size={12} color={colors.textLight} />
                             ) : (
                               <View style={styles.dotEmpty} />
                             )}
                           </View>
                           <View style={styles.lessonInfo}>
-                            <Text style={styles.lessonTitle}>{lesson.titleKo}</Text>
-                            <Text style={styles.lessonSituation}>{lesson.situation}</Text>
+                            <Text style={[styles.lessonTitle, locked && styles.lockedText]}>{lesson.titleKo}</Text>
+                            <Text style={[styles.lessonSituation, locked && styles.lockedText]}>{lesson.situation}</Text>
                           </View>
-                          <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+                          {!locked && <Ionicons name="chevron-forward" size={18} color={colors.textLight} />}
                         </TouchableOpacity>
                       );
                     })}
@@ -134,6 +149,9 @@ const styles = StyleSheet.create({
   lessonDone: {
     opacity: 0.7,
   },
+  lessonLocked: {
+    opacity: 0.45,
+  },
   lessonDot: {
     width: 28,
     height: 28,
@@ -146,6 +164,10 @@ const styles = StyleSheet.create({
   dotDone: {
     backgroundColor: colors.success,
     borderColor: colors.success,
+  },
+  dotLocked: {
+    backgroundColor: colors.borderLight,
+    borderColor: colors.borderLight,
   },
   dotEmpty: {
     width: 8,
@@ -164,5 +186,8 @@ const styles = StyleSheet.create({
   lessonSituation: {
     fontSize: fontSize.xs,
     color: colors.textSecondary,
+  },
+  lockedText: {
+    color: colors.textLight,
   },
 });

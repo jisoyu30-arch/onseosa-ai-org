@@ -78,6 +78,20 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
+        {/* AI 대화 연습 */}
+        <TouchableOpacity
+          style={styles.practiceCard}
+          onPress={() => router.push('/practice')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="chatbubbles" size={28} color={colors.primary} />
+          <View style={styles.aiCardText}>
+            <Text style={styles.aiCardTitle}>대화 연습</Text>
+            <Text style={styles.aiCardDesc}>AI와 스페인어로 실전 대화 연습</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+
         {/* AI 질문 */}
         <TouchableOpacity
           style={styles.aiCard}
@@ -225,6 +239,19 @@ const styles = StyleSheet.create({
   reviewCount: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
+  },
+  // 대화 연습 카드
+  practiceCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+    ...shadow.sm,
   },
   // AI 카드
   aiCard: {

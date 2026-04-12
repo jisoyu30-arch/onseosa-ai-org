@@ -10,6 +10,7 @@ import { getTermsForLesson } from '../../data/tango-terms';
 import { getBonusById } from '../../data/bonuses';
 import { getMissionById } from '../../data/missions';
 import { homeworks } from '../../data/homeworks';
+import { getGrammarNoteById } from '../../data/grammar-notes';
 import { SentenceCard } from '../../components/lesson/SentenceCard';
 import { ProgressBar } from '../../components/lesson/ProgressBar';
 import { LessonComplete } from '../../components/lesson/LessonComplete';
@@ -18,7 +19,9 @@ import { FillBlank } from '../../components/quiz/FillBlank';
 import { WordOrder } from '../../components/quiz/WordOrder';
 import { MeaningMatch } from '../../components/quiz/MeaningMatch';
 import { ReverseTranslate } from '../../components/quiz/ReverseTranslate';
+import { Dictation } from '../../components/quiz/Dictation';
 import { TermCard } from '../../components/curriculum/TermCard';
+import { GrammarCard } from '../../components/curriculum/GrammarCard';
 import { BonusKnowledgeCard } from '../../components/curriculum/BonusKnowledgeCard';
 import { MissionCard } from '../../components/curriculum/MissionCard';
 import { HomeworkCard } from '../../components/curriculum/HomeworkCard';
@@ -59,26 +62,30 @@ export default function LessonScreen() {
   const bonus = lesson.bonusId ? getBonusById(lesson.bonusId) : undefined;
   const mission = lesson.missionId ? getMissionById(lesson.missionId) : undefined;
   const homeworkList = lesson.homeworkIds ? lesson.homeworkIds.map((id) => homeworks[id]).filter(Boolean) : [];
+  const grammarNote = lesson.grammarId ? getGrammarNoteById(lesson.grammarId) : undefined;
 
   // 전체 스텝 수 계산
+  const grammarSteps = grammarNote ? 1 : 0;
   const termSteps = termList.length;
   const bonusSteps = bonus ? 1 : 0;
   const missionSteps = mission ? 1 : 0;
   const homeworkSteps = homeworkList.length;
-  const totalSteps = sentenceList.length + quizList.length + termSteps + bonusSteps + missionSteps + homeworkSteps;
+  const totalSteps = sentenceList.length + quizList.length + grammarSteps + termSteps + bonusSteps + missionSteps + homeworkSteps;
 
   const currentStep =
     phase === 'sentences' ? currentIndex
     : phase === 'quiz' ? sentenceList.length + currentIndex
-    : phase === 'term' ? sentenceList.length + quizList.length + currentIndex
-    : phase === 'bonus' ? sentenceList.length + quizList.length + termSteps + currentIndex
-    : phase === 'mission' ? sentenceList.length + quizList.length + termSteps + bonusSteps
-    : phase === 'homework' ? sentenceList.length + quizList.length + termSteps + bonusSteps + missionSteps + currentIndex
+    : phase === 'grammar' ? sentenceList.length + quizList.length
+    : phase === 'term' ? sentenceList.length + quizList.length + grammarSteps + currentIndex
+    : phase === 'bonus' ? sentenceList.length + quizList.length + grammarSteps + termSteps + currentIndex
+    : phase === 'mission' ? sentenceList.length + quizList.length + grammarSteps + termSteps + bonusSteps
+    : phase === 'homework' ? sentenceList.length + quizList.length + grammarSteps + termSteps + bonusSteps + missionSteps + currentIndex
     : totalSteps;
 
   const phaseLabel =
     phase === 'sentences' ? '문장'
     : phase === 'quiz' ? '퀴즈'
+    : phase === 'grammar' ? '문법'
     : phase === 'term' ? '용어'
     : phase === 'bonus' ? '보너스'
     : phase === 'mission' ? '미션'
@@ -101,7 +108,10 @@ export default function LessonScreen() {
   };
 
   const advanceAfterQuiz = (finalXp: number) => {
-    if (termList.length > 0) {
+    if (grammarNote) {
+      setPhase('grammar');
+      setCurrentIndex(0);
+    } else if (termList.length > 0) {
       setPhase('term');
       setCurrentIndex(0);
     } else if (bonus) {
@@ -112,6 +122,21 @@ export default function LessonScreen() {
       setCurrentIndex(0);
     } else {
       goToHomeworkOrComplete(finalXp);
+    }
+  };
+
+  const advanceAfterGrammar = () => {
+    if (termList.length > 0) {
+      setPhase('term');
+      setCurrentIndex(0);
+    } else if (bonus) {
+      setPhase('bonus');
+      setCurrentIndex(0);
+    } else if (mission) {
+      setPhase('mission');
+      setCurrentIndex(0);
+    } else {
+      goToHomeworkOrComplete(earnedXp);
     }
   };
 
@@ -215,9 +240,22 @@ export default function LessonScreen() {
           return <MeaningMatch key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
         case 'reverse_translate':
           return <ReverseTranslate key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
+        case 'listening':
+          return <Dictation key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
         default:
           return <MultipleChoice key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
       }
+    }
+
+    if (phase === 'grammar' && grammarNote) {
+      return (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <GrammarCard note={grammarNote} />
+          <View style={styles.nextWrap}>
+            <Button title="다음" onPress={advanceAfterGrammar} size="lg" />
+          </View>
+        </ScrollView>
+      );
     }
 
     if (phase === 'term') {

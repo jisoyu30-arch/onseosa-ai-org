@@ -44,6 +44,7 @@ export interface Lesson {
   bonusId?: string;         // 레슨 완료 후 해금되는 보너스
   missionId?: string;       // 레슨 완료 후 커플 미션
   homeworkIds?: string[];   // 숙제
+  grammarId?: string;       // 문법 미니 레슨
   order: number;
 }
 
@@ -186,7 +187,7 @@ export interface CoupleMission {
 }
 
 // ===== 레슨 진행 상태 =====
-export type LessonPhase = 'sentences' | 'quiz' | 'term' | 'bonus' | 'mission' | 'homework' | 'complete';
+export type LessonPhase = 'sentences' | 'quiz' | 'grammar' | 'term' | 'bonus' | 'mission' | 'homework' | 'complete';
 
 export interface LessonState {
   lessonId: string | null;

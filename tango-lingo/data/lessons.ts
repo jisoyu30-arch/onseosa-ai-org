@@ -132,6 +132,7 @@ export const lessons: Lesson[] = [
     sentenceIds: ['s1_01_1', 's1_01_2', 's1_01_3', 's1_01_4', 's1_01_5', 's1_01_6', 's1_01_7', 's1_01_8', 's1_01_9', 's1_01_10', 's1_01_11', 's1_01_12', 's1_01_13', 's1_01_14', 's1_01_15'],
     quizIds: ['q1_01_1', 'q1_01_2', 'q1_01_3', 'q1_01_4', 'q1_01_5', 'q1_01_6', 'q1_01_7', 'q1_01_8', 'q1_01_9', 'q1_01_10'],
     homeworkIds: ['hw1_a1'],
+    grammarId: 'gn1_01',
     order: 1,
   },
   {
@@ -144,6 +145,7 @@ export const lessons: Lesson[] = [
     quizIds: ['q1_02_1', 'q1_02_2', 'q1_02_3', 'q1_02_4', 'q1_02_5', 'q1_02_6', 'q1_02_7', 'q1_02_8', 'q1_02_9', 'q1_02_10'],
     termIds: ['t_mirada'],
     bonusId: 'b01',
+    grammarId: 'gn1_02',
     order: 2,
   },
   {
@@ -157,6 +159,7 @@ export const lessons: Lesson[] = [
     termIds: ['t_postura'],
     missionId: 'm01',
     homeworkIds: ['hw1_a1', 'hw1_a2'],
+    grammarId: 'gn1_03',
     order: 3,
   },
 
@@ -170,6 +173,7 @@ export const lessons: Lesson[] = [
     sentenceIds: ['s1_04_1', 's1_04_2', 's1_04_3', 's1_04_4', 's1_04_5', 's1_04_6', 's1_04_7', 's1_04_8', 's1_04_9', 's1_04_10', 's1_04_11', 's1_04_12', 's1_04_13', 's1_04_14', 's1_04_15'],
     quizIds: ['q1_04_1', 'q1_04_2', 'q1_04_3', 'q1_04_4', 'q1_04_5', 'q1_04_6', 'q1_04_7', 'q1_04_8', 'q1_04_9', 'q1_04_10'],
     termIds: ['t_tension'],
+    grammarId: 'gn1_04',
     order: 4,
   },
   {
@@ -182,6 +186,7 @@ export const lessons: Lesson[] = [
     quizIds: ['q1_05_1', 'q1_05_2', 'q1_05_3', 'q1_05_4', 'q1_05_5', 'q1_05_6', 'q1_05_7', 'q1_05_8', 'q1_05_9', 'q1_05_10'],
     bonusId: 'b02',
     homeworkIds: ['hw1_b1'],
+    grammarId: 'gn1_05',
     order: 5,
   },
   {
@@ -195,6 +200,7 @@ export const lessons: Lesson[] = [
     termIds: ['t_eje'],
     missionId: 'm02',
     homeworkIds: ['hw1_b1', 'hw1_b2'],
+    grammarId: 'gn1_06',
     order: 6,
   },
 
@@ -207,6 +213,7 @@ export const lessons: Lesson[] = [
     situation: '무게 이동 기초 — 걷기 전 필수 준비',
     sentenceIds: ['s1_07_1', 's1_07_2', 's1_07_3', 's1_07_4', 's1_07_5', 's1_07_6', 's1_07_7', 's1_07_8', 's1_07_9', 's1_07_10', 's1_07_11', 's1_07_12', 's1_07_13', 's1_07_14', 's1_07_15'],
     quizIds: ['q1_07_1', 'q1_07_2', 'q1_07_3', 'q1_07_4', 'q1_07_5', 'q1_07_6', 'q1_07_7', 'q1_07_8', 'q1_07_9', 'q1_07_10'],
+    grammarId: 'gn1_07',
     order: 7,
   },
   {
@@ -219,6 +226,7 @@ export const lessons: Lesson[] = [
     quizIds: ['q1_08_1', 'q1_08_2', 'q1_08_3', 'q1_08_4', 'q1_08_5', 'q1_08_6', 'q1_08_7', 'q1_08_8', 'q1_08_9', 'q1_08_10'],
     termIds: ['t_abrazo'],
     bonusId: 'b03',
+    grammarId: 'gn1_08',
     order: 8,
   },
   {
@@ -232,6 +240,7 @@ export const lessons: Lesson[] = [
     termIds: ['t_conexion'],
     missionId: 'm03',
     homeworkIds: ['hw1_c1', 'hw1_c2'],
+    grammarId: 'gn1_09',
     order: 9,
   },
   {
@@ -244,6 +253,7 @@ export const lessons: Lesson[] = [
     quizIds: ['q1_10_1', 'q1_10_2', 'q1_10_3', 'q1_10_4', 'q1_10_5', 'q1_10_6', 'q1_10_7', 'q1_10_8', 'q1_10_9', 'q1_10_10'],
     roleplayId: 'rp1_10',
     bonusId: 'b04',
+    grammarId: 'gn1_10',
     order: 10,
   },
 

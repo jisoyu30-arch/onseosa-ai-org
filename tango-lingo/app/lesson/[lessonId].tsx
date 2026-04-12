@@ -11,6 +11,7 @@ import { getBonusById } from '../../data/bonuses';
 import { getMissionById } from '../../data/missions';
 import { homeworks } from '../../data/homeworks';
 import { getGrammarNoteById } from '../../data/grammar-notes';
+import { getDialoguesForLesson } from '../../data/dialogues';
 import { SentenceCard } from '../../components/lesson/SentenceCard';
 import { ProgressBar } from '../../components/lesson/ProgressBar';
 import { LessonComplete } from '../../components/lesson/LessonComplete';
@@ -25,6 +26,7 @@ import { GrammarCard } from '../../components/curriculum/GrammarCard';
 import { BonusKnowledgeCard } from '../../components/curriculum/BonusKnowledgeCard';
 import { MissionCard } from '../../components/curriculum/MissionCard';
 import { HomeworkCard } from '../../components/curriculum/HomeworkCard';
+import { DialogueCard } from '../../components/curriculum/DialogueCard';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../constants/theme';
@@ -63,29 +65,33 @@ export default function LessonScreen() {
   const mission = lesson.missionId ? getMissionById(lesson.missionId) : undefined;
   const homeworkList = lesson.homeworkIds ? lesson.homeworkIds.map((id) => homeworks[id]).filter(Boolean) : [];
   const grammarNote = lesson.grammarId ? getGrammarNoteById(lesson.grammarId) : undefined;
+  const dialogueList = getDialoguesForLesson(lesson.id);
 
   // 전체 스텝 수 계산
   const grammarSteps = grammarNote ? 1 : 0;
+  const dialogueSteps = dialogueList.length;
   const termSteps = termList.length;
   const bonusSteps = bonus ? 1 : 0;
   const missionSteps = mission ? 1 : 0;
   const homeworkSteps = homeworkList.length;
-  const totalSteps = sentenceList.length + quizList.length + grammarSteps + termSteps + bonusSteps + missionSteps + homeworkSteps;
+  const totalSteps = sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps + missionSteps + homeworkSteps;
 
   const currentStep =
     phase === 'sentences' ? currentIndex
     : phase === 'quiz' ? sentenceList.length + currentIndex
     : phase === 'grammar' ? sentenceList.length + quizList.length
-    : phase === 'term' ? sentenceList.length + quizList.length + grammarSteps + currentIndex
-    : phase === 'bonus' ? sentenceList.length + quizList.length + grammarSteps + termSteps + currentIndex
-    : phase === 'mission' ? sentenceList.length + quizList.length + grammarSteps + termSteps + bonusSteps
-    : phase === 'homework' ? sentenceList.length + quizList.length + grammarSteps + termSteps + bonusSteps + missionSteps + currentIndex
+    : phase === 'dialogue' ? sentenceList.length + quizList.length + grammarSteps + currentIndex
+    : phase === 'term' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + currentIndex
+    : phase === 'bonus' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + currentIndex
+    : phase === 'mission' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps
+    : phase === 'homework' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps + missionSteps + currentIndex
     : totalSteps;
 
   const phaseLabel =
     phase === 'sentences' ? '문장'
     : phase === 'quiz' ? '퀴즈'
     : phase === 'grammar' ? '문법'
+    : phase === 'dialogue' ? '대화'
     : phase === 'term' ? '용어'
     : phase === 'bonus' ? '보너스'
     : phase === 'mission' ? '미션'
@@ -111,6 +117,9 @@ export default function LessonScreen() {
     if (grammarNote) {
       setPhase('grammar');
       setCurrentIndex(0);
+    } else if (dialogueList.length > 0) {
+      setPhase('dialogue');
+      setCurrentIndex(0);
     } else if (termList.length > 0) {
       setPhase('term');
       setCurrentIndex(0);
@@ -126,7 +135,27 @@ export default function LessonScreen() {
   };
 
   const advanceAfterGrammar = () => {
-    if (termList.length > 0) {
+    if (dialogueList.length > 0) {
+      setPhase('dialogue');
+      setCurrentIndex(0);
+    } else if (termList.length > 0) {
+      setPhase('term');
+      setCurrentIndex(0);
+    } else if (bonus) {
+      setPhase('bonus');
+      setCurrentIndex(0);
+    } else if (mission) {
+      setPhase('mission');
+      setCurrentIndex(0);
+    } else {
+      goToHomeworkOrComplete(earnedXp);
+    }
+  };
+
+  const advanceAfterDialogue = () => {
+    if (currentIndex < dialogueList.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else if (termList.length > 0) {
       setPhase('term');
       setCurrentIndex(0);
     } else if (bonus) {
@@ -253,6 +282,19 @@ export default function LessonScreen() {
           <GrammarCard note={grammarNote} />
           <View style={styles.nextWrap}>
             <Button title="다음" onPress={advanceAfterGrammar} size="lg" />
+          </View>
+        </ScrollView>
+      );
+    }
+
+    if (phase === 'dialogue') {
+      const dlg = dialogueList[currentIndex];
+      if (!dlg) return null;
+      return (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <DialogueCard situation={dlg.situation} lines={dlg.lines} />
+          <View style={styles.nextWrap}>
+            <Button title="다음" onPress={advanceAfterDialogue} size="lg" />
           </View>
         </ScrollView>
       );

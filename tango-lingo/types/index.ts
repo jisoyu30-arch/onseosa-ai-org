@@ -187,7 +187,7 @@ export interface CoupleMission {
 }
 
 // ===== 레슨 진행 상태 =====
-export type LessonPhase = 'sentences' | 'quiz' | 'grammar' | 'term' | 'bonus' | 'mission' | 'homework' | 'complete';
+export type LessonPhase = 'sentences' | 'quiz' | 'grammar' | 'dialogue' | 'term' | 'bonus' | 'mission' | 'homework' | 'complete';
 
 export interface LessonState {
   lessonId: string | null;

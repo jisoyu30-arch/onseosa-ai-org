@@ -106,6 +106,34 @@ export default function HomeScreen() {
           <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
         </TouchableOpacity>
 
+        {/* 단어장 */}
+        <TouchableOpacity
+          style={styles.aiCard}
+          onPress={() => router.push('/vocabulary')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="book" size={28} color={colors.accent} />
+          <View style={styles.aiCardText}>
+            <Text style={styles.aiCardTitle}>단어장</Text>
+            <Text style={styles.aiCardDesc}>학습한 단어 복습 · 플래시카드</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+
+        {/* 작문 연습 */}
+        <TouchableOpacity
+          style={styles.aiCard}
+          onPress={() => router.push('/writing')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="create" size={28} color={colors.success} />
+          <View style={styles.aiCardText}>
+            <Text style={styles.aiCardTitle}>작문 연습</Text>
+            <Text style={styles.aiCardDesc}>상황별 스페인어 작문 + AI 채점</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+
         {/* 학습 현황 */}
         <View style={styles.progressSection}>
           <Text style={styles.sectionTitle}>학습 현황</Text>

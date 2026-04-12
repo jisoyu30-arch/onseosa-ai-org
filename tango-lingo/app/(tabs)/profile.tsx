@@ -1,18 +1,48 @@
 import { View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Platform } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
-import { lessons } from '../../data/lessons';
+import { lessons, units } from '../../data/lessons';
+import { badges, Badge } from '../../data/badges';
+import { BadgeCard } from '../../components/common/BadgeCard';
 import { requestNotificationPermission, scheduleDailyReminder, cancelAllReminders } from '../../utils/notifications';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
+
+function checkBadgeEarned(badge: Badge, completedLessons: string[], xp: number, streak: number): boolean {
+  const { type, value, levelId } = badge.condition;
+  switch (type) {
+    case 'lessons_completed':
+      return completedLessons.length >= value;
+    case 'xp':
+      return xp >= value;
+    case 'streak':
+      return streak >= value;
+    case 'level_complete': {
+      if (!levelId) return false;
+      const levelUnits = units.filter((u) => u.levelId === levelId);
+      const levelLessonIds = levelUnits.flatMap((u) => u.lessonIds);
+      return levelLessonIds.every((id) => completedLessons.includes(id));
+    }
+    default:
+      return false;
+  }
+}
 
 const HOUR_OPTIONS = [7, 8, 9, 10, 11, 12, 18, 19, 20, 21, 22];
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { xp, streak, completedLessons, lastStudyDate, wrongSentences } = useProgressStore();
   const { notificationEnabled, notificationHour, notificationMinute, update } = useSettingsStore();
+
+  const earnedBadges = useMemo(
+    () => badges.map((b) => ({ badge: b, earned: checkBadgeEarned(b, completedLessons, xp, streak) })),
+    [completedLessons, xp, streak],
+  );
+  const earnedCount = earnedBadges.filter((b) => b.earned).length;
 
   const stats = [
     { icon: 'star' as const, label: 'XP', value: xp, color: colors.xpGold },
@@ -64,6 +94,27 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>{stat.label}</Text>
             </View>
           ))}
+        </View>
+
+        {/* 주간 리포트 */}
+        <TouchableOpacity
+          style={styles.reportBtn}
+          onPress={() => router.push('/report')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="bar-chart" size={22} color={colors.secondary} />
+          <Text style={styles.reportBtnText}>주간 리포트 보기</Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+        </TouchableOpacity>
+
+        {/* 배지 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>배지 ({earnedCount}/{badges.length})</Text>
+          <View style={styles.badgeGrid}>
+            {earnedBadges.map(({ badge, earned }) => (
+              <BadgeCard key={badge.id} badge={badge} earned={earned} />
+            ))}
+          </View>
         </View>
 
         {/* 알림 설정 */}
@@ -159,6 +210,11 @@ const styles = StyleSheet.create({
   timeText: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.textSecondary },
   timeTextActive: { color: '#FFF' },
   timeHint: { fontSize: fontSize.xs, color: colors.textLight, fontStyle: 'italic', marginTop: spacing.xs },
+
+  reportBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md, gap: spacing.sm, ...shadow.sm },
+  reportBtnText: { flex: 1, fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text },
+
+  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-start' },
 
   completedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
   completedText: { fontSize: fontSize.md, color: colors.text },

@@ -5,6 +5,10 @@ import { sentencesL2Extra } from './sentences-l2-extra';
 import { sentencesL3Extra } from './sentences-l3-extra';
 import { sentencesL4Extra } from './sentences-l4-extra';
 import { sentencesL5Extra } from './sentences-l5-extra';
+import { sentencesL2Extra2 } from './sentences-l2-extra2';
+import { sentencesL3Extra2 } from './sentences-l3-extra2';
+import { sentencesL4Extra2 } from './sentences-l4-extra2';
+import { sentencesL5Extra2 } from './sentences-l5-extra2';
 
 const baseSentences: Record<string, Sentence> = {
   // =====================================================
@@ -771,4 +775,8 @@ export const sentences: Record<string, Sentence> = {
   ...sentencesL3Extra,
   ...sentencesL4Extra,
   ...sentencesL5Extra,
+  ...sentencesL2Extra2,
+  ...sentencesL3Extra2,
+  ...sentencesL4Extra2,
+  ...sentencesL5Extra2,
 };

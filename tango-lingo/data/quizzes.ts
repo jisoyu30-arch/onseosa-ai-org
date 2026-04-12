@@ -5,6 +5,10 @@ import { quizzesL2Extra } from './quizzes-l2-extra';
 import { quizzesL3Extra } from './quizzes-l3-extra';
 import { quizzesL4Extra } from './quizzes-l4-extra';
 import { quizzesL5Extra } from './quizzes-l5-extra';
+import { quizzesL2Extra2 } from './quizzes-l2-extra2';
+import { quizzesL3Extra2 } from './quizzes-l3-extra2';
+import { quizzesL4Extra2 } from './quizzes-l4-extra2';
+import { quizzesL5Extra2 } from './quizzes-l5-extra2';
 
 const baseQuizzes: Record<string, Quiz> = {
   // =====================================================
@@ -640,4 +644,8 @@ export const quizzes: Record<string, Quiz> = {
   ...quizzesL3Extra,
   ...quizzesL4Extra,
   ...quizzesL5Extra,
+  ...quizzesL2Extra2,
+  ...quizzesL3Extra2,
+  ...quizzesL4Extra2,
+  ...quizzesL5Extra2,
 };

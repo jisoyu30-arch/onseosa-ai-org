@@ -1,12 +1,18 @@
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useProgressStore } from '../../stores/useProgressStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import { lessons } from '../../data/lessons';
+import { requestNotificationPermission, scheduleDailyReminder, cancelAllReminders } from '../../utils/notifications';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
+
+const HOUR_OPTIONS = [7, 8, 9, 10, 11, 12, 18, 19, 20, 21, 22];
 
 export default function ProfileScreen() {
   const { xp, streak, completedLessons, lastStudyDate, wrongSentences } = useProgressStore();
+  const { notificationEnabled, notificationHour, notificationMinute, update } = useSettingsStore();
 
   const stats = [
     { icon: 'star' as const, label: 'XP', value: xp, color: colors.xpGold },
@@ -15,25 +21,41 @@ export default function ProfileScreen() {
     { icon: 'refresh' as const, label: '복습 대기', value: wrongSentences.length, color: colors.accent },
   ];
 
+  const handleToggleNotification = async (enabled: boolean) => {
+    if (enabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) return;
+      await scheduleDailyReminder(notificationHour, notificationMinute);
+    } else {
+      await cancelAllReminders();
+    }
+    update({ notificationEnabled: enabled });
+  };
+
+  const handleChangeHour = async (hour: number) => {
+    update({ notificationHour: hour });
+    if (notificationEnabled) {
+      await scheduleDailyReminder(hour, notificationMinute);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Text style={styles.pageTitle}>프로필</Text>
 
-        {/* 아바타 영역 */}
+        {/* 아바타 */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
             <Ionicons name="musical-notes" size={40} color={colors.primary} />
           </View>
           <Text style={styles.greeting}>탱고 학습자</Text>
           {lastStudyDate && (
-            <Text style={styles.lastStudy}>
-              마지막 학습: {lastStudyDate}
-            </Text>
+            <Text style={styles.lastStudy}>마지막 학습: {lastStudyDate}</Text>
           )}
         </View>
 
-        {/* 통계 그리드 */}
+        {/* 통계 */}
         <View style={styles.statsGrid}>
           {stats.map((stat, i) => (
             <View key={i} style={styles.statBox}>
@@ -44,7 +66,49 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        {/* 학습 완료 레슨 목록 */}
+        {/* 알림 설정 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>학습 알림</Text>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="notifications" size={22} color={colors.primary} />
+              <Text style={styles.settingLabel}>매일 알림</Text>
+            </View>
+            <Switch
+              value={notificationEnabled}
+              onValueChange={handleToggleNotification}
+              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              thumbColor={notificationEnabled ? colors.primary : '#f4f3f4'}
+            />
+          </View>
+
+          {notificationEnabled && (
+            <>
+              <Text style={styles.timeLabel}>알림 시간</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.timeScroll}>
+                <View style={styles.timeRow}>
+                  {HOUR_OPTIONS.map((hour) => (
+                    <TouchableOpacity
+                      key={hour}
+                      style={[styles.timeChip, notificationHour === hour && styles.timeChipActive]}
+                      onPress={() => handleChangeHour(hour)}
+                    >
+                      <Text style={[styles.timeText, notificationHour === hour && styles.timeTextActive]}>
+                        {hour < 12 ? `오전 ${hour}시` : hour === 12 ? '낮 12시' : `오후 ${hour - 12}시`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+              <Text style={styles.timeHint}>
+                매일 {notificationHour < 12 ? `오전 ${notificationHour}` : notificationHour === 12 ? '낮 12' : `오후 ${notificationHour - 12}`}시에 알림이 울려요
+              </Text>
+            </>
+          )}
+        </View>
+
+        {/* 완료 레슨 */}
         {completedLessons.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>완료한 레슨</Text>
@@ -66,88 +130,36 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
-  },
-  pageTitle: {
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    marginBottom: spacing.lg,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.errorLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  greeting: {
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
-  lastStudy: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  statBox: {
-    width: '48%',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    ...shadow.sm,
-  },
-  statValue: {
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    marginTop: spacing.xs,
-  },
-  statLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  section: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    ...shadow.sm,
-  },
-  sectionTitle: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  completedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  completedText: {
-    fontSize: fontSize.md,
-    color: colors.text,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  scroll: { padding: spacing.md, paddingBottom: spacing.xxl },
+  pageTitle: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.lg },
+
+  avatarSection: { alignItems: 'center', marginBottom: spacing.lg },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.errorLight, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  greeting: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text },
+  lastStudy: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
+
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  statBox: { width: '48%' as any, backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, alignItems: 'center', ...shadow.sm },
+  statValue: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text, marginTop: spacing.xs },
+  statLabel: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
+
+  section: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md, ...shadow.sm },
+  sectionTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.sm },
+
+  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.xs },
+  settingLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  settingLabel: { fontSize: fontSize.md, color: colors.text, fontWeight: fontWeight.medium },
+
+  timeLabel: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.md, marginBottom: spacing.xs },
+  timeScroll: { marginBottom: spacing.xs },
+  timeRow: { flexDirection: 'row', gap: spacing.xs },
+  timeChip: { paddingVertical: spacing.xs, paddingHorizontal: spacing.sm + 2, borderRadius: borderRadius.full, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.background },
+  timeChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
+  timeText: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.textSecondary },
+  timeTextActive: { color: '#FFF' },
+  timeHint: { fontSize: fontSize.xs, color: colors.textLight, fontStyle: 'italic', marginTop: spacing.xs },
+
+  completedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
+  completedText: { fontSize: fontSize.md, color: colors.text },
 });

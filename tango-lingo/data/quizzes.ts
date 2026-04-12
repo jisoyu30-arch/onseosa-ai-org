@@ -1,6 +1,11 @@
 import { Quiz } from '../types';
+import { quizzesL1Extra } from './quizzes-l1-extra';
+import { quizzesL2Extra } from './quizzes-l2-extra';
+import { quizzesL3Extra } from './quizzes-l3-extra';
+import { quizzesL4Extra } from './quizzes-l4-extra';
+import { quizzesL5Extra } from './quizzes-l5-extra';
 
-export const quizzes: Record<string, Quiz> = {
+const baseQuizzes: Record<string, Quiz> = {
   // =====================================================
   // LEVEL 1 — 10 lessons × 4 quizzes = 40 quizzes
   // =====================================================
@@ -623,4 +628,14 @@ export const quizzes: Record<string, Quiz> = {
   q5_16_2: { id: 'q5_16_2', type: 'fill_blank', sentenceId: 's5_16_2', question: 'Gracias, _____ mucho.', questionKo: '고마워요, 정말 즐거웠어요.', correctAnswer: 'disfruté', options: ['disfruté', 'bailé', 'caminé', 'descansé'] },
   q5_16_3: { id: 'q5_16_3', type: 'multiple_choice', sentenceId: 's5_16_3', question: '"Nos vemos luego"는?', options: ['나중에 봐요', '지금 봐요', '안 봐요', '또 봐요'], correctAnswer: '나중에 봐요' },
   q5_16_4: { id: 'q5_16_4', type: 'word_order', sentenceId: 's5_16_3', question: '문장을 배열하세요.', questionKo: '나중에 봐요.', words: ['Nos', 'vemos', 'luego.'], correctAnswer: 'Nos vemos luego.' },
+};
+
+// 기본 퀴즈 + 확장 퀴즈 병합
+export const quizzes: Record<string, Quiz> = {
+  ...baseQuizzes,
+  ...quizzesL1Extra,
+  ...quizzesL2Extra,
+  ...quizzesL3Extra,
+  ...quizzesL4Extra,
+  ...quizzesL5Extra,
 };

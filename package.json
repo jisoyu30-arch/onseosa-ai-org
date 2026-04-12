@@ -1,15 +1,27 @@
 {
-  "name": "ons-studio",
+  "name": "onseosa-ai-org",
   "version": "1.0.0",
   "private": true,
-  "description": "ONS Studio - AI Engine Orchestration Platform",
   "scripts": {
-    "dev:worker": "pnpm --filter claude-worker dev",
-    "dev:ui": "pnpm --filter control-room dev",
-    "build": "pnpm -r build",
-    "clean": "pnpm -r clean"
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start"
   },
-  "engines": {
-    "node": ">=20.0.0"
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.79.0",
+    "@tailwindcss/postcss": "^4.2.1",
+    "mammoth": "^1.12.0",
+    "next": "^16.1.7",
+    "openai": "^6.31.0",
+    "postcss": "^8.5.8",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
   }
 }

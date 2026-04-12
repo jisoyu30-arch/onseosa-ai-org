@@ -1,38 +1,6 @@
 node_modules/
-dist/
 .next/
-*.tsbuildinfo
-
-# Environment
 .env
 .env.local
-.env.*.local
-
-# n8n data
-data/n8n-data/
-
-# Logs
-data/logs/
-*.log
-
-# OS
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-
-# Output files
-data/outputs/
-
-# Credentials
-google-credentials.json
-*.pem
-
-# Claude Code
-.claude/worktrees/
-.claude/settings.local.json
-
-# misc
+.env*.local
 .vercel

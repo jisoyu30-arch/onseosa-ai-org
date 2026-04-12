@@ -2,10 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "control-room",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "control-room", "dev"],
-      "port": 5173
+      "name": "onseosa-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["node_modules/next/dist/bin/next", "dev", "--webpack"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

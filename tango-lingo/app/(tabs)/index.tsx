@@ -78,6 +78,20 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
+        {/* AI 질문 */}
+        <TouchableOpacity
+          style={styles.aiCard}
+          onPress={() => router.push('/chat')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="chatbubble-ellipses" size={28} color={colors.secondary} />
+          <View style={styles.aiCardText}>
+            <Text style={styles.aiCardTitle}>탱고 AI 선생님</Text>
+            <Text style={styles.aiCardDesc}>탱고 용어, 문화, 스페인어 질문하기</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+
         {/* 학습 현황 */}
         <View style={styles.progressSection}>
           <Text style={styles.sectionTitle}>학습 현황</Text>
@@ -209,6 +223,29 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   reviewCount: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+  },
+  // AI 카드
+  aiCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    ...shadow.sm,
+  },
+  aiCardText: {
+    flex: 1,
+  },
+  aiCardTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+  },
+  aiCardDesc: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
   },

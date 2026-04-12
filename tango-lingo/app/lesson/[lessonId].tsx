@@ -1,4 +1,4 @@
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,19 +6,26 @@ import { Ionicons } from '@expo/vector-icons';
 import { getLessonById } from '../../data/lessons';
 import { sentences } from '../../data/sentences';
 import { quizzes } from '../../data/quizzes';
+import { getTermsForLesson } from '../../data/tango-terms';
+import { getBonusById } from '../../data/bonuses';
+import { getMissionById } from '../../data/missions';
 import { SentenceCard } from '../../components/lesson/SentenceCard';
 import { ProgressBar } from '../../components/lesson/ProgressBar';
 import { LessonComplete } from '../../components/lesson/LessonComplete';
 import { MultipleChoice } from '../../components/quiz/MultipleChoice';
 import { FillBlank } from '../../components/quiz/FillBlank';
 import { WordOrder } from '../../components/quiz/WordOrder';
+import { TermCard } from '../../components/curriculum/TermCard';
+import { BonusKnowledgeCard } from '../../components/curriculum/BonusKnowledgeCard';
+import { MissionCard } from '../../components/curriculum/MissionCard';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
-import { colors, spacing, fontSize, fontWeight } from '../../constants/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../constants/theme';
 import type { LessonPhase } from '../../types';
+import { Button } from '../../components/common/Button';
 
 const XP_PER_CORRECT = 10;
-const XP_BASE = 5; // 레슨 완료 기본 XP
+const XP_BASE = 5;
 
 export default function LessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
@@ -44,22 +51,86 @@ export default function LessonScreen() {
 
   const sentenceList = lesson.sentenceIds.map((id) => sentences[id]).filter(Boolean);
   const quizList = lesson.quizIds.map((id) => quizzes[id]).filter(Boolean);
-  const totalSteps = sentenceList.length + quizList.length;
+  const termList = lesson.termIds ? getTermsForLesson(lesson.termIds) : [];
+  const bonus = lesson.bonusId ? getBonusById(lesson.bonusId) : undefined;
+  const mission = lesson.missionId ? getMissionById(lesson.missionId) : undefined;
 
-  // 현재 전체 진행률 계산
+  // 전체 스텝 수 계산 (진행률 바용)
+  const termSteps = termList.length;
+  const bonusSteps = bonus ? 1 : 0;
+  const missionSteps = mission ? 1 : 0;
+  const totalSteps = sentenceList.length + quizList.length + termSteps + bonusSteps + missionSteps;
+
   const currentStep =
-    phase === 'sentences'
-      ? currentIndex
-      : phase === 'quiz'
-      ? sentenceList.length + currentIndex
-      : totalSteps;
+    phase === 'sentences' ? currentIndex
+    : phase === 'quiz' ? sentenceList.length + currentIndex
+    : phase === 'term' ? sentenceList.length + quizList.length + currentIndex
+    : phase === 'bonus' ? sentenceList.length + quizList.length + termSteps + currentIndex
+    : phase === 'mission' ? sentenceList.length + quizList.length + termSteps + bonusSteps
+    : totalSteps;
+
+  const phaseLabel =
+    phase === 'sentences' ? '문장'
+    : phase === 'quiz' ? '퀴즈'
+    : phase === 'term' ? '용어'
+    : phase === 'bonus' ? '보너스'
+    : phase === 'mission' ? '미션'
+    : '';
+
+  // === 다음 단계로 진행하는 헬퍼 ===
+  const advanceAfterQuiz = (finalXp: number) => {
+    if (termList.length > 0) {
+      setPhase('term');
+      setCurrentIndex(0);
+    } else if (bonus) {
+      setPhase('bonus');
+      setCurrentIndex(0);
+    } else if (mission) {
+      setPhase('mission');
+      setCurrentIndex(0);
+    } else {
+      completeLesson(lesson.id, finalXp);
+      setPhase('complete');
+    }
+  };
+
+  const advanceAfterTerm = () => {
+    if (currentIndex < termList.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else if (bonus) {
+      setPhase('bonus');
+      setCurrentIndex(0);
+    } else if (mission) {
+      setPhase('mission');
+      setCurrentIndex(0);
+    } else {
+      completeLesson(lesson.id, earnedXp);
+      setPhase('complete');
+    }
+  };
+
+  const advanceAfterBonus = () => {
+    if (mission) {
+      setPhase('mission');
+      setCurrentIndex(0);
+    } else {
+      completeLesson(lesson.id, earnedXp);
+      setPhase('complete');
+    }
+  };
+
+  const advanceAfterMission = (missionXp: number) => {
+    const finalXp = earnedXp + missionXp;
+    setEarnedXp(finalXp);
+    completeLesson(lesson.id, finalXp);
+    setPhase('complete');
+  };
 
   // === 문장 카드 다음 ===
   const handleNextSentence = () => {
     if (currentIndex < sentenceList.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // 퀴즈로 전환
       setPhase('quiz');
       setCurrentIndex(0);
     }
@@ -67,11 +138,12 @@ export default function LessonScreen() {
 
   // === 퀴즈 답변 ===
   const handleQuizAnswer = (correct: boolean) => {
+    let newXp = earnedXp;
     if (correct) {
       setCorrectCount((c) => c + 1);
-      setEarnedXp((x) => x + XP_PER_CORRECT);
+      newXp += XP_PER_CORRECT;
+      setEarnedXp(newXp);
     } else {
-      // 틀린 문장 저장
       const quiz = quizList[currentIndex];
       if (quiz) addWrongSentence(quiz.sentenceId);
     }
@@ -79,11 +151,9 @@ export default function LessonScreen() {
     if (currentIndex < quizList.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      // 레슨 완료
-      const finalXp = earnedXp + (correct ? XP_PER_CORRECT : 0) + XP_BASE;
+      const finalXp = newXp + XP_BASE;
       setEarnedXp(finalXp);
-      completeLesson(lesson.id, finalXp);
-      setPhase('complete');
+      advanceAfterQuiz(finalXp);
     }
   };
 
@@ -105,7 +175,6 @@ export default function LessonScreen() {
     if (phase === 'quiz') {
       const quiz = quizList[currentIndex];
       if (!quiz) return null;
-
       switch (quiz.type) {
         case 'multiple_choice':
           return <MultipleChoice key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
@@ -116,6 +185,39 @@ export default function LessonScreen() {
         default:
           return <MultipleChoice key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
       }
+    }
+
+    if (phase === 'term') {
+      const term = termList[currentIndex];
+      if (!term) return null;
+      return (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <TermCard term={term} />
+          <View style={styles.nextWrap}>
+            <Button title="다음" onPress={advanceAfterTerm} size="lg" />
+          </View>
+        </ScrollView>
+      );
+    }
+
+    if (phase === 'bonus' && bonus) {
+      return (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <BonusKnowledgeCard bonus={bonus} />
+          <View style={styles.nextWrap}>
+            <Button title="다음" onPress={advanceAfterBonus} size="lg" />
+          </View>
+        </ScrollView>
+      );
+    }
+
+    if (phase === 'mission' && mission) {
+      return (
+        <MissionCard
+          mission={mission}
+          onComplete={() => advanceAfterMission(mission.xpReward)}
+        />
+      );
     }
 
     if (phase === 'complete') {
@@ -143,13 +245,11 @@ export default function LessonScreen() {
           <View style={styles.progressWrap}>
             <ProgressBar current={currentStep} total={totalSteps} />
           </View>
-          <Text style={styles.phaseLabel}>
-            {phase === 'sentences' ? '문장' : '퀴즈'}
-          </Text>
+          <Text style={styles.phaseLabel}>{phaseLabel}</Text>
         </View>
       )}
 
-      {/* 상황 설명 (문장 단계 첫 번째일 때만) */}
+      {/* 상황 설명 (문장 첫 번째만) */}
       {phase === 'sentences' && currentIndex === 0 && (
         <View style={styles.situationBox}>
           <Text style={styles.situationEmoji}>📍</Text>
@@ -184,7 +284,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
     color: colors.textSecondary,
-    minWidth: 36,
+    minWidth: 40,
     textAlign: 'right',
   },
   situationBox: {
@@ -207,6 +307,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: spacing.xxl,
+  },
+  nextWrap: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    alignItems: 'center',
   },
   errorText: {
     fontSize: fontSize.lg,

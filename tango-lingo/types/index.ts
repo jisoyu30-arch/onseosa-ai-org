@@ -40,6 +40,10 @@ export interface Lesson {
   sentenceIds: string[];
   quizIds: string[];
   roleplayId?: string;
+  termIds?: string[];       // 이 레슨에서 소개할 탱고 용어
+  bonusId?: string;         // 레슨 완료 후 해금되는 보너스
+  missionId?: string;       // 레슨 완료 후 커플 미션
+  homeworkIds?: string[];   // 숙제
   order: number;
 }
 
@@ -109,8 +113,80 @@ export interface Settings {
   showChinese: boolean;
 }
 
+// ===== 발음 연습 언어 =====
+export type PracticeLanguage = 'es' | 'zh' | 'ko';
+
+// ===== 발음 연습 =====
+export interface PronunciationAttempt {
+  sentenceId: string;
+  transcript: string;
+  feedbackLabel: string;
+  attemptedAt: string; // ISO date
+}
+
+export interface PronunciationFeedback {
+  label: 'perfect' | 'great' | 'close' | 'missing_word' | 'try_again';
+  message: string;
+  missingWords?: string[];
+  similarity: number; // 0~1
+}
+
+export interface SpeechTranscriptionResult {
+  text: string;
+  confidence: number; // 0~1
+}
+
+export type RecordingState = 'idle' | 'recording' | 'recorded' | 'playing';
+
+// ===== 탱고 용어 노트 =====
+export interface TangoTerm {
+  id: string;
+  term: string;
+  literalMeaning: string;     // 사전적 스페인어 뜻
+  tangoMeaning: string;       // 탱고에서의 의미
+  bodyInterpretation: string; // 몸으로 느끼는 해석
+  example: string;            // 짧은 실전 예시
+  relatedLessonIds?: string[];
+}
+
+// ===== 보너스 지식 캡슐 =====
+// ===== 숙제 =====
+export type HomeworkType = 'speaking' | 'couple' | 'real_world' | 'reflection' | 'recording';
+
+export interface Homework {
+  id: string;
+  type: HomeworkType;
+  instruction: string;
+  targetSentences?: string[];
+  xpReward: number;
+  lessonGroup: string; // 어느 레슨 묶음에 속하는지 (예: 'les1_01~03')
+}
+
+export type BonusCategory = 'history' | 'etiquette' | 'music' | 'culture' | 'word_origin';
+
+export interface BonusCard {
+  id: string;
+  category: BonusCategory;
+  title: string;
+  titleKo: string;
+  content: string;            // 짧고 따뜻한 탱고 선생님 톤
+  emoji: string;
+  unlockAfterLesson: string;  // 이 레슨 완료 후 해금
+  relatedTermIds?: string[];
+}
+
+// ===== 커플 미션 =====
+export interface CoupleMission {
+  id: string;
+  title: string;
+  description: string;
+  type: 'practice' | 'conversation' | 'observation' | 'challenge';
+  unlockAfterLesson: string;
+  xpReward: number;
+}
+
 // ===== 레슨 진행 상태 =====
-export type LessonPhase = 'sentences' | 'quiz' | 'complete';
+export type LessonPhase = 'sentences' | 'quiz' | 'term' | 'bonus' | 'mission' | 'complete';
 
 export interface LessonState {
   lessonId: string | null;

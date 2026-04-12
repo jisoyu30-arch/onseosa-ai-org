@@ -1,7 +1,8 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Sentence } from '../../types';
+import { PronunciationPanel } from './PronunciationPanel';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
 
 interface SentenceCardProps {
@@ -14,9 +15,14 @@ interface SentenceCardProps {
 export function SentenceCard({ sentence, onNext, showEnglish = false, showChinese = false }: SentenceCardProps) {
   const [engVisible, setEngVisible] = useState(showEnglish);
   const [chnVisible, setChnVisible] = useState(showChinese);
+  const [practiceOpen, setPracticeOpen] = useState(false);
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
       {/* 스페인어 — 메인 */}
       <Text style={styles.spanish}>{sentence.spanish}</Text>
 
@@ -34,17 +40,13 @@ export function SentenceCard({ sentence, onNext, showEnglish = false, showChines
           style={[styles.toggleBtn, engVisible && styles.toggleActive]}
           onPress={() => setEngVisible(!engVisible)}
         >
-          <Text style={[styles.toggleText, engVisible && styles.toggleTextActive]}>
-            EN
-          </Text>
+          <Text style={[styles.toggleText, engVisible && styles.toggleTextActive]}>EN</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.toggleBtn, chnVisible && styles.toggleActive]}
           onPress={() => setChnVisible(!chnVisible)}
         >
-          <Text style={[styles.toggleText, chnVisible && styles.toggleTextActive]}>
-            中
-          </Text>
+          <Text style={[styles.toggleText, chnVisible && styles.toggleTextActive]}>中</Text>
         </TouchableOpacity>
       </View>
 
@@ -54,21 +56,46 @@ export function SentenceCard({ sentence, onNext, showEnglish = false, showChines
       {/* 중국어 */}
       {chnVisible && <Text style={styles.auxiliary}>{sentence.chinese}</Text>}
 
+      {/* 발음 연습 토글 */}
+      <TouchableOpacity
+        style={[styles.practiceToggle, practiceOpen && styles.practiceToggleActive]}
+        onPress={() => setPracticeOpen(!practiceOpen)}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name="mic"
+          size={16}
+          color={practiceOpen ? '#FFF' : colors.primary}
+        />
+        <Text style={[styles.practiceToggleText, practiceOpen && styles.practiceToggleTextActive]}>
+          {practiceOpen ? '발음 연습 접기' : '발음 연습'}
+        </Text>
+      </TouchableOpacity>
+
+      {/* 발음 패널 */}
+      {practiceOpen && (
+        <PronunciationPanel sentence={sentence} />
+      )}
+
       {/* 다음 버튼 */}
       <TouchableOpacity style={styles.nextBtn} onPress={onNext} activeOpacity={0.7}>
         <Text style={styles.nextText}>다음</Text>
         <Ionicons name="arrow-forward" size={20} color="#FFF" />
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scroll: {
     flex: 1,
+  },
+  container: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   spanish: {
     fontSize: fontSize.xxl,
@@ -119,6 +146,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
+  practiceToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: spacing.xs + 2,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  practiceToggleActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  practiceToggleText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.primary,
+  },
+  practiceToggleTextActive: {
+    color: '#FFF',
+  },
   nextBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -127,7 +179,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md - 2,
     paddingHorizontal: spacing.xl,
     borderRadius: borderRadius.lg,
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     ...shadow.sm,
   },
   nextText: {

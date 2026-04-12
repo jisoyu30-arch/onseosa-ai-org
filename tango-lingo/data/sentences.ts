@@ -1,6 +1,11 @@
 import { Sentence } from '../types';
+import { sentencesL1Extra } from './sentences-l1-extra';
+import { sentencesL2Extra } from './sentences-l2-extra';
+import { sentencesL3Extra } from './sentences-l3-extra';
+import { sentencesL4Extra } from './sentences-l4-extra';
+import { sentencesL5Extra } from './sentences-l5-extra';
 
-export const sentences: Record<string, Sentence> = {
+const baseSentences: Record<string, Sentence> = {
   // =====================================================
   // LEVEL 1: El primer abrazo (첫 아브라소) — 10 lessons
   // =====================================================
@@ -754,4 +759,14 @@ export const sentences: Record<string, Sentence> = {
   s5_16_1: { id: 's5_16_1', spanish: '¿Bailamos?', korean: '출래요?', english: 'Shall we dance?', chinese: '我们跳舞吗？', pronunciation: 'bai-LA-mos?', tags: ['밀롱가', '역할극'], difficulty: 1 },
   s5_16_2: { id: 's5_16_2', spanish: 'Gracias, disfruté mucho.', korean: '고마워요, 정말 즐거웠어요.', english: 'Thank you, I enjoyed it a lot.', chinese: '谢谢，我非常享受。', pronunciation: 'GRA-sias, dis-fru-TÉ MU-cho', tags: ['밀롱가', '역할극'], difficulty: 2 },
   s5_16_3: { id: 's5_16_3', spanish: 'Nos vemos luego.', korean: '나중에 봐요.', english: 'See you later.', chinese: '回头见。', pronunciation: 'nos VE-mos LUE-go', tags: ['밀롱가', '역할극'], difficulty: 1 },
+};
+
+// 기본 문장 + 확장 문장 병합
+export const sentences: Record<string, Sentence> = {
+  ...baseSentences,
+  ...sentencesL1Extra,
+  ...sentencesL2Extra,
+  ...sentencesL3Extra,
+  ...sentencesL4Extra,
+  ...sentencesL5Extra,
 };

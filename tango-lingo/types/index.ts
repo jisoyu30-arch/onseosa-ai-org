@@ -48,7 +48,7 @@ export interface Lesson {
 }
 
 // ===== 퀴즈 =====
-export type QuizType = 'multiple_choice' | 'fill_blank' | 'word_order' | 'listening';
+export type QuizType = 'multiple_choice' | 'fill_blank' | 'word_order' | 'listening' | 'meaning_match' | 'reverse_translate';
 
 export interface Quiz {
   id: string;

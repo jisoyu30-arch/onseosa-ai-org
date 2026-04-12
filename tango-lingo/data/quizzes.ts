@@ -1,5 +1,6 @@
 import { Quiz } from '../types';
 import { quizzesL1Extra } from './quizzes-l1-extra';
+import { quizzesL1Extra2 } from './quizzes-l1-extra2';
 import { quizzesL2Extra } from './quizzes-l2-extra';
 import { quizzesL3Extra } from './quizzes-l3-extra';
 import { quizzesL4Extra } from './quizzes-l4-extra';
@@ -634,6 +635,7 @@ const baseQuizzes: Record<string, Quiz> = {
 export const quizzes: Record<string, Quiz> = {
   ...baseQuizzes,
   ...quizzesL1Extra,
+  ...quizzesL1Extra2,
   ...quizzesL2Extra,
   ...quizzesL3Extra,
   ...quizzesL4Extra,

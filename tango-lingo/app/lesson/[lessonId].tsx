@@ -16,6 +16,8 @@ import { LessonComplete } from '../../components/lesson/LessonComplete';
 import { MultipleChoice } from '../../components/quiz/MultipleChoice';
 import { FillBlank } from '../../components/quiz/FillBlank';
 import { WordOrder } from '../../components/quiz/WordOrder';
+import { MeaningMatch } from '../../components/quiz/MeaningMatch';
+import { ReverseTranslate } from '../../components/quiz/ReverseTranslate';
 import { TermCard } from '../../components/curriculum/TermCard';
 import { BonusKnowledgeCard } from '../../components/curriculum/BonusKnowledgeCard';
 import { MissionCard } from '../../components/curriculum/MissionCard';
@@ -209,6 +211,10 @@ export default function LessonScreen() {
           return <FillBlank key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
         case 'word_order':
           return <WordOrder key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
+        case 'meaning_match':
+          return <MeaningMatch key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
+        case 'reverse_translate':
+          return <ReverseTranslate key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
         default:
           return <MultipleChoice key={quiz.id} quiz={quiz} onAnswer={handleQuizAnswer} />;
       }

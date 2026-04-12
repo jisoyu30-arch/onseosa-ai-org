@@ -1,5 +1,6 @@
 import { Sentence } from '../types';
 import { sentencesL1Extra } from './sentences-l1-extra';
+import { sentencesL1Extra2 } from './sentences-l1-extra2';
 import { sentencesL2Extra } from './sentences-l2-extra';
 import { sentencesL3Extra } from './sentences-l3-extra';
 import { sentencesL4Extra } from './sentences-l4-extra';
@@ -765,6 +766,7 @@ const baseSentences: Record<string, Sentence> = {
 export const sentences: Record<string, Sentence> = {
   ...baseSentences,
   ...sentencesL1Extra,
+  ...sentencesL1Extra2,
   ...sentencesL2Extra,
   ...sentencesL3Extra,
   ...sentencesL4Extra,

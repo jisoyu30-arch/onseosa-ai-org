@@ -9,6 +9,7 @@ import { quizzes } from '../../data/quizzes';
 import { getTermsForLesson } from '../../data/tango-terms';
 import { getBonusById } from '../../data/bonuses';
 import { getMissionById } from '../../data/missions';
+import { homeworks } from '../../data/homeworks';
 import { SentenceCard } from '../../components/lesson/SentenceCard';
 import { ProgressBar } from '../../components/lesson/ProgressBar';
 import { LessonComplete } from '../../components/lesson/LessonComplete';
@@ -18,6 +19,7 @@ import { WordOrder } from '../../components/quiz/WordOrder';
 import { TermCard } from '../../components/curriculum/TermCard';
 import { BonusKnowledgeCard } from '../../components/curriculum/BonusKnowledgeCard';
 import { MissionCard } from '../../components/curriculum/MissionCard';
+import { HomeworkCard } from '../../components/curriculum/HomeworkCard';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../constants/theme';
@@ -54,12 +56,14 @@ export default function LessonScreen() {
   const termList = lesson.termIds ? getTermsForLesson(lesson.termIds) : [];
   const bonus = lesson.bonusId ? getBonusById(lesson.bonusId) : undefined;
   const mission = lesson.missionId ? getMissionById(lesson.missionId) : undefined;
+  const homeworkList = lesson.homeworkIds ? lesson.homeworkIds.map((id) => homeworks[id]).filter(Boolean) : [];
 
-  // 전체 스텝 수 계산 (진행률 바용)
+  // 전체 스텝 수 계산
   const termSteps = termList.length;
   const bonusSteps = bonus ? 1 : 0;
   const missionSteps = mission ? 1 : 0;
-  const totalSteps = sentenceList.length + quizList.length + termSteps + bonusSteps + missionSteps;
+  const homeworkSteps = homeworkList.length;
+  const totalSteps = sentenceList.length + quizList.length + termSteps + bonusSteps + missionSteps + homeworkSteps;
 
   const currentStep =
     phase === 'sentences' ? currentIndex
@@ -67,6 +71,7 @@ export default function LessonScreen() {
     : phase === 'term' ? sentenceList.length + quizList.length + currentIndex
     : phase === 'bonus' ? sentenceList.length + quizList.length + termSteps + currentIndex
     : phase === 'mission' ? sentenceList.length + quizList.length + termSteps + bonusSteps
+    : phase === 'homework' ? sentenceList.length + quizList.length + termSteps + bonusSteps + missionSteps + currentIndex
     : totalSteps;
 
   const phaseLabel =
@@ -75,9 +80,24 @@ export default function LessonScreen() {
     : phase === 'term' ? '용어'
     : phase === 'bonus' ? '보너스'
     : phase === 'mission' ? '미션'
+    : phase === 'homework' ? '숙제'
     : '';
 
   // === 다음 단계로 진행하는 헬퍼 ===
+  const goToComplete = (xp: number) => {
+    completeLesson(lesson.id, xp);
+    setPhase('complete');
+  };
+
+  const goToHomeworkOrComplete = (xp: number) => {
+    if (homeworkList.length > 0) {
+      setPhase('homework');
+      setCurrentIndex(0);
+    } else {
+      goToComplete(xp);
+    }
+  };
+
   const advanceAfterQuiz = (finalXp: number) => {
     if (termList.length > 0) {
       setPhase('term');
@@ -89,8 +109,7 @@ export default function LessonScreen() {
       setPhase('mission');
       setCurrentIndex(0);
     } else {
-      completeLesson(lesson.id, finalXp);
-      setPhase('complete');
+      goToHomeworkOrComplete(finalXp);
     }
   };
 
@@ -104,8 +123,7 @@ export default function LessonScreen() {
       setPhase('mission');
       setCurrentIndex(0);
     } else {
-      completeLesson(lesson.id, earnedXp);
-      setPhase('complete');
+      goToHomeworkOrComplete(earnedXp);
     }
   };
 
@@ -114,16 +132,25 @@ export default function LessonScreen() {
       setPhase('mission');
       setCurrentIndex(0);
     } else {
-      completeLesson(lesson.id, earnedXp);
-      setPhase('complete');
+      goToHomeworkOrComplete(earnedXp);
     }
   };
 
   const advanceAfterMission = (missionXp: number) => {
     const finalXp = earnedXp + missionXp;
     setEarnedXp(finalXp);
-    completeLesson(lesson.id, finalXp);
-    setPhase('complete');
+    goToHomeworkOrComplete(finalXp);
+  };
+
+  const advanceAfterHomework = (hwXp: number) => {
+    const newXp = earnedXp + hwXp;
+    setEarnedXp(newXp);
+    if (currentIndex < homeworkList.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      completeLesson(lesson.id, newXp);
+      setPhase('complete');
+    }
   };
 
   // === 문장 카드 다음 ===
@@ -216,6 +243,17 @@ export default function LessonScreen() {
         <MissionCard
           mission={mission}
           onComplete={() => advanceAfterMission(mission.xpReward)}
+        />
+      );
+    }
+
+    if (phase === 'homework') {
+      const hw = homeworkList[currentIndex];
+      if (!hw) return null;
+      return (
+        <HomeworkCard
+          homework={hw}
+          onComplete={() => advanceAfterHomework(hw.xpReward)}
         />
       );
     }

@@ -74,7 +74,7 @@ export function SentenceCard({ sentence, onNext, showEnglish = false, showChines
 
       {/* 발음 패널 */}
       {practiceOpen && (
-        <PronunciationPanel sentence={sentence} />
+        <PronunciationPanel key={sentence.id} sentence={sentence} />
       )}
 
       {/* 다음 버튼 */}

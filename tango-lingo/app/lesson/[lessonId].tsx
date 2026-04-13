@@ -247,6 +247,7 @@ export default function LessonScreen() {
       if (!sentence) return null;
       return (
         <SentenceCard
+          key={sentence.id}
           sentence={sentence}
           onNext={handleNextSentence}
           showEnglish={showEnglish}

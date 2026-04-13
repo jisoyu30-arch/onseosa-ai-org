@@ -37,7 +37,7 @@ const HOUR_OPTIONS = [7, 8, 9, 10, 11, 12, 18, 19, 20, 21, 22];
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { xp, streak, completedLessons, lastStudyDate, wrongSentences } = useProgressStore();
+  const { xp, streak, completedLessons, lastStudyDate, wrongSentences, streakFreezes } = useProgressStore();
   const { notificationEnabled, notificationHour, notificationMinute, learningMode, update } = useSettingsStore();
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
 
@@ -103,6 +103,29 @@ export default function ProfileScreen() {
               <Text style={styles.statLabel}>{stat.label}</Text>
             </View>
           ))}
+        </View>
+
+        {/* 스트릭 프리즈 */}
+        <View style={styles.freezeCard}>
+          <Text style={styles.freezeEmoji}>{'\u2744\uFE0F'}</Text>
+          <View style={styles.freezeTextWrap}>
+            <Text style={styles.freezeTitle}>
+              스트릭 프리즈 {streakFreezes}개 보유
+            </Text>
+            <Text style={styles.freezeDesc}>
+              {streakFreezes > 0
+                ? '하루 쉬어도 스트릭 유지!'
+                : '7일 연속 학습하면 프리즈를 받아요'}
+            </Text>
+          </View>
+          <View style={styles.freezeDots}>
+            {[0, 1, 2].map((i) => (
+              <View
+                key={i}
+                style={[styles.freezeDot, i < streakFreezes && styles.freezeDotActive]}
+              />
+            ))}
+          </View>
         </View>
 
         {/* 주간 리포트 */}
@@ -282,4 +305,13 @@ const styles = StyleSheet.create({
 
   completedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
   completedText: { fontSize: fontSize.md, color: colors.text },
+
+  freezeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md, gap: spacing.sm, ...shadow.sm },
+  freezeEmoji: { fontSize: 28 },
+  freezeTextWrap: { flex: 1 },
+  freezeTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text },
+  freezeDesc: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
+  freezeDots: { flexDirection: 'row', gap: spacing.xs },
+  freezeDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.border },
+  freezeDotActive: { backgroundColor: '#64B5F6' },
 });

@@ -42,6 +42,7 @@ export interface Lesson {
   sentenceIds: string[];
   quizIds: string[];
   roleplayId?: string;
+  chunkIds?: string[];      // 청크 학습 (표현 덩어리)
   termIds?: string[];       // 이 레슨에서 소개할 탱고 용어
   bonusId?: string;         // 레슨 완료 후 해금되는 보너스
   missionId?: string;       // 레슨 완료 후 커플 미션
@@ -105,6 +106,8 @@ export interface UserProgress {
   lastStudyDate: string; // ISO date
   wrongSentences: string[]; // 틀린 문장 id 목록
   sentenceReviews: Record<string, ReviewState>;
+  streakFreezes: number;   // 보유 중인 스트릭 프리즈 (최대 3)
+  lastFreezeDate: string;  // 마지막 프리즈 사용 날짜
 }
 
 // ===== 학습 언어 모드 =====
@@ -193,7 +196,7 @@ export interface CoupleMission {
 }
 
 // ===== 레슨 진행 상태 =====
-export type LessonPhase = 'sentences' | 'quiz' | 'grammar' | 'dialogue' | 'term' | 'bonus' | 'mission' | 'homework' | 'complete';
+export type LessonPhase = 'chunks' | 'sentences' | 'shadowing' | 'quiz' | 'grammar' | 'dialogue' | 'term' | 'bonus' | 'mission' | 'homework' | 'complete';
 
 export interface LessonState {
   lessonId: string | null;

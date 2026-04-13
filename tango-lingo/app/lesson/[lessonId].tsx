@@ -1,11 +1,12 @@
 import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { getLessonById } from '../../data/lessons';
 import { sentences } from '../../data/sentences';
 import { quizzes } from '../../data/quizzes';
+import { getChunksForLesson } from '../../data/chunks';
 import { getTermsForLesson } from '../../data/tango-terms';
 import { getBonusById } from '../../data/bonuses';
 import { getMissionById } from '../../data/missions';
@@ -13,6 +14,7 @@ import { homeworks } from '../../data/homeworks';
 import { getGrammarNoteById } from '../../data/grammar-notes';
 import { getDialoguesForLesson } from '../../data/dialogues';
 import { SentenceCard } from '../../components/lesson/SentenceCard';
+import { ChunkCard } from '../../components/lesson/ChunkCard';
 import { ProgressBar } from '../../components/lesson/ProgressBar';
 import { LessonComplete } from '../../components/lesson/LessonComplete';
 import { MultipleChoice } from '../../components/quiz/MultipleChoice';
@@ -29,12 +31,17 @@ import { HomeworkCard } from '../../components/curriculum/HomeworkCard';
 import { DialogueCard } from '../../components/curriculum/DialogueCard';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
+import { speak } from '../../utils/audio';
+import { getAdaptiveQuizOrder } from '../../utils/adaptive-quiz';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../constants/theme';
 import type { LessonPhase } from '../../types';
 import { Button } from '../../components/common/Button';
 
 const XP_PER_CORRECT = 10;
 const XP_BASE = 5;
+const SENTENCE_LIMIT = 10;    // 문장 카드 최대 10개
+const SHADOWING_COUNT = 3;    // 쉐도잉 문장 3개
+const QUIZ_LIMIT = 8;         // 퀴즈 최대 8개
 
 export default function LessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
@@ -45,10 +52,17 @@ export default function LessonScreen() {
   const showEnglish = useSettingsStore((s) => s.showEnglish);
   const showChinese = useSettingsStore((s) => s.showChinese);
 
-  const [phase, setPhase] = useState<LessonPhase>('sentences');
+  const [phase, setPhase] = useState<LessonPhase>(
+    // 청크가 있으면 chunks부터, 아니면 sentences부터
+    lesson?.chunkIds && lesson.chunkIds.length > 0 ? 'chunks' : 'sentences'
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [earnedXp, setEarnedXp] = useState(0);
+
+  // 적응형 퀴즈용 스트릭 트래킹
+  const [correctStreak, setCorrectStreak] = useState(0);
+  const [wrongStreak, setWrongStreak] = useState(0);
 
   if (!lesson) {
     return (
@@ -58,8 +72,23 @@ export default function LessonScreen() {
     );
   }
 
-  const sentenceList = lesson.sentenceIds.map((id) => sentences[id]).filter(Boolean);
-  const quizList = lesson.quizIds.map((id) => quizzes[id]).filter(Boolean);
+  // === 데이터 준비 ===
+  const chunkList = lesson.chunkIds ? getChunksForLesson(lesson.chunkIds) : [];
+  const allSentences = lesson.sentenceIds.map((id) => sentences[id]).filter(Boolean);
+  const sentenceList = allSentences.slice(0, SENTENCE_LIMIT); // 10개로 제한
+  const shadowingSentences = allSentences.slice(0, SHADOWING_COUNT); // 쉐도잉용 3문장
+
+  const allQuizzes = lesson.quizIds.map((id) => quizzes[id]).filter(Boolean);
+  const baseQuizList = allQuizzes.slice(0, QUIZ_LIMIT); // 8개로 제한
+
+  // 적응형 퀴즈 순서 (스트릭에 따라 동적 재정렬)
+  const quizList = useMemo(
+    () => getAdaptiveQuizOrder(baseQuizList, correctStreak, wrongStreak),
+    // correctStreak/wrongStreak가 변하면 남은 퀴즈 순서가 바뀜
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [correctStreak, wrongStreak]
+  );
+
   const termList = lesson.termIds ? getTermsForLesson(lesson.termIds) : [];
   const bonus = lesson.bonusId ? getBonusById(lesson.bonusId) : undefined;
   const mission = lesson.missionId ? getMissionById(lesson.missionId) : undefined;
@@ -68,27 +97,33 @@ export default function LessonScreen() {
   const dialogueList = getDialoguesForLesson(lesson.id);
 
   // 전체 스텝 수 계산
+  const chunkSteps = chunkList.length;
+  const shadowingSteps = shadowingSentences.length;
   const grammarSteps = grammarNote ? 1 : 0;
   const dialogueSteps = dialogueList.length;
   const termSteps = termList.length;
   const bonusSteps = bonus ? 1 : 0;
   const missionSteps = mission ? 1 : 0;
   const homeworkSteps = homeworkList.length;
-  const totalSteps = sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps + missionSteps + homeworkSteps;
+  const totalSteps = chunkSteps + sentenceList.length + shadowingSteps + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps + missionSteps + homeworkSteps;
 
   const currentStep =
-    phase === 'sentences' ? currentIndex
-    : phase === 'quiz' ? sentenceList.length + currentIndex
-    : phase === 'grammar' ? sentenceList.length + quizList.length
-    : phase === 'dialogue' ? sentenceList.length + quizList.length + grammarSteps + currentIndex
-    : phase === 'term' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + currentIndex
-    : phase === 'bonus' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + currentIndex
-    : phase === 'mission' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps
-    : phase === 'homework' ? sentenceList.length + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps + missionSteps + currentIndex
+    phase === 'chunks' ? currentIndex
+    : phase === 'sentences' ? chunkSteps + currentIndex
+    : phase === 'shadowing' ? chunkSteps + sentenceList.length + currentIndex
+    : phase === 'quiz' ? chunkSteps + sentenceList.length + shadowingSteps + currentIndex
+    : phase === 'grammar' ? chunkSteps + sentenceList.length + shadowingSteps + quizList.length
+    : phase === 'dialogue' ? chunkSteps + sentenceList.length + shadowingSteps + quizList.length + grammarSteps + currentIndex
+    : phase === 'term' ? chunkSteps + sentenceList.length + shadowingSteps + quizList.length + grammarSteps + dialogueSteps + currentIndex
+    : phase === 'bonus' ? chunkSteps + sentenceList.length + shadowingSteps + quizList.length + grammarSteps + dialogueSteps + termSteps + currentIndex
+    : phase === 'mission' ? chunkSteps + sentenceList.length + shadowingSteps + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps
+    : phase === 'homework' ? chunkSteps + sentenceList.length + shadowingSteps + quizList.length + grammarSteps + dialogueSteps + termSteps + bonusSteps + missionSteps + currentIndex
     : totalSteps;
 
   const phaseLabel =
-    phase === 'sentences' ? '문장'
+    phase === 'chunks' ? '청크'
+    : phase === 'sentences' ? '문장'
+    : phase === 'shadowing' ? '쉐도잉'
     : phase === 'quiz' ? '퀴즈'
     : phase === 'grammar' ? '문법'
     : phase === 'dialogue' ? '대화'
@@ -209,9 +244,36 @@ export default function LessonScreen() {
     }
   };
 
+  // === 청크 다음 ===
+  const handleNextChunk = () => {
+    if (currentIndex < chunkList.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      // 청크 끝 → 문장으로
+      setPhase('sentences');
+      setCurrentIndex(0);
+    }
+  };
+
   // === 문장 카드 다음 ===
   const handleNextSentence = () => {
     if (currentIndex < sentenceList.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      // 문장 끝 → 쉐도잉으로 (쉐도잉 문장이 있으면)
+      if (shadowingSentences.length > 0) {
+        setPhase('shadowing');
+        setCurrentIndex(0);
+      } else {
+        setPhase('quiz');
+        setCurrentIndex(0);
+      }
+    }
+  };
+
+  // === 쉐도잉 다음 ===
+  const handleNextShadowing = () => {
+    if (currentIndex < shadowingSentences.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
       setPhase('quiz');
@@ -219,16 +281,20 @@ export default function LessonScreen() {
     }
   };
 
-  // === 퀴즈 답변 ===
+  // === 퀴즈 답변 (적응형) ===
   const handleQuizAnswer = (correct: boolean) => {
     let newXp = earnedXp;
     if (correct) {
       setCorrectCount((c) => c + 1);
+      setCorrectStreak((s) => s + 1);
+      setWrongStreak(0);
       newXp += XP_PER_CORRECT;
       setEarnedXp(newXp);
     } else {
       const quiz = quizList[currentIndex];
       if (quiz) addWrongSentence(quiz.sentenceId);
+      setWrongStreak((s) => s + 1);
+      setCorrectStreak(0);
     }
 
     if (currentIndex < quizList.length - 1) {
@@ -242,6 +308,14 @@ export default function LessonScreen() {
 
   // === 렌더 ===
   const renderContent = () => {
+    // --- 청크 ---
+    if (phase === 'chunks') {
+      const chunk = chunkList[currentIndex];
+      if (!chunk) return null;
+      return <ChunkCard key={chunk.id} chunk={chunk} onNext={handleNextChunk} />;
+    }
+
+    // --- 문장 ---
     if (phase === 'sentences') {
       const sentence = sentenceList[currentIndex];
       if (!sentence) return null;
@@ -256,6 +330,20 @@ export default function LessonScreen() {
       );
     }
 
+    // --- 쉐도잉 (간소화 인라인 버전) ---
+    if (phase === 'shadowing') {
+      const sentence = shadowingSentences[currentIndex];
+      if (!sentence) return null;
+      return (
+        <ShadowingInline
+          key={sentence.id}
+          sentence={sentence}
+          onNext={handleNextShadowing}
+        />
+      );
+    }
+
+    // --- 퀴즈 (적응형) ---
     if (phase === 'quiz') {
       const quiz = quizList[currentIndex];
       if (!quiz) return null;
@@ -390,6 +478,66 @@ export default function LessonScreen() {
   );
 }
 
+// ===== 쉐도잉 인라인 컴포넌트 (간소화 버전) =====
+import type { Sentence } from '../../types';
+
+function ShadowingInline({ sentence, onNext }: { sentence: Sentence; onNext: () => void }) {
+  const [speaking, setSpeaking] = useState(false);
+
+  const handleSpeak = async () => {
+    if (speaking) return;
+    setSpeaking(true);
+    try {
+      await speak(sentence.spanish, 'es', true);
+    } finally {
+      setSpeaking(false);
+    }
+  };
+
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={styles.shadowingContainer}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* 쉐도잉 안내 */}
+      <View style={styles.shadowingBadge}>
+        <Ionicons name="mic-outline" size={16} color={colors.primary} />
+        <Text style={styles.shadowingBadgeText}>쉐도잉</Text>
+      </View>
+
+      {/* 문장 */}
+      <Text style={styles.shadowingSpanish}>{sentence.spanish}</Text>
+      <Text style={styles.shadowingKorean}>{sentence.korean}</Text>
+
+      {/* TTS 버튼 */}
+      <TouchableOpacity
+        style={[styles.shadowingSpeakBtn, speaking && styles.shadowingSpeakBtnActive]}
+        onPress={handleSpeak}
+        activeOpacity={0.7}
+      >
+        <Ionicons
+          name={speaking ? 'volume-high' : 'play'}
+          size={28}
+          color={speaking ? '#FFF' : colors.primary}
+        />
+      </TouchableOpacity>
+
+      {/* 따라 말해보세요 */}
+      <Text style={styles.shadowingPrompt}>따라 말해보세요</Text>
+      <Text style={styles.shadowingHint}>
+        소리를 듣고 똑같이 따라해 보세요
+      </Text>
+
+      {/* 다음 버튼 */}
+      <TouchableOpacity style={styles.shadowingNextBtn} onPress={onNext} activeOpacity={0.7}>
+        <Text style={styles.shadowingNextText}>다음</Text>
+        <Ionicons name="arrow-forward" size={20} color="#FFF" />
+      </TouchableOpacity>
+    </ScrollView>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -447,5 +595,85 @@ const styles = StyleSheet.create({
     color: colors.error,
     textAlign: 'center',
     marginTop: 100,
+  },
+
+  // === 쉐도잉 스타일 ===
+  shadowingContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+    paddingBottom: spacing.xxl,
+  },
+  shadowingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+    marginBottom: spacing.lg,
+  },
+  shadowingBadgeText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.primary,
+  },
+  shadowingSpanish: {
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  shadowingKorean: {
+    fontSize: fontSize.lg,
+    color: colors.secondary,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  shadowingSpeakBtn: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.full,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  shadowingSpeakBtnActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  shadowingPrompt: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    marginBottom: spacing.xs,
+  },
+  shadowingHint: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  shadowingNextBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md - 2,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.lg,
+  },
+  shadowingNextText: {
+    color: '#FFF',
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.bold,
   },
 });

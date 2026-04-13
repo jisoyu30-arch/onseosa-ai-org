@@ -2,15 +2,18 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-nati
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo } from 'react';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { lessons } from '../../data/lessons';
 import { getTodayQuote } from '../../data/dailyQuotes';
+import { getStudyRecommendation } from '../../utils/study-recommender';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { xp, streak, completedLessons, wrongSentences } = useProgressStore();
+  const { xp, streak, completedLessons, wrongSentences, sentenceReviews } = useProgressStore();
   const todayQuote = getTodayQuote();
+  const recommendation = useMemo(() => getStudyRecommendation(sentenceReviews), [sentenceReviews]);
 
   // 다음 미완료 레슨 찾기
   const nextLesson = lessons.find((l) => !completedLessons.includes(l.id));
@@ -33,6 +36,18 @@ export default function HomeScreen() {
             </View>
           </View>
         </View>
+
+        {/* 스마트 복습 추천 배너 */}
+        {recommendation.urgentCount > 0 && (
+          <TouchableOpacity
+            style={styles.recBanner}
+            onPress={() => router.push('/(tabs)/review')}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.recEmoji}>{'\uD83E\uDDE0'}</Text>
+            <Text style={styles.recText}>{recommendation.message}</Text>
+          </TouchableOpacity>
+        )}
 
         {/* 오늘의 레슨 */}
         {nextLesson && (
@@ -105,6 +120,14 @@ export default function HomeScreen() {
             <Ionicons name="git-compare" size={24} color={colors.accent} />
             <Text style={styles.toolLabel}>문법 비교</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/shadowing')}>
+            <Ionicons name="headset" size={24} color={colors.secondary} />
+            <Text style={styles.toolLabel}>쉐도잉</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/minimal-pairs')}>
+            <Ionicons name="ear" size={24} color={colors.primaryDark} />
+            <Text style={styles.toolLabel}>미니멀 페어</Text>
+          </TouchableOpacity>
         </View>
 
         {/* 학습 현황 */}
@@ -170,6 +193,26 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: fontWeight.bold,
     color: colors.text,
+  },
+  // 스마트 복습 배너
+  recBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  recEmoji: {
+    fontSize: 18,
+  },
+  recText: {
+    flex: 1,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    color: '#E65100',
   },
   // 오늘의 레슨 카드
   lessonCard: {

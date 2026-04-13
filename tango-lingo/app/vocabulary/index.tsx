@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { lessons, levels, units } from '../../data/lessons';
 import { sentences } from '../../data/sentences';
+import { MasteryBadge, getMasteryLevel, MASTERY_CONFIG, type MasteryLevel } from '../../components/common/MasteryBadge';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
 
 interface WordEntry {
@@ -64,13 +65,35 @@ function extractWords(completedLessonIds: string[]): WordEntry[] {
   return Array.from(wordMap.values());
 }
 
+type MasteryFilter = 'all' | MasteryLevel;
+
 export default function VocabularyScreen() {
   const router = useRouter();
-  const { completedLessons } = useProgressStore();
+  const { completedLessons, sentenceReviews } = useProgressStore();
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [masteryFilter, setMasteryFilter] = useState<MasteryFilter>('all');
 
   const allWords = useMemo(() => extractWords(completedLessons), [completedLessons]);
+
+  // 단어별 마스터리 레벨 계산
+  const wordMastery = useMemo(() => {
+    const map: Record<string, MasteryLevel> = {};
+    for (const word of allWords) {
+      const review = sentenceReviews[word.spanish];
+      map[word.spanish] = review ? getMasteryLevel(review.interval) : 'new';
+    }
+    return map;
+  }, [allWords, sentenceReviews]);
+
+  // 마스터리 분포
+  const masteryDistribution = useMemo(() => {
+    const dist: Record<MasteryLevel, number> = { new: 0, learning: 0, familiar: 0, mastered: 0 };
+    for (const level of Object.values(wordMastery)) {
+      dist[level]++;
+    }
+    return dist;
+  }, [wordMastery]);
 
   const wordsByLevel = useMemo(() => {
     const grouped: Record<string, WordEntry[]> = {};
@@ -81,7 +104,13 @@ export default function VocabularyScreen() {
     return grouped;
   }, [allWords]);
 
-  const displayWords = selectedLevel ? (wordsByLevel[selectedLevel] ?? []) : allWords;
+  const displayWords = useMemo(() => {
+    let words = selectedLevel ? (wordsByLevel[selectedLevel] ?? []) : allWords;
+    if (masteryFilter !== 'all') {
+      words = words.filter((w) => wordMastery[w.spanish] === masteryFilter);
+    }
+    return words;
+  }, [selectedLevel, wordsByLevel, allWords, masteryFilter, wordMastery]);
 
   const toggleFlip = (word: string) => {
     setFlippedCards((prev) => {
@@ -104,6 +133,38 @@ export default function VocabularyScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* 마스터리 분포 */}
+        {allWords.length > 0 && (
+          <View style={styles.masteryBar}>
+            <Text style={styles.masteryBarTitle}>숙련도</Text>
+            <Text style={styles.masteryBarStats}>
+              새것 {masteryDistribution.new} | 학습중 {masteryDistribution.learning} | 익숙함 {masteryDistribution.familiar} | 마스터 {masteryDistribution.mastered}
+            </Text>
+          </View>
+        )}
+
+        {/* 마스터리 필터 */}
+        {allWords.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+            <View style={styles.filterRow}>
+              {([['all', '전체', null], ['new', '새것', '#9E9E9E'], ['learning', '학습중', '#F9A825'], ['familiar', '익숙함', '#1E88E5'], ['mastered', '마스터', '#43A047']] as const).map(([key, label, dotColor]) => (
+                <TouchableOpacity
+                  key={key}
+                  style={[styles.filterChip, masteryFilter === key && styles.filterChipActive]}
+                  onPress={() => setMasteryFilter(key as MasteryFilter)}
+                >
+                  <View style={styles.filterChipInner}>
+                    {dotColor && <View style={[styles.masteryDot, { backgroundColor: dotColor }]} />}
+                    <Text style={[styles.filterText, masteryFilter === key && styles.filterTextActive]}>
+                      {label}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        )}
+
         {/* 레벨 필터 */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
           <View style={styles.filterRow}>
@@ -165,7 +226,10 @@ export default function VocabularyScreen() {
                     </>
                   ) : (
                     <>
-                      <Text style={styles.wordSpanish}>{word.spanish}</Text>
+                      <View style={styles.wordRow}>
+                        <MasteryBadge level={wordMastery[word.spanish] ?? 'new'} size={28} />
+                        <Text style={styles.wordSpanish}>{word.spanish}</Text>
+                      </View>
                       <Text style={styles.flipHint}>탭하여 예문 보기</Text>
                     </>
                   )}
@@ -250,6 +314,15 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     marginTop: spacing.sm,
   },
+
+  wordRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.xs },
+
+  masteryBar: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.sm, ...shadow.sm },
+  masteryBarTitle: { fontSize: fontSize.sm, fontWeight: fontWeight.bold, color: colors.text, marginBottom: 4 },
+  masteryBarStats: { fontSize: fontSize.sm, color: colors.textSecondary },
+
+  masteryDot: { width: 8, height: 8, borderRadius: 4 },
+  filterChipInner: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 
   empty: { alignItems: 'center', paddingVertical: spacing.xxl },
   emptyEmoji: { fontSize: 48, marginBottom: spacing.md },

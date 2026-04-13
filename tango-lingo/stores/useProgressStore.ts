@@ -27,6 +27,8 @@ export const useProgressStore = create<ProgressStore>((set, get) => ({
   lastStudyDate: '',
   wrongSentences: [],
   sentenceReviews: {},
+  streakFreezes: 1,
+  lastFreezeDate: '',
   loaded: false,
 
   load: async () => {
@@ -61,7 +63,12 @@ export const useProgressStore = create<ProgressStore>((set, get) => ({
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayStr = yesterday.toISOString().split('T')[0];
       const newStreak = lastDate === yesterdayStr ? state.streak + 1 : 1;
-      set({ streak: newStreak, lastStudyDate: todayStr });
+      // 7일 연속 달성 시 프리즈 1개 획득 (최대 3개)
+      const updates: Partial<UserProgress> = { streak: newStreak, lastStudyDate: todayStr };
+      if (newStreak > 0 && newStreak % 7 === 0 && state.streakFreezes < 3) {
+        updates.streakFreezes = Math.min(state.streakFreezes + 1, 3);
+      }
+      set(updates);
     }
     get()._persist();
   },
@@ -127,7 +134,16 @@ export const useProgressStore = create<ProgressStore>((set, get) => ({
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString().split('T')[0];
     if (lastDate !== yesterdayStr && lastDate !== todayStr) {
-      set({ streak: 0 });
+      // 스트릭이 끊길 위기 — 프리즈가 있으면 사용
+      if (state.streakFreezes > 0) {
+        set({
+          streakFreezes: state.streakFreezes - 1,
+          lastFreezeDate: todayStr,
+          // streak 유지, lastStudyDate는 바꾸지 않음 (오늘 공부하면 completeLesson에서 갱신)
+        });
+      } else {
+        set({ streak: 0 });
+      }
       get()._persist();
     }
   },

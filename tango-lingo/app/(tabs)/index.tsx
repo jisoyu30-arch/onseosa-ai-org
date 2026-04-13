@@ -134,6 +134,20 @@ export default function HomeScreen() {
           <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
         </TouchableOpacity>
 
+        {/* 알파벳 발음 */}
+        <TouchableOpacity
+          style={styles.aiCard}
+          onPress={() => router.push('/alphabet')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="text" size={28} color={colors.primaryDark} />
+          <View style={styles.aiCardText}>
+            <Text style={styles.aiCardTitle}>알파벳 발음</Text>
+            <Text style={styles.aiCardDesc}>6개 발음 비교 · 아르헨티나 특수 발음</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+
         {/* 학습 현황 */}
         <View style={styles.progressSection}>
           <Text style={styles.sectionTitle}>학습 현황</Text>

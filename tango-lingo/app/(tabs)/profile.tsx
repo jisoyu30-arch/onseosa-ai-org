@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useThemeStore } from '../../stores/useThemeStore';
+import { LearningMode } from '../../types';
 import { lessons, units } from '../../data/lessons';
 import { badges, Badge } from '../../data/badges';
 import { BadgeCard } from '../../components/common/BadgeCard';
@@ -37,8 +38,14 @@ const HOUR_OPTIONS = [7, 8, 9, 10, 11, 12, 18, 19, 20, 21, 22];
 export default function ProfileScreen() {
   const router = useRouter();
   const { xp, streak, completedLessons, lastStudyDate, wrongSentences } = useProgressStore();
-  const { notificationEnabled, notificationHour, notificationMinute, update } = useSettingsStore();
+  const { notificationEnabled, notificationHour, notificationMinute, learningMode, update } = useSettingsStore();
   const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
+
+  const languageOptions: { mode: LearningMode; flag: string; label: string }[] = [
+    { mode: 'es', flag: '\uD83C\uDDE6\uD83C\uDDF7', label: '스페인어' },
+    { mode: 'en', flag: '\uD83C\uDDFA\uD83C\uDDF8', label: '영어' },
+    { mode: 'zh', flag: '\uD83C\uDDE8\uD83C\uDDF3', label: '중국어' },
+  ];
 
   const earnedBadges = useMemo(
     () => badges.map((b) => ({ badge: b, earned: checkBadgeEarned(b, completedLessons, xp, streak) })),
@@ -147,6 +154,26 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* 학습 언어 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>학습 언어</Text>
+          <View style={styles.langRow}>
+            {languageOptions.map((opt) => (
+              <TouchableOpacity
+                key={opt.mode}
+                style={[styles.langChip, learningMode === opt.mode && styles.langChipActive]}
+                onPress={() => update({ learningMode: opt.mode })}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.langFlag}>{opt.flag}</Text>
+                <Text style={[styles.langLabel, learningMode === opt.mode && styles.langLabelActive]}>
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* 알림 설정 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>학습 알림</Text>
@@ -245,6 +272,13 @@ const styles = StyleSheet.create({
   reportBtnText: { flex: 1, fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text },
 
   badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-start' },
+
+  langRow: { flexDirection: 'row', gap: spacing.sm },
+  langChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.md, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.background },
+  langChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
+  langFlag: { fontSize: fontSize.lg },
+  langLabel: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.textSecondary },
+  langLabelActive: { color: '#FFF' },
 
   completedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
   completedText: { fontSize: fontSize.md, color: colors.text },

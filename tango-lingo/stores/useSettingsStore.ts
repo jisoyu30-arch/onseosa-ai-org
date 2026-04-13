@@ -16,6 +16,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   notificationMinute: 0,
   showEnglish: false,
   showChinese: false,
+  learningMode: 'es',
   loaded: false,
 
   load: async () => {

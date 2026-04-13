@@ -5,7 +5,9 @@ export interface Sentence {
   korean: string;
   english: string;
   chinese: string;
-  pronunciation?: string;
+  pronunciation?: string;      // 스페인어 발음 기호
+  pronunciationEn?: string;    // 영어 발음 기호 (IPA)
+  pronunciationZh?: string;    // 중국어 발음 기호 (pinyin)
   audioKey?: string;
   tags: string[];
   difficulty: 1 | 2 | 3;
@@ -105,6 +107,9 @@ export interface UserProgress {
   sentenceReviews: Record<string, ReviewState>;
 }
 
+// ===== 학습 언어 모드 =====
+export type LearningMode = 'es' | 'en' | 'zh';
+
 // ===== 설정 =====
 export interface Settings {
   notificationEnabled: boolean;
@@ -112,6 +117,7 @@ export interface Settings {
   notificationMinute: number;
   showEnglish: boolean;
   showChinese: boolean;
+  learningMode: LearningMode;
 }
 
 // ===== 발음 연습 언어 =====

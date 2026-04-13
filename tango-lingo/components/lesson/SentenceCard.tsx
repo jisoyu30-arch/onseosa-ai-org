@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Sentence } from '../../types';
 import { PronunciationPanel } from './PronunciationPanel';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
 
 interface SentenceCardProps {
@@ -13,9 +14,46 @@ interface SentenceCardProps {
 }
 
 export function SentenceCard({ sentence, onNext, showEnglish = false, showChinese = false }: SentenceCardProps) {
-  const [engVisible, setEngVisible] = useState(showEnglish);
-  const [chnVisible, setChnVisible] = useState(showChinese);
+  const learningMode = useSettingsStore((s) => s.learningMode);
+
+  // 모드별 메인 문장, 발음, 토글 설정
+  const mainText =
+    learningMode === 'en' ? sentence.english :
+    learningMode === 'zh' ? sentence.chinese :
+    sentence.spanish;
+
+  const pronunciation =
+    learningMode === 'en' ? sentence.pronunciationEn :
+    learningMode === 'zh' ? sentence.pronunciationZh :
+    sentence.pronunciation;
+
+  // 보조 언어 토글: 메인이 아닌 언어들
+  const toggles =
+    learningMode === 'es'
+      ? [
+          { key: 'en', label: 'EN', text: sentence.english },
+          { key: 'zh', label: '中', text: sentence.chinese },
+        ]
+      : learningMode === 'en'
+      ? [
+          { key: 'es', label: 'ES', text: sentence.spanish },
+          { key: 'zh', label: '中', text: sentence.chinese },
+        ]
+      : [
+          { key: 'es', label: 'ES', text: sentence.spanish },
+          { key: 'en', label: 'EN', text: sentence.english },
+        ];
+
+  const [visibleToggles, setVisibleToggles] = useState<Record<string, boolean>>({
+    en: learningMode === 'es' ? showEnglish : false,
+    zh: learningMode === 'es' ? showChinese : false,
+    es: false,
+  });
   const [practiceOpen, setPracticeOpen] = useState(false);
+
+  const handleToggle = (key: string) => {
+    setVisibleToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <ScrollView
@@ -23,38 +61,41 @@ export function SentenceCard({ sentence, onNext, showEnglish = false, showChines
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
     >
-      {/* 스페인어 — 메인 */}
-      <Text style={styles.spanish}>{sentence.spanish}</Text>
+      {/* 메인 문장 */}
+      <Text style={styles.mainSentence}>{mainText}</Text>
 
       {/* 발음 */}
-      {sentence.pronunciation && (
-        <Text style={styles.pronunciation}>[{sentence.pronunciation}]</Text>
+      {pronunciation && (
+        <Text style={styles.pronunciation}>[{pronunciation}]</Text>
       )}
 
-      {/* 한국어 — 기본 표시 */}
+      {/* 한국어 — 항상 표시 */}
       <Text style={styles.korean}>{sentence.korean}</Text>
 
       {/* 보조 언어 토글 */}
       <View style={styles.toggleRow}>
-        <TouchableOpacity
-          style={[styles.toggleBtn, engVisible && styles.toggleActive]}
-          onPress={() => setEngVisible(!engVisible)}
-        >
-          <Text style={[styles.toggleText, engVisible && styles.toggleTextActive]}>EN</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleBtn, chnVisible && styles.toggleActive]}
-          onPress={() => setChnVisible(!chnVisible)}
-        >
-          <Text style={[styles.toggleText, chnVisible && styles.toggleTextActive]}>中</Text>
-        </TouchableOpacity>
+        {toggles.map((t) => (
+          <TouchableOpacity
+            key={t.key}
+            style={[styles.toggleBtn, visibleToggles[t.key] && styles.toggleActive]}
+            onPress={() => handleToggle(t.key)}
+          >
+            <Text style={[styles.toggleText, visibleToggles[t.key] && styles.toggleTextActive]}>
+              {t.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
-      {/* 영어 */}
-      {engVisible && <Text style={styles.auxiliary}>{sentence.english}</Text>}
-
-      {/* 중국어 */}
-      {chnVisible && <Text style={styles.auxiliary}>{sentence.chinese}</Text>}
+      {/* 토글된 보조 언어 표시 */}
+      {toggles.map(
+        (t) =>
+          visibleToggles[t.key] && (
+            <Text key={t.key} style={styles.auxiliary}>
+              {t.text}
+            </Text>
+          ),
+      )}
 
       {/* 발음 연습 토글 */}
       <TouchableOpacity
@@ -97,7 +138,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     paddingBottom: spacing.xxl,
   },
-  spanish: {
+  mainSentence: {
     fontSize: fontSize.xxl,
     fontWeight: fontWeight.bold,
     color: colors.text,

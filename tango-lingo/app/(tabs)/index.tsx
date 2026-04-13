@@ -78,75 +78,34 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* AI 대화 연습 */}
-        <TouchableOpacity
-          style={styles.practiceCard}
-          onPress={() => router.push('/practice')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="chatbubbles" size={28} color={colors.primary} />
-          <View style={styles.aiCardText}>
-            <Text style={styles.aiCardTitle}>대화 연습</Text>
-            <Text style={styles.aiCardDesc}>AI와 스페인어로 실전 대화 연습</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-        </TouchableOpacity>
-
-        {/* AI 질문 */}
-        <TouchableOpacity
-          style={styles.aiCard}
-          onPress={() => router.push('/chat')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="chatbubble-ellipses" size={28} color={colors.secondary} />
-          <View style={styles.aiCardText}>
-            <Text style={styles.aiCardTitle}>탱고 AI 선생님</Text>
-            <Text style={styles.aiCardDesc}>탱고 용어, 문화, 스페인어 질문하기</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-        </TouchableOpacity>
-
-        {/* 단어장 */}
-        <TouchableOpacity
-          style={styles.aiCard}
-          onPress={() => router.push('/vocabulary')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="book" size={28} color={colors.accent} />
-          <View style={styles.aiCardText}>
-            <Text style={styles.aiCardTitle}>단어장</Text>
-            <Text style={styles.aiCardDesc}>학습한 단어 복습 · 플래시카드</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-        </TouchableOpacity>
-
-        {/* 작문 연습 */}
-        <TouchableOpacity
-          style={styles.aiCard}
-          onPress={() => router.push('/writing')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="create" size={28} color={colors.success} />
-          <View style={styles.aiCardText}>
-            <Text style={styles.aiCardTitle}>작문 연습</Text>
-            <Text style={styles.aiCardDesc}>상황별 스페인어 작문 + AI 채점</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-        </TouchableOpacity>
-
-        {/* 알파벳 발음 */}
-        <TouchableOpacity
-          style={styles.aiCard}
-          onPress={() => router.push('/alphabet')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="text" size={28} color={colors.primaryDark} />
-          <View style={styles.aiCardText}>
-            <Text style={styles.aiCardTitle}>알파벳 발음</Text>
-            <Text style={styles.aiCardDesc}>6개 발음 비교 · 아르헨티나 특수 발음</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-        </TouchableOpacity>
+        {/* 도구 모음 — 2×3 그리드 */}
+        <Text style={styles.sectionTitle}>연습 도구</Text>
+        <View style={styles.toolGrid}>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/practice')}>
+            <Ionicons name="chatbubbles" size={24} color={colors.primary} />
+            <Text style={styles.toolLabel}>대화 연습</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/chat')}>
+            <Ionicons name="chatbubble-ellipses" size={24} color={colors.secondary} />
+            <Text style={styles.toolLabel}>AI 선생님</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/vocabulary')}>
+            <Ionicons name="book" size={24} color={colors.accent} />
+            <Text style={styles.toolLabel}>단어장</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/writing')}>
+            <Ionicons name="create" size={24} color={colors.success} />
+            <Text style={styles.toolLabel}>작문 연습</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/alphabet')}>
+            <Ionicons name="text" size={24} color={colors.primaryDark} />
+            <Text style={styles.toolLabel}>알파벳</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/grammar-compare')}>
+            <Ionicons name="git-compare" size={24} color={colors.accent} />
+            <Text style={styles.toolLabel}>문법 비교</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* 학습 현황 */}
         <View style={styles.progressSection}>
@@ -282,20 +241,29 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
   },
-  // 대화 연습 카드
-  practiceCard: {
+  // 도구 그리드
+  toolGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  toolCard: {
+    width: '31%' as any,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    padding: spacing.md,
-    flexDirection: 'row',
+    padding: spacing.sm,
     alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
+    gap: spacing.xs,
     ...shadow.sm,
   },
-  // AI 카드
+  toolLabel: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  // AI 카드 (unused but kept for compatibility)
   aiCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,

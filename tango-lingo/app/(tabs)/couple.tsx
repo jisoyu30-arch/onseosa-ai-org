@@ -15,6 +15,22 @@ export default function CoupleScreen() {
         <Text style={styles.pageTitle}>커플 모드</Text>
         <Text style={styles.subtitle}>파트너와 번갈아 역할극을 해보세요</Text>
 
+        {/* 커플 챌린지 */}
+        <TouchableOpacity
+          style={styles.challengeCard}
+          onPress={() => router.push('/challenge')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.challengeIcon}>
+            <Ionicons name="trophy" size={28} color={colors.xpGold} />
+          </View>
+          <View style={styles.cardContent}>
+            <Text style={styles.cardTitle}>커플 챌린지</Text>
+            <Text style={styles.cardSituation}>같은 5문제를 풀고 점수를 비교해보세요!</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+        </TouchableOpacity>
+
         {/* 역할극 목록 */}
         {roleplayList.map((rp) => (
           <TouchableOpacity
@@ -74,6 +90,26 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     marginBottom: spacing.lg,
+  },
+  challengeCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    borderWidth: 2,
+    borderColor: colors.xpGold,
+    ...shadow.md,
+  },
+  challengeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.accentLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
     backgroundColor: colors.surface,

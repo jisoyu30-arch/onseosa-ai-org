@@ -30,6 +30,19 @@
     "plugins": [
       "expo-router",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "859f7aa7-02e5-4d70-a789-80ed44b03777"
+      }
+    },
+    "owner": "onseosa",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/859f7aa7-02e5-4d70-a789-80ed44b03777"
+    }
   }
 }

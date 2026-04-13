@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useThemeStore } from '../../stores/useThemeStore';
 import { lessons, units } from '../../data/lessons';
 import { badges, Badge } from '../../data/badges';
 import { BadgeCard } from '../../components/common/BadgeCard';
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { xp, streak, completedLessons, lastStudyDate, wrongSentences } = useProgressStore();
   const { notificationEnabled, notificationHour, notificationMinute, update } = useSettingsStore();
+  const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
 
   const earnedBadges = useMemo(
     () => badges.map((b) => ({ badge: b, earned: checkBadgeEarned(b, completedLessons, xp, streak) })),
@@ -107,6 +109,17 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
         </TouchableOpacity>
 
+        {/* 학습 분석 */}
+        <TouchableOpacity
+          style={styles.reportBtn}
+          onPress={() => router.push('/analytics')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="analytics" size={22} color={colors.accent} />
+          <Text style={styles.reportBtnText}>학습 분석 보기</Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
+        </TouchableOpacity>
+
         {/* 배지 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>배지 ({earnedCount}/{badges.length})</Text>
@@ -114,6 +127,23 @@ export default function ProfileScreen() {
             {earnedBadges.map(({ badge, earned }) => (
               <BadgeCard key={badge.id} badge={badge} earned={earned} />
             ))}
+          </View>
+        </View>
+
+        {/* 다크 모드 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>화면 설정</Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="moon" size={22} color={colors.secondary} />
+              <Text style={styles.settingLabel}>다크 모드</Text>
+            </View>
+            <Switch
+              value={themeMode === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ false: colors.border, true: colors.primaryLight }}
+              thumbColor={themeMode === 'dark' ? colors.primary : '#f4f3f4'}
+            />
           </View>
         </View>
 

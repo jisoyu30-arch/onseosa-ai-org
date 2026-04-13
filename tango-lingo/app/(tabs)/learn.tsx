@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +11,32 @@ export default function LearnScreen() {
   const router = useRouter();
   const completedLessons = useProgressStore((s) => s.completedLessons);
 
+  // 현재 진행 중인 레벨 찾기 (첫 번째로 완료 안 된 레벨)
+  const currentLevelId = useMemo(() => {
+    for (const level of levels) {
+      const levelUnits = units.filter((u) => level.unitIds.includes(u.id));
+      const levelLessonIds = levelUnits.flatMap((u) =>
+        lessons.filter((l) => u.lessonIds.includes(l.id)).map((l) => l.id)
+      );
+      const allDone = levelLessonIds.every((id) => completedLessons.includes(id));
+      if (!allDone) return level.id;
+    }
+    return levels[levels.length - 1]?.id ?? '';
+  }, [completedLessons]);
+
+  // 접히기/펼치기 상태 — 현재 레벨만 기본 펼침
+  const [expandedLevels, setExpandedLevels] = useState<Record<string, boolean>>(() => {
+    const init: Record<string, boolean> = {};
+    for (const level of levels) {
+      init[level.id] = level.id === currentLevelId;
+    }
+    return init;
+  });
+
+  const toggleLevel = (levelId: string) => {
+    setExpandedLevels((prev) => ({ ...prev, [levelId]: !prev[levelId] }));
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -17,16 +44,62 @@ export default function LearnScreen() {
 
         {levels.map((level) => {
           const levelUnits = units.filter((u) => level.unitIds.includes(u.id));
+          const levelLessonIds = levelUnits.flatMap((u) =>
+            lessons.filter((l) => u.lessonIds.includes(l.id)).map((l) => l.id)
+          );
+          const doneInLevel = levelLessonIds.filter((id) => completedLessons.includes(id)).length;
+          const totalInLevel = levelLessonIds.length;
+          const isLevelComplete = totalInLevel > 0 && doneInLevel === totalInLevel;
+          const expanded = expandedLevels[level.id] ?? false;
+          const progressRatio = totalInLevel > 0 ? doneInLevel / totalInLevel : 0;
+
           return (
             <View key={level.id} style={styles.levelSection}>
-              <View style={styles.levelHeader}>
-                <Text style={styles.levelTitle}>{level.title}</Text>
-                <Text style={styles.levelTitleKo}>{level.titleKo}</Text>
-              </View>
+              {/* 레벨 헤더 (탭해서 접기/펼치기) */}
+              <TouchableOpacity
+                style={styles.levelHeader}
+                onPress={() => toggleLevel(level.id)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.levelTitleRow}>
+                  <View style={styles.levelTitles}>
+                    <Text style={styles.levelTitle}>{level.title}</Text>
+                    <Text style={styles.levelTitleKo}>{level.titleKo}</Text>
+                  </View>
+                  <View style={styles.levelRight}>
+                    {isLevelComplete && (
+                      <View style={styles.completeBadge}>
+                        <Ionicons name="checkmark-circle" size={16} color="#FFF" />
+                        <Text style={styles.completeBadgeText}>완료</Text>
+                      </View>
+                    )}
+                    <Ionicons
+                      name={expanded ? 'chevron-up' : 'chevron-down'}
+                      size={20}
+                      color={colors.textSecondary}
+                    />
+                  </View>
+                </View>
 
-              {levelUnits.map((unit) => {
+                {/* 레벨 진행률 바 */}
+                <View style={styles.progressBarContainer}>
+                  <View style={styles.progressBarBg}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${progressRatio * 100}%` },
+                        isLevelComplete && styles.progressBarComplete,
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.progressText}>{doneInLevel}/{totalInLevel}</Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* 펼쳐진 내용 */}
+              {expanded && levelUnits.map((unit) => {
                 const unitLessons = lessons.filter((l) => unit.lessonIds.includes(l.id));
-                const doneCount = unitLessons.filter((l) => completedLessons.includes(l.id)).length;
+                const unitDoneCount = unitLessons.filter((l) => completedLessons.includes(l.id)).length;
 
                 // 같은 레벨의 모든 레슨 ID를 순서대로 수집
                 const allLevelLessonIds = levelUnits.flatMap((u) =>
@@ -37,7 +110,7 @@ export default function LearnScreen() {
                   <View key={unit.id} style={styles.unitCard}>
                     <View style={styles.unitHeader}>
                       <Text style={styles.unitTitle}>{unit.titleKo}</Text>
-                      <Text style={styles.unitProgress}>{doneCount}/{unitLessons.length}</Text>
+                      <Text style={styles.unitProgress}>{unitDoneCount}/{unitLessons.length}</Text>
                     </View>
 
                     {unitLessons.map((lesson) => {
@@ -104,7 +177,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   levelHeader: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
     marginBottom: spacing.sm,
+    ...shadow.sm,
+  },
+  levelTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  levelTitles: {
+    flex: 1,
   },
   levelTitle: {
     fontSize: fontSize.lg,
@@ -115,10 +200,58 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textSecondary,
   },
+  levelRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  completeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: colors.success,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.full,
+  },
+  completeBadgeText: {
+    color: '#FFF',
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 6,
+    backgroundColor: colors.borderLight,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 3,
+  },
+  progressBarComplete: {
+    backgroundColor: colors.success,
+  },
+  progressText: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    fontWeight: fontWeight.medium,
+    minWidth: 36,
+    textAlign: 'right',
+  },
   unitCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
+    marginBottom: spacing.sm,
     ...shadow.sm,
   },
   unitHeader: {

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useProgressStore } from '../../stores/useProgressStore';
 import { sentences } from '../../data/sentences';
 import { getTomorrowCount } from '../../utils/spaced-repetition';
+import { WeakPointCard } from '../../components/common/WeakPointCard';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
 
 export default function ReviewScreen() {
@@ -62,6 +63,9 @@ export default function ReviewScreen() {
             <Text style={styles.statLabel}>전체 추적</Text>
           </View>
         </View>
+
+        {/* 약점 분석 카드 */}
+        <WeakPointCard />
 
         {reviewList.length === 0 ? (
           <View style={styles.emptyBox}>

@@ -25,48 +25,41 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: '홈',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
+          title: '오늘',
+          tabBarIcon: ({ color, size }) => <Ionicons name="flame" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="learn"
         options={{
-          title: '학습',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="book" size={size} color={color} />
-          ),
+          title: '365일',
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="review"
+        name="alphabet"
         options={{
-          title: '복습',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="refresh" size={size} color={color} />
-          ),
+          title: '알파벳',
+          tabBarIcon: ({ color, size }) => <Ionicons name="text" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="couple"
+        name="roleplay"
         options={{
-          title: '커플',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="heart" size={size} color={color} />
-          ),
+          title: '롤플레이',
+          tabBarIcon: ({ color, size }) => <Ionicons name="chatbubbles" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: '프로필',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
+          title: '나',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />
+      {/* 숨김 */}
+      <Tabs.Screen name="review" options={{ href: null }} />
+      <Tabs.Screen name="couple" options={{ href: null }} />
     </Tabs>
   );
 }

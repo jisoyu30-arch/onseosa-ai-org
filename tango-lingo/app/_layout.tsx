@@ -5,6 +5,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useProgressStore } from '../stores/useProgressStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useThemeStore } from '../stores/useThemeStore';
+import { useGoalStore } from '../stores/useGoalStore';
+import { useDialogueProgress } from '../stores/useDialogueProgress';
+import { useCurriculumStore } from '../stores/useCurriculumStore';
+import { useTestStore } from '../stores/useTestStore';
 import { useTheme } from '../utils/useTheme';
 import OnboardingScreen from './onboarding';
 
@@ -17,21 +21,27 @@ function AppContent() {
   const loadProgress = useProgressStore((s) => s.load);
   const loadSettings = useSettingsStore((s) => s.load);
   const loadTheme = useThemeStore((s) => s.load);
+  const loadGoal = useGoalStore((s) => s.load);
+  const loadDialogueProgress = useDialogueProgress((s) => s.load);
+  const loadCurriculum = useCurriculumStore((s) => s.load);
+  const loadTest = useTestStore((s) => s.load);
 
   useEffect(() => {
     loadProgress();
     loadSettings();
     loadTheme();
+    loadGoal();
+    loadDialogueProgress();
+    loadCurriculum();
+    loadTest();
 
     AsyncStorage.getItem(ONBOARDING_KEY)
       .then((val) => setOnboardingDone(val === 'true'))
       .catch(() => setOnboardingDone(false));
   }, []);
 
-  // 로딩 중 (null) — 아무것도 안 그림
   if (onboardingDone === null) return null;
 
-  // 온보딩 미완료
   if (!onboardingDone) {
     return (
       <>

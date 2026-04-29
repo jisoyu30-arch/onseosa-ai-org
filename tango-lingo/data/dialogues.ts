@@ -3,6 +3,7 @@ import { dialoguesL2 } from './dialogues-l2';
 import { dialoguesL3 } from './dialogues-l3';
 import { dialoguesL4 } from './dialogues-l4';
 import { dialoguesL5 } from './dialogues-l5';
+import { dialoguesAI } from './dialogues-ai-index';
 
 export type { DialogueExample };
 
@@ -12,6 +13,7 @@ export const allDialogues: Record<string, DialogueExample> = {
   ...dialoguesL3,
   ...dialoguesL4,
   ...dialoguesL5,
+  ...dialoguesAI,
 };
 
 export function getDialoguesForLesson(lessonId: string): DialogueExample[] {

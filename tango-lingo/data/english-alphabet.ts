@@ -1,0 +1,71 @@
+// 영어 알파벳 26자 — 탱고 맥락의 예시 단어
+import type { PronunciationVariant, AlphabetEntry } from './alphabet';
+
+function makeVariants(letter: string, enUS: string, enGB?: string): PronunciationVariant[] {
+  return [
+    { locale: 'en-US', label: '미국 영어', flag: '🇺🇸', text: enUS },
+    { locale: 'en-GB', label: '영국 영어', flag: '🇬🇧', text: enGB ?? enUS },
+  ];
+}
+
+export const englishAlphabet: AlphabetEntry[] = [
+  { letter: 'A', name: 'ay', nameKo: '에이', sound: '"에이" /eɪ/', example: 'Abrazo', exampleKo: '포옹',
+    variants: makeVariants('A', 'ay') },
+  { letter: 'B', name: 'bee', nameKo: '비', sound: '"비" /biː/', example: 'Beat', exampleKo: '비트',
+    variants: makeVariants('B', 'bee') },
+  { letter: 'C', name: 'see', nameKo: '씨', sound: '"씨" /siː/. k/s 두 음', example: 'Cortina', exampleKo: '코르티나',
+    variants: makeVariants('C', 'see') },
+  { letter: 'D', name: 'dee', nameKo: '디', sound: '"디" /diː/', example: 'Dance', exampleKo: '춤',
+    variants: makeVariants('D', 'dee') },
+  { letter: 'E', name: 'ee', nameKo: '이', sound: '"이" /iː/', example: 'Embrace', exampleKo: '포옹',
+    variants: makeVariants('E', 'ee') },
+  { letter: 'F', name: 'ef', nameKo: '에프', sound: '"에프" /ɛf/', example: 'Floor', exampleKo: '플로어',
+    variants: makeVariants('F', 'ef') },
+  { letter: 'G', name: 'gee', nameKo: '쥐', sound: '"쥐" /dʒiː/. g/j 두 음', example: 'Gancho', exampleKo: '걸기',
+    variants: makeVariants('G', 'jee') },
+  { letter: 'H', name: 'aitch', nameKo: '에이치', sound: '"에이치" /eɪtʃ/. 무음 빈번', example: 'Heel', exampleKo: '힐',
+    variants: makeVariants('H', 'aytch') },
+  { letter: 'I', name: 'eye', nameKo: '아이', sound: '"아이" /aɪ/', example: 'Invite', exampleKo: '초대',
+    variants: makeVariants('I', 'eye') },
+  { letter: 'J', name: 'jay', nameKo: '제이', sound: '"제이" /dʒeɪ/', example: 'Joy', exampleKo: '기쁨',
+    variants: makeVariants('J', 'jay') },
+  { letter: 'K', name: 'kay', nameKo: '케이', sound: '"케이" /keɪ/', example: 'Kick', exampleKo: '킥',
+    variants: makeVariants('K', 'kay') },
+  { letter: 'L', name: 'el', nameKo: '엘', sound: '"엘" /ɛl/. dark L 끝음', example: 'Lead', exampleKo: '리드',
+    variants: makeVariants('L', 'el') },
+  { letter: 'M', name: 'em', nameKo: '엠', sound: '"엠" /ɛm/', example: 'Milonga', exampleKo: '밀롱가',
+    variants: makeVariants('M', 'em') },
+  { letter: 'N', name: 'en', nameKo: '엔', sound: '"엔" /ɛn/', example: 'Night', exampleKo: '밤',
+    variants: makeVariants('N', 'en') },
+  { letter: 'O', name: 'oh', nameKo: '오', sound: '"오" /oʊ/', example: 'Ocho', exampleKo: '오초(8자걸음)',
+    variants: makeVariants('O', 'oh') },
+  { letter: 'P', name: 'pee', nameKo: '피', sound: '"피" /piː/', example: 'Partner', exampleKo: '파트너',
+    variants: makeVariants('P', 'pee') },
+  { letter: 'Q', name: 'cue', nameKo: '큐', sound: '"큐" /kjuː/. 항상 qu', example: 'Quick', exampleKo: '빠른',
+    variants: makeVariants('Q', 'cue') },
+  { letter: 'R', name: 'ar', nameKo: '아', sound: '"아ㄹ" /ɑːr/. 미국 r-색 강함', example: 'Rhythm', exampleKo: '리듬',
+    variants: makeVariants('R', 'ar') },
+  { letter: 'S', name: 'ess', nameKo: '에스', sound: '"에스" /ɛs/', example: 'Salida', exampleKo: '시작',
+    variants: makeVariants('S', 'ess') },
+  { letter: 'T', name: 'tee', nameKo: '티', sound: '"티" /tiː/', example: 'Tanda', exampleKo: '탄다',
+    variants: makeVariants('T', 'tee') },
+  { letter: 'U', name: 'you', nameKo: '유', sound: '"유" /juː/', example: 'Upper', exampleKo: '윗부분',
+    variants: makeVariants('U', 'you') },
+  { letter: 'V', name: 'vee', nameKo: '브이', sound: '"브이" /viː/. 윗니 아랫입술', example: 'Vals', exampleKo: '발스',
+    variants: makeVariants('V', 'vee') },
+  { letter: 'W', name: 'double-you', nameKo: '더블유', sound: '"더블유" /ˈdʌbljuː/', example: 'Walk', exampleKo: '걷기',
+    variants: makeVariants('W', 'double-you') },
+  { letter: 'X', name: 'ex', nameKo: '엑스', sound: '"엑스" /ɛks/', example: 'Mix', exampleKo: '믹스',
+    variants: makeVariants('X', 'ex') },
+  { letter: 'Y', name: 'why', nameKo: '와이', sound: '"와이" /waɪ/', example: 'Yearning', exampleKo: '갈망',
+    variants: makeVariants('Y', 'why') },
+  { letter: 'Z', name: 'zee', nameKo: '지', sound: '"지" /ziː/ (미) / "제드" /zɛd/ (영)', example: 'Zone', exampleKo: '존',
+    variants: makeVariants('Z', 'zee', 'zed') },
+];
+
+export const englishNotes = [
+  { rule: '강세 박자', description: '강한 음절·약한 음절 리듬으로 말함', example: 'TAN-go (강) - dance (약)' },
+  { rule: '연음 (Linking)', description: '단어 끝 자음 + 다음 단어 모음 연결', example: 'an apple → "an_apple"' },
+  { rule: '약화 (Schwa)', description: '약한 모음은 모두 "어" 같은 /ə/로', example: 'about → "어바웃"' },
+  { rule: 'h 묵음', description: 'honest, hour 처럼 h 안 발음하는 단어 있음', example: 'hour → "아워"' },
+];

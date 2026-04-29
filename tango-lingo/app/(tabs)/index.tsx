@@ -1,391 +1,219 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useMemo } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useMemo } from 'react';
-import { useProgressStore } from '../../stores/useProgressStore';
-import { lessons } from '../../data/lessons';
-import { getTodayQuote } from '../../data/dailyQuotes';
-import { getStudyRecommendation } from '../../utils/study-recommender';
-import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
+import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useDialogueProgress } from '../../stores/useDialogueProgress';
+import { useGoalStore } from '../../stores/useGoalStore';
+import { useCurriculumStore } from '../../stores/useCurriculumStore';
+import { useTheme } from '../../utils/useTheme';
+import { allDialogues } from '../../data/dialogues';
+import { getDayPlan, curriculum365 as curriculum100, PHASE_INFO } from '../../data/curriculum-365';
+import { enrichDialogueLines } from '../../utils/dialogueHelper';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
+import DialogueCard from '../../components/DialogueCard';
+import PosLegend from '../../components/PosLegend';
+import IntroCard from '../../components/IntroCard';
 
-export default function HomeScreen() {
-  const router = useRouter();
-  const { xp, streak, completedLessons, wrongSentences, sentenceReviews } = useProgressStore();
-  const todayQuote = getTodayQuote();
-  const recommendation = useMemo(() => getStudyRecommendation(sentenceReviews), [sentenceReviews]);
+export default function TodayHome() {
+  const { colors, spacing } = useTheme();
+  const mode = useSettingsStore((s) => s.learningMode);
+  const lang = useDialogueProgress((s) => s.langs[mode]);
+  const completeDialogue = useDialogueProgress((s) => s.completeDialogue);
+  const isCompleted = useDialogueProgress((s) => s.isCompleted);
+  const goal = useGoalStore((s) => s.goals[mode]);
+  const getCurrentDay = useCurriculumStore((s) => s.getCurrentDay);
 
-  // 다음 미완료 레슨 찾기
-  const nextLesson = lessons.find((l) => !completedLessons.includes(l.id));
-  const reviewCount = wrongSentences.length;
+  const currentDay = getCurrentDay(mode);
+  const dayPlan = getDayPlan(currentDay);
+
+  // 오늘의 신규 + 누적된 미완료 (최대 3개) — 학습할 거리
+  const todayItems = useMemo(() => {
+    const items: { dialogueId: string; isNew: boolean; planDay: number }[] = [];
+
+    // 1) 오늘 day 신규
+    if (dayPlan) {
+      for (const id of dayPlan.newDialogueIds) {
+        if (!isCompleted(mode, id)) {
+          items.push({ dialogueId: id, isNew: true, planDay: currentDay });
+        }
+      }
+    }
+
+    // 2) 이전 day의 미완료 (backlog) — 최대 3개까지 채움
+    if (items.length < 3) {
+      for (let d = 1; d < currentDay && items.length < 3; d++) {
+        const plan = getDayPlan(d);
+        if (!plan) continue;
+        for (const id of plan.newDialogueIds) {
+          if (!isCompleted(mode, id) && items.length < 3) {
+            items.push({ dialogueId: id, isNew: false, planDay: d });
+          }
+        }
+      }
+    }
+
+    return items;
+  }, [mode, currentDay, lang.completedIds, isCompleted]);
+
+  const enriched = useMemo(
+    () =>
+      todayItems
+        .map((item) => {
+          const dialogue = allDialogues[item.dialogueId];
+          if (!dialogue) return null;
+          return { ...item, dialogue, lines: enrichDialogueLines(dialogue) };
+        })
+        .filter(Boolean) as Array<{ dialogueId: string; isNew: boolean; planDay: number; dialogue: any; lines: any[] }>,
+    [todayItems],
+  );
+
+  const totalCurriculumDialogues = useMemo(
+    () => curriculum100.reduce((sum, p) => sum + p.newDialogueIds.length, 0),
+    [],
+  );
+  const completedFromCurriculum = useMemo(() => {
+    const allCurriculumIds = new Set(curriculum100.flatMap((p) => p.newDialogueIds));
+    return lang.completedIds.filter((id) => allCurriculumIds.has(id)).length;
+  }, [lang.completedIds]);
+
+  const dayDoneAll = todayItems.length === 0;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* 상단 헤더 */}
-        <View style={styles.header}>
-          <Text style={styles.appTitle}>TangoLingo</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Ionicons name="flame" size={20} color={colors.streakOrange} />
-              <Text style={styles.statText}>{streak}</Text>
-            </View>
-            <View style={styles.stat}>
-              <Ionicons name="star" size={20} color={colors.xpGold} />
-              <Text style={styles.statText}>{xp}</Text>
-            </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView contentContainerStyle={{ padding: spacing.md, gap: spacing.md }}>
+        <View>
+          <Text style={[styles.hello, { color: colors.textSecondary }]}>오늘의 탱고</Text>
+          <Text style={[styles.title, { color: colors.text }]}>TangoLingo</Text>
+        </View>
+
+        {/* Day 카드 */}
+        <View style={[styles.dayCard, { backgroundColor: colors.primary }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6 }}>
+            <Text style={styles.dayBig}>Day {currentDay}</Text>
+            <Text style={styles.dayTotal}>/ 365</Text>
           </View>
+          {dayPlan && (
+            <>
+              <Text style={styles.dayPhase}>
+                {PHASE_INFO[dayPlan.phase].label} · {PHASE_INFO[dayPlan.phase].goal}
+              </Text>
+              <Text style={styles.dayTheme}>
+                {dayPlan.isReviewDay ? '↻' : '📍'} {dayPlan.themeKo}
+              </Text>
+              <View style={styles.dayPills}>
+                <View style={styles.dayPill}>
+                  <Text style={styles.dayPillText}>{dayPlan.level}</Text>
+                </View>
+                <View style={styles.dayPill}>
+                  <Text style={styles.dayPillText}>🔥 {lang.streak}일</Text>
+                </View>
+                <View style={styles.dayPill}>
+                  <Text style={styles.dayPillText}>⭐ {lang.xp} XP</Text>
+                </View>
+              </View>
+            </>
+          )}
+          <View style={styles.dayProgressBar}>
+            <View
+              style={[
+                styles.dayProgressFill,
+                { width: `${Math.min(100, (completedFromCurriculum / totalCurriculumDialogues) * 100)}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.dayProgressText}>
+            {completedFromCurriculum} / {totalCurriculumDialogues} 대화 학습
+          </Text>
         </View>
 
-        {/* 스마트 복습 추천 배너 */}
-        {recommendation.urgentCount > 0 && (
-          <TouchableOpacity
-            style={styles.recBanner}
-            onPress={() => router.push('/(tabs)/review')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.recEmoji}>{'\uD83E\uDDE0'}</Text>
-            <Text style={styles.recText}>{recommendation.message}</Text>
-          </TouchableOpacity>
+        {/* 언어 스위처 */}
+        <LanguageSwitcher />
+
+        {/* Day 1 — 오리엔테이션 */}
+        {currentDay === 1 && <IntroCard />}
+
+        {/* 품사 범례 (대화 학습용) */}
+        {currentDay !== 1 && <PosLegend />}
+
+        {/* 오늘의 학습 거리 */}
+        {!dayDoneAll && (
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {currentDay === 1 ? '🎯 첫 대화' : `오늘의 학습 (${todayItems.length}개)`}
+          </Text>
         )}
 
-        {/* 오늘의 레슨 */}
-        {nextLesson && (
-          <TouchableOpacity
-            style={styles.lessonCard}
-            onPress={() => router.push(`/lesson/${nextLesson.id}`)}
-            activeOpacity={0.8}
+        {enriched.map((item) => (
+          <View
+            key={item.dialogueId}
+            style={[styles.setCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
-            <View style={styles.lessonBadge}>
-              <Text style={styles.lessonBadgeText}>오늘의 레슨</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              {item.isNew ? (
+                <View style={[styles.tag, { backgroundColor: colors.success + '22' }]}>
+                  <Text style={{ color: colors.success, fontSize: 10, fontWeight: '800' }}>✨ 신규</Text>
+                </View>
+              ) : (
+                <View style={[styles.tag, { backgroundColor: colors.warning + '22' }]}>
+                  <Text style={{ color: colors.warning, fontSize: 10, fontWeight: '800' }}>↩ Day {item.planDay}</Text>
+                </View>
+              )}
+              <Text style={[styles.setSituation, { color: colors.textSecondary }]}>
+                💬 {item.dialogue.situation}
+              </Text>
             </View>
-            <Text style={styles.lessonTitle}>{nextLesson.title}</Text>
-            <Text style={styles.lessonTitleKo}>{nextLesson.titleKo}</Text>
-            <Text style={styles.lessonSituation}>{nextLesson.situation}</Text>
-            <View style={styles.startRow}>
-              <Text style={styles.startText}>시작하기</Text>
-              <Ionicons name="arrow-forward-circle" size={24} color="#FFF" />
+            <View style={{ gap: 4, marginTop: 8 }}>
+              {item.lines.map((line: any, i: number) => (
+                <DialogueCard key={i} line={line} />
+              ))}
             </View>
-          </TouchableOpacity>
-        )}
+            <Pressable
+              onPress={() => completeDialogue(mode, item.dialogueId, 10)}
+              style={[styles.doneBtn, { backgroundColor: colors.primary }]}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>학습 완료 · +10 XP</Text>
+            </Pressable>
+          </View>
+        ))}
 
-        {/* 완료 메시지 (모든 레슨 완료) */}
-        {!nextLesson && (
-          <View style={[styles.lessonCard, { backgroundColor: colors.success }]}>
-            <Text style={styles.lessonBadgeText}>🎉 모든 레슨 완료!</Text>
-            <Text style={styles.lessonTitleKo}>복습으로 실력을 다져보세요.</Text>
+        {dayDoneAll && (
+          <View style={[styles.doneBanner, { backgroundColor: colors.successLight }]}>
+            <Text style={{ fontSize: 32 }}>🎉</Text>
+            <Text style={{ color: colors.success, fontSize: 16, fontWeight: '800' }}>
+              Day {currentDay} 완료!
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 13, textAlign: 'center', marginTop: 4 }}>
+              내일 Day {Math.min(currentDay + 1, 100)}에 만나요
+            </Text>
           </View>
         )}
 
-        {/* 복습 카드 */}
-        {reviewCount > 0 && (
-          <TouchableOpacity
-            style={styles.reviewCard}
-            onPress={() => router.push('/(tabs)/review')}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="refresh-circle" size={28} color={colors.accent} />
-            <View style={styles.reviewText}>
-              <Text style={styles.reviewTitle}>복습하기</Text>
-              <Text style={styles.reviewCount}>틀린 문장 {reviewCount}개</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
-          </TouchableOpacity>
-        )}
-
-        {/* 도구 모음 — 2×3 그리드 */}
-        <Text style={styles.sectionTitle}>연습 도구</Text>
-        <View style={styles.toolGrid}>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/practice')}>
-            <Ionicons name="chatbubbles" size={24} color={colors.primary} />
-            <Text style={styles.toolLabel}>대화 연습</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/chat')}>
-            <Ionicons name="chatbubble-ellipses" size={24} color={colors.secondary} />
-            <Text style={styles.toolLabel}>AI 선생님</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/vocabulary')}>
-            <Ionicons name="book" size={24} color={colors.accent} />
-            <Text style={styles.toolLabel}>단어장</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/writing')}>
-            <Ionicons name="create" size={24} color={colors.success} />
-            <Text style={styles.toolLabel}>작문 연습</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/alphabet')}>
-            <Ionicons name="text" size={24} color={colors.primaryDark} />
-            <Text style={styles.toolLabel}>알파벳</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/grammar-compare')}>
-            <Ionicons name="git-compare" size={24} color={colors.accent} />
-            <Text style={styles.toolLabel}>문법 비교</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/shadowing')}>
-            <Ionicons name="headset" size={24} color={colors.secondary} />
-            <Text style={styles.toolLabel}>쉐도잉</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.toolCard} onPress={() => router.push('/minimal-pairs')}>
-            <Ionicons name="ear" size={24} color={colors.primaryDark} />
-            <Text style={styles.toolLabel}>미니멀 페어</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 학습 현황 */}
-        <View style={styles.progressSection}>
-          <Text style={styles.sectionTitle}>학습 현황</Text>
-          <View style={styles.progressRow}>
-            <View style={styles.progressBox}>
-              <Text style={styles.progressValue}>{completedLessons.length}</Text>
-              <Text style={styles.progressLabel}>완료 레슨</Text>
-            </View>
-            <View style={styles.progressBox}>
-              <Text style={styles.progressValue}>{lessons.length - completedLessons.length}</Text>
-              <Text style={styles.progressLabel}>남은 레슨</Text>
-            </View>
-            <View style={styles.progressBox}>
-              <Text style={styles.progressValue}>{streak}</Text>
-              <Text style={styles.progressLabel}>연속 학습</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 오늘의 탱고 한 문장 */}
-        <View style={styles.quoteCard}>
-          <Text style={styles.quoteLabel}>오늘의 탱고 한 문장</Text>
-          <Text style={styles.quoteSpanish}>{todayQuote.spanish}</Text>
-          <Text style={styles.quoteKorean}>{todayQuote.korean}</Text>
-        </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  appTitle: {
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
-    color: colors.primary,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  stat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  statText: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
-  // 스마트 복습 배너
-  recBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF3E0',
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm,
-    gap: spacing.sm,
-  },
-  recEmoji: {
-    fontSize: 18,
-  },
-  recText: {
-    flex: 1,
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.medium,
-    color: '#E65100',
-  },
-  // 오늘의 레슨 카드
-  lessonCard: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    ...shadow.md,
-  },
-  lessonBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignSelf: 'flex-start',
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.full,
-    marginBottom: spacing.sm,
-  },
-  lessonBadgeText: {
-    color: '#FFF',
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.bold,
-  },
-  lessonTitle: {
-    color: '#FFF',
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-    marginBottom: 2,
-  },
-  lessonTitleKo: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: fontSize.md,
-    marginBottom: spacing.sm,
-  },
-  lessonSituation: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: fontSize.sm,
-    marginBottom: spacing.md,
-  },
-  startRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  startText: {
-    color: '#FFF',
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-  },
-  // 복습 카드
-  reviewCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-    ...shadow.sm,
-  },
-  reviewText: {
-    flex: 1,
-  },
-  reviewTitle: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
-  reviewCount: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  // 도구 그리드
-  toolGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  toolCard: {
-    width: '31%' as any,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.sm,
-    alignItems: 'center',
-    gap: spacing.xs,
-    ...shadow.sm,
-  },
-  toolLabel: {
-    fontSize: fontSize.xs,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-    textAlign: 'center',
-  },
-  // AI 카드 (unused but kept for compatibility)
-  aiCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-    ...shadow.sm,
-  },
-  aiCardText: {
-    flex: 1,
-  },
-  aiCardTitle: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-  },
-  aiCardDesc: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-  },
-  // 학습 현황
-  progressSection: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-    color: colors.text,
-    marginBottom: spacing.sm,
-  },
-  progressRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  progressBox: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    alignItems: 'center',
-    ...shadow.sm,
-  },
-  progressValue: {
-    fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
-    color: colors.secondary,
-  },
-  progressLabel: {
-    fontSize: fontSize.xs,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-  // 오늘의 문장
-  quoteCard: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.accent,
-    ...shadow.sm,
-  },
-  quoteLabel: {
-    fontSize: fontSize.xs,
-    color: colors.accent,
-    fontWeight: fontWeight.bold,
-    marginBottom: spacing.sm,
-    textTransform: 'uppercase',
-  },
-  quoteSpanish: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
-    marginBottom: spacing.xs,
-    fontStyle: 'italic',
-  },
-  quoteKorean: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
-  },
+  hello: { fontSize: 14 },
+  title: { fontSize: 28, fontWeight: '800', marginTop: 2 },
+
+  dayCard: { padding: 18, borderRadius: 16, gap: 8 },
+  dayBig: { color: '#fff', fontSize: 36, fontWeight: '900', lineHeight: 40 },
+  dayTotal: { color: '#fff', fontSize: 16, fontWeight: '700', opacity: 0.8, paddingBottom: 4 },
+  dayPhase: { color: '#fff', fontSize: 12, opacity: 0.85, fontWeight: '600' },
+  dayTheme: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  dayPills: { flexDirection: 'row', gap: 6, marginTop: 4 },
+  dayPill: { backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  dayPillText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  dayProgressBar: { height: 5, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 3, overflow: 'hidden', marginTop: 8 },
+  dayProgressFill: { height: '100%', backgroundColor: '#fff' },
+  dayProgressText: { color: '#fff', fontSize: 11, opacity: 0.9, marginTop: 4 },
+
+  sectionTitle: { fontSize: 16, fontWeight: '700' },
+  setCard: { padding: 14, borderRadius: 14, borderWidth: 1 },
+  setSituation: { fontSize: 12, fontWeight: '700' },
+  tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  doneBtn: { marginTop: 10, padding: 12, borderRadius: 10, alignItems: 'center' },
+  doneBanner: { padding: 22, borderRadius: 14, alignItems: 'center', gap: 6 },
 });

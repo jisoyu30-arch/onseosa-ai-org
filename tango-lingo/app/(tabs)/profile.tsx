@@ -1,317 +1,454 @@
-import { View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Platform } from 'react-native';
-import { useState, useEffect, useMemo } from 'react';
+import { View, Text, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useProgressStore } from '../../stores/useProgressStore';
-import { useSettingsStore } from '../../stores/useSettingsStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useDialogueProgress } from '../../stores/useDialogueProgress';
+import { useGoalStore, LEVEL_LABELS, LEVEL_TARGETS, type CefrLevel } from '../../stores/useGoalStore';
 import { useThemeStore } from '../../stores/useThemeStore';
-import { LearningMode } from '../../types';
-import { lessons, units } from '../../data/lessons';
-import { badges, Badge } from '../../data/badges';
-import { BadgeCard } from '../../components/common/BadgeCard';
-import { requestNotificationPermission, scheduleDailyReminder, cancelAllReminders } from '../../utils/notifications';
-import { colors, spacing, borderRadius, fontSize, fontWeight, shadow } from '../../constants/theme';
+import { useCurriculumStore } from '../../stores/useCurriculumStore';
+import { useSettingsStore } from '../../stores/useSettingsStore';
+import { useTestStore } from '../../stores/useTestStore';
+import { useRouter } from 'expo-router';
+import { scheduleDailyReminder, cancelAllReminders, requestNotificationPermission } from '../../utils/notifications';
+import { useTheme } from '../../utils/useTheme';
+import { estimateLevel, LEVEL_CRITERIA_KO } from '../../utils/levelEstimator';
+import type { LearningMode } from '../../types';
 
-function checkBadgeEarned(badge: Badge, completedLessons: string[], xp: number, streak: number): boolean {
-  const { type, value, levelId } = badge.condition;
-  switch (type) {
-    case 'lessons_completed':
-      return completedLessons.length >= value;
-    case 'xp':
-      return xp >= value;
-    case 'streak':
-      return streak >= value;
-    case 'level_complete': {
-      if (!levelId) return false;
-      const levelUnits = units.filter((u) => u.levelId === levelId);
-      const levelLessonIds = levelUnits.flatMap((u) => u.lessonIds);
-      return levelLessonIds.every((id) => completedLessons.includes(id));
-    }
-    default:
-      return false;
-  }
-}
+const LANGS: { code: LearningMode; flag: string; name: string }[] = [
+  { code: 'es', flag: '🇪🇸', name: '스페인어' },
+  { code: 'en', flag: '🇬🇧', name: '영어' },
+  { code: 'zh', flag: '🇨🇳', name: '중국어' },
+];
 
-const HOUR_OPTIONS = [7, 8, 9, 10, 11, 12, 18, 19, 20, 21, 22];
+const LEVELS: CefrLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1'];
 
-export default function ProfileScreen() {
+const LEVEL_COLORS: Record<CefrLevel, string> = {
+  A1: '#9CA3AF',
+  A2: '#60A5FA',
+  B1: '#34D399',
+  B2: '#F59E0B',
+  C1: '#EF4444',
+};
+
+export default function Profile() {
+  const { colors, spacing } = useTheme();
+  const langs = useDialogueProgress((s) => s.langs);
+  const resetLang = useDialogueProgress((s) => s.resetLang);
+  const resetAll = useDialogueProgress((s) => s.resetAll);
+  const goals = useGoalStore((s) => s.goals);
+  const setGoal = useGoalStore((s) => s.setGoal);
+  const computePace = useGoalStore((s) => s.computePace);
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
+  const resetStart = useCurriculumStore((s) => s.resetStart);
+  const curLangs = useCurriculumStore((s) => s.langs);
+  const currentMode = useSettingsStore((s) => s.learningMode);
+  const testLangs = useTestStore((s) => s.langs);
   const router = useRouter();
-  const { xp, streak, completedLessons, lastStudyDate, wrongSentences, streakFreezes } = useProgressStore();
-  const { notificationEnabled, notificationHour, notificationMinute, learningMode, update } = useSettingsStore();
-  const { mode: themeMode, toggle: toggleTheme } = useThemeStore();
+  const settings = useSettingsStore((s) => ({
+    enabled: s.notificationEnabled,
+    hour: s.notificationHour,
+    minute: s.notificationMinute,
+  }));
+  const updateSettings = useSettingsStore((s) => s.update);
 
-  const languageOptions: { mode: LearningMode; flag: string; label: string }[] = [
-    { mode: 'es', flag: '\uD83C\uDDE6\uD83C\uDDF7', label: '스페인어' },
-    { mode: 'en', flag: '\uD83C\uDDFA\uD83C\uDDF8', label: '영어' },
-    { mode: 'zh', flag: '\uD83C\uDDE8\uD83C\uDDF3', label: '중국어' },
-  ];
-
-  const earnedBadges = useMemo(
-    () => badges.map((b) => ({ badge: b, earned: checkBadgeEarned(b, completedLessons, xp, streak) })),
-    [completedLessons, xp, streak],
-  );
-  const earnedCount = earnedBadges.filter((b) => b.earned).length;
-
-  const stats = [
-    { icon: 'star' as const, label: 'XP', value: xp, color: colors.xpGold },
-    { icon: 'flame' as const, label: '연속 학습', value: `${streak}일`, color: colors.streakOrange },
-    { icon: 'checkmark-circle' as const, label: '완료 레슨', value: `${completedLessons.length}/${lessons.length}`, color: colors.success },
-    { icon: 'refresh' as const, label: '복습 대기', value: wrongSentences.length, color: colors.accent },
-  ];
-
-  const handleToggleNotification = async (enabled: boolean) => {
-    if (enabled) {
-      const granted = await requestNotificationPermission();
-      if (!granted) return;
-      await scheduleDailyReminder(notificationHour, notificationMinute);
-    } else {
+  const toggleNotification = async () => {
+    if (settings.enabled) {
       await cancelAllReminders();
+      updateSettings({ notificationEnabled: false });
+    } else {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert('권한 필요', '알림 권한을 허용해주세요.');
+        return;
+      }
+      await scheduleDailyReminder(settings.hour, settings.minute);
+      updateSettings({ notificationEnabled: true });
     }
-    update({ notificationEnabled: enabled });
   };
 
-  const handleChangeHour = async (hour: number) => {
-    update({ notificationHour: hour });
-    if (notificationEnabled) {
-      await scheduleDailyReminder(hour, notificationMinute);
+  const changeTime = async (deltaH: number, deltaM: number) => {
+    const newH = (settings.hour + deltaH + 24) % 24;
+    const newM = (settings.minute + deltaM + 60) % 60;
+    updateSettings({ notificationHour: newH, notificationMinute: newM });
+    if (settings.enabled) {
+      await scheduleDailyReminder(newH, newM);
     }
+  };
+
+  const confirmAction = (title: string, message: string, onConfirm: () => void) => {
+    Alert.alert(title, message, [
+      { text: '취소', style: 'cancel' },
+      { text: '실행', style: 'destructive', onPress: onConfirm },
+    ]);
+  };
+
+  const handleRestartCurrentLang = () => {
+    confirmAction(
+      `${LANGS.find((l) => l.code === currentMode)?.name} 진도 리셋`,
+      '학습한 대화·XP·스트릭이 모두 초기화됩니다. 시작일도 오늘로 리셋. 되돌릴 수 없어요.',
+      () => {
+        resetLang(currentMode);
+        resetStart(currentMode);
+      },
+    );
+  };
+
+  const handleResetStartDate = () => {
+    confirmAction(
+      '시작일을 오늘로',
+      '학습 기록은 유지하되 Day 1부터 다시 시작합니다.',
+      () => resetStart(currentMode),
+    );
+  };
+
+  const handleResetAlphabet = () => {
+    confirmAction(
+      '알파벳 진도 리셋',
+      '들은 알파벳 기록이 초기화됩니다.',
+      async () => {
+        await AsyncStorage.removeItem('@tangolingo_alphabet_heard_v2_es').catch(() => {});
+        await AsyncStorage.removeItem('@tangolingo_alphabet_heard_v2_en').catch(() => {});
+        await AsyncStorage.removeItem('@tangolingo_alphabet_heard_v2_zh').catch(() => {});
+        Alert.alert('완료', '알파벳 진도 리셋됨');
+      },
+    );
+  };
+
+  const handleResetAll = () => {
+    confirmAction(
+      '⚠️ 모든 데이터 리셋',
+      '3개 언어의 모든 진도·스트릭·XP·알파벳·시작일이 초기화됩니다. 절대 되돌릴 수 없어요!',
+      async () => {
+        resetAll();
+        (['es', 'en', 'zh'] as LearningMode[]).forEach((m) => resetStart(m));
+        await AsyncStorage.multiRemove([
+          '@tangolingo_alphabet_heard_v2_es',
+          '@tangolingo_alphabet_heard_v2_en',
+          '@tangolingo_alphabet_heard_v2_zh',
+        ]).catch(() => {});
+        Alert.alert('완료', '모든 데이터 초기화됨');
+      },
+    );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.pageTitle}>프로필</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView contentContainerStyle={{ padding: spacing.md, gap: spacing.md }}>
+        <Text style={[styles.title, { color: colors.text }]}>나의 진도</Text>
+        <Text style={[styles.titleSub, { color: colors.textSecondary }]}>
+          현재 레벨은 학습량·테스트 결과로 자동 산정됩니다
+        </Text>
 
-        {/* 아바타 */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <Ionicons name="musical-notes" size={40} color={colors.primary} />
-          </View>
-          <Text style={styles.greeting}>탱고 학습자</Text>
-          {lastStudyDate && (
-            <Text style={styles.lastStudy}>마지막 학습: {lastStudyDate}</Text>
-          )}
-        </View>
-
-        {/* 통계 */}
-        <View style={styles.statsGrid}>
-          {stats.map((stat, i) => (
-            <View key={i} style={styles.statBox}>
-              <Ionicons name={stat.icon} size={24} color={stat.color} />
-              <Text style={styles.statValue}>{stat.value}</Text>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* 스트릭 프리즈 */}
-        <View style={styles.freezeCard}>
-          <Text style={styles.freezeEmoji}>{'\u2744\uFE0F'}</Text>
-          <View style={styles.freezeTextWrap}>
-            <Text style={styles.freezeTitle}>
-              스트릭 프리즈 {streakFreezes}개 보유
-            </Text>
-            <Text style={styles.freezeDesc}>
-              {streakFreezes > 0
-                ? '하루 쉬어도 스트릭 유지!'
-                : '7일 연속 학습하면 프리즈를 받아요'}
+        {/* 레벨 시험 진입 */}
+        <Pressable
+          onPress={() => router.push('/test')}
+          style={[styles.testCard, { backgroundColor: colors.primary }]}
+        >
+          <Text style={{ fontSize: 26 }}>📝</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}>레벨 시험 보기</Text>
+            <Text style={{ color: '#fff', fontSize: 12, opacity: 0.95, marginTop: 2 }}>
+              5문제 자동 출제 · 결과가 레벨에 반영
             </Text>
           </View>
-          <View style={styles.freezeDots}>
-            {[0, 1, 2].map((i) => (
-              <View
-                key={i}
-                style={[styles.freezeDot, i < streakFreezes && styles.freezeDotActive]}
-              />
-            ))}
-          </View>
-        </View>
+          <Text style={{ color: '#fff', fontSize: 20 }}>→</Text>
+        </Pressable>
 
-        {/* 주간 리포트 */}
-        <TouchableOpacity
-          style={styles.reportBtn}
-          onPress={() => router.push('/report')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="bar-chart" size={22} color={colors.secondary} />
-          <Text style={styles.reportBtnText}>주간 리포트 보기</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
-        </TouchableOpacity>
+        {LANGS.map((l) => {
+          const progress = langs[l.code];
+          const goal = goals[l.code];
+          const pace = computePace(l.code, progress.completedIds.length);
+          const target = LEVEL_TARGETS[goal.targetLevel];
 
-        {/* 학습 분석 */}
-        <TouchableOpacity
-          style={styles.reportBtn}
-          onPress={() => router.push('/analytics')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="analytics" size={22} color={colors.accent} />
-          <Text style={styles.reportBtnText}>학습 분석 보기</Text>
-          <Ionicons name="chevron-forward" size={18} color={colors.textLight} />
-        </TouchableOpacity>
+          // 자동 레벨 산정 (대화 + 테스트 결과 반영)
+          const test = testLangs[l.code];
+          const estimate = estimateLevel({
+            completedDialogues: progress.completedIds.length,
+            testCorrect: test?.totalCorrect ?? 0,
+            testWrong: test?.totalWrong ?? 0,
+          });
+          const currentLevelColor = LEVEL_COLORS[estimate.current];
+          const targetLevelColor = LEVEL_COLORS[goal.targetLevel];
 
-        {/* 배지 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>배지 ({earnedCount}/{badges.length})</Text>
-          <View style={styles.badgeGrid}>
-            {earnedBadges.map(({ badge, earned }) => (
-              <BadgeCard key={badge.id} badge={badge} earned={earned} />
-            ))}
-          </View>
-        </View>
-
-        {/* 다크 모드 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>화면 설정</Text>
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="moon" size={22} color={colors.secondary} />
-              <Text style={styles.settingLabel}>다크 모드</Text>
-            </View>
-            <Switch
-              value={themeMode === 'dark'}
-              onValueChange={toggleTheme}
-              trackColor={{ false: colors.border, true: colors.primaryLight }}
-              thumbColor={themeMode === 'dark' ? colors.primary : '#f4f3f4'}
-            />
-          </View>
-        </View>
-
-        {/* 학습 언어 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>학습 언어</Text>
-          <View style={styles.langRow}>
-            {languageOptions.map((opt) => (
-              <TouchableOpacity
-                key={opt.mode}
-                style={[styles.langChip, learningMode === opt.mode && styles.langChipActive]}
-                onPress={() => update({ learningMode: opt.mode })}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.langFlag}>{opt.flag}</Text>
-                <Text style={[styles.langLabel, learningMode === opt.mode && styles.langLabelActive]}>
-                  {opt.label}
+          return (
+            <View
+              key={l.code}
+              style={[styles.langCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            >
+              <View style={styles.langHeader}>
+                <Text style={{ fontSize: 26 }}>{l.flag}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.langName, { color: colors.text }]}>{l.name}</Text>
+                </View>
+                <Text style={{ color: colors.primary, fontWeight: '800', fontSize: 18 }}>
+                  🔥 {progress.streak}
                 </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+              </View>
+
+              {/* 현재 → 목표 레벨 표시 (자동 산정) */}
+              <View style={styles.levelRow}>
+                <View style={styles.levelBox}>
+                  <Text style={[styles.levelTag, { color: colors.textSecondary }]}>현재 (자동)</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+                    <Text style={[styles.levelBig, { color: currentLevelColor }]}>{estimate.current}</Text>
+                    <Text style={[styles.levelDesc, { color: colors.textSecondary }]}>
+                      · {LEVEL_CRITERIA_KO[estimate.current]}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={{ color: colors.textLight, fontSize: 18 }}>→</Text>
+                <View style={[styles.levelBox, { alignItems: 'flex-end' }]}>
+                  <Text style={[styles.levelTag, { color: colors.textSecondary }]}>목표</Text>
+                  <Text style={[styles.levelBig, { color: targetLevelColor }]}>{goal.targetLevel}</Text>
+                </View>
+              </View>
+
+              {/* 다음 레벨까지 진도바 */}
+              {estimate.current !== 'C1' && (
+                <>
+                  <View style={[styles.track, { backgroundColor: colors.border }]}>
+                    <View style={[styles.fill, { width: `${estimate.pctToNext}%`, backgroundColor: currentLevelColor }]} />
+                  </View>
+                  <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                    다음 레벨까지 {estimate.pctToNext}% (점수 {estimate.score} / {estimate.nextThreshold})
+                  </Text>
+                </>
+              )}
+
+              {/* 학습 통계 */}
+              <View style={styles.statsRow}>
+                <View style={styles.statBox}>
+                  <Text style={[styles.statVal, { color: colors.primary }]}>{progress.completedIds.length}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>대화 완료</Text>
+                </View>
+                <View style={[styles.statSep, { backgroundColor: colors.border }]} />
+                <View style={styles.statBox}>
+                  <Text style={[styles.statVal, { color: colors.warning }]}>{progress.xp}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>XP</Text>
+                </View>
+                <View style={[styles.statSep, { backgroundColor: colors.border }]} />
+                <View style={styles.statBox}>
+                  <Text style={[styles.statVal, { color: colors.secondary }]}>D-{pace.daysLeft}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{pace.dailyPace}/일</Text>
+                </View>
+              </View>
+
+              {/* 페이스 뱃지 */}
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                <View style={[styles.pill, { backgroundColor: pace.onTrack ? colors.successLight : colors.errorLight }]}>
+                  <Text style={{ color: pace.onTrack ? colors.success : colors.error, fontSize: 10, fontWeight: '800' }}>
+                    {pace.onTrack ? '페이스 유지' : '뒤처짐'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* 목표 레벨 변경 */}
+              <Text style={[styles.goalSelectLabel, { color: colors.textSecondary }]}>🎯 목표 레벨 선택</Text>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                {LEVELS.map((lv) => {
+                  const active = goal.targetLevel === lv;
+                  return (
+                    <Pressable
+                      key={lv}
+                      onPress={() => setGoal(l.code, { targetLevel: lv })}
+                      style={[
+                        styles.levelBtn,
+                        {
+                          backgroundColor: active ? LEVEL_COLORS[lv] : 'transparent',
+                          borderColor: active ? LEVEL_COLORS[lv] : colors.border,
+                        },
+                      ]}
+                    >
+                      <Text style={{ color: active ? '#fff' : colors.text, fontSize: 11, fontWeight: '700' }}>
+                        {lv}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          );
+        })}
 
         {/* 알림 설정 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>학습 알림</Text>
-
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="notifications" size={22} color={colors.primary} />
-              <Text style={styles.settingLabel}>매일 알림</Text>
+        <View style={[styles.settingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.settingTitle, { color: colors.text }]}>📱 매일 학습 알림</Text>
+              <Text style={[styles.dangerSub, { color: colors.textSecondary }]}>
+                {settings.enabled
+                  ? `매일 ${String(settings.hour).padStart(2, '0')}:${String(settings.minute).padStart(2, '0')}에 알려드려요`
+                  : '꺼져있음'}
+              </Text>
             </View>
-            <Switch
-              value={notificationEnabled}
-              onValueChange={handleToggleNotification}
-              trackColor={{ false: colors.border, true: colors.primaryLight }}
-              thumbColor={notificationEnabled ? colors.primary : '#f4f3f4'}
-            />
+            <Pressable
+              onPress={toggleNotification}
+              style={[
+                styles.toggle,
+                { backgroundColor: settings.enabled ? colors.primary : colors.border },
+              ]}
+            >
+              <View style={[
+                styles.toggleKnob,
+                {
+                  alignSelf: settings.enabled ? 'flex-end' : 'flex-start',
+                  backgroundColor: '#fff',
+                },
+              ]} />
+            </Pressable>
           </View>
 
-          {notificationEnabled && (
-            <>
-              <Text style={styles.timeLabel}>알림 시간</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.timeScroll}>
+          {settings.enabled && (
+            <View style={{ marginTop: 12 }}>
+              <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>알림 시간</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 }}>
                 <View style={styles.timeRow}>
-                  {HOUR_OPTIONS.map((hour) => (
-                    <TouchableOpacity
-                      key={hour}
-                      style={[styles.timeChip, notificationHour === hour && styles.timeChipActive]}
-                      onPress={() => handleChangeHour(hour)}
-                    >
-                      <Text style={[styles.timeText, notificationHour === hour && styles.timeTextActive]}>
-                        {hour < 12 ? `오전 ${hour}시` : hour === 12 ? '낮 12시' : `오후 ${hour - 12}시`}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  <Pressable onPress={() => changeTime(-1, 0)} style={[styles.timeBtn, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Text style={{ color: colors.text, fontSize: 18 }}>−</Text>
+                  </Pressable>
+                  <Text style={[styles.timeText, { color: colors.text }]}>
+                    {String(settings.hour).padStart(2, '0')}
+                  </Text>
+                  <Pressable onPress={() => changeTime(1, 0)} style={[styles.timeBtn, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Text style={{ color: colors.text, fontSize: 18 }}>+</Text>
+                  </Pressable>
                 </View>
-              </ScrollView>
-              <Text style={styles.timeHint}>
-                매일 {notificationHour < 12 ? `오전 ${notificationHour}` : notificationHour === 12 ? '낮 12' : `오후 ${notificationHour - 12}`}시에 알림이 울려요
+                <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800' }}>:</Text>
+                <View style={styles.timeRow}>
+                  <Pressable onPress={() => changeTime(0, -10)} style={[styles.timeBtn, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Text style={{ color: colors.text, fontSize: 18 }}>−</Text>
+                  </Pressable>
+                  <Text style={[styles.timeText, { color: colors.text }]}>
+                    {String(settings.minute).padStart(2, '0')}
+                  </Text>
+                  <Pressable onPress={() => changeTime(0, 10)} style={[styles.timeBtn, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Text style={{ color: colors.text, fontSize: 18 }}>+</Text>
+                  </Pressable>
+                </View>
+              </View>
+              <Text style={{ color: colors.textLight, fontSize: 11, marginTop: 6 }}>
+                시: ±1, 분: ±10
               </Text>
-            </>
+            </View>
           )}
         </View>
 
-        {/* 완료 레슨 */}
-        {completedLessons.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>완료한 레슨</Text>
-            {completedLessons.map((lessonId) => {
-              const lesson = lessons.find((l) => l.id === lessonId);
-              if (!lesson) return null;
-              return (
-                <View key={lessonId} style={styles.completedRow}>
-                  <Ionicons name="checkmark-circle" size={20} color={colors.success} />
-                  <Text style={styles.completedText}>{lesson.titleKo}</Text>
-                </View>
-              );
-            })}
+        {/* 설정 */}
+        <View style={[styles.settingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.settingTitle, { color: colors.text }]}>⚙️ 설정</Text>
+          <View style={{ marginTop: 10 }}>
+            <Text style={[styles.settingLabel, { color: colors.textSecondary }]}>테마</Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+              {(['light', 'dark'] as const).map((m) => {
+                const active = themeMode === m;
+                return (
+                  <Pressable
+                    key={m}
+                    onPress={() => setThemeMode(m)}
+                    style={[
+                      styles.themeBtn,
+                      { backgroundColor: active ? colors.primary : 'transparent', borderColor: active ? colors.primary : colors.border },
+                    ]}
+                  >
+                    <Text style={{ color: active ? '#fff' : colors.text, fontWeight: '600' }}>
+                      {m === 'light' ? '☀️ 라이트' : '🌙 다크'}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        )}
+        </View>
+
+        {/* 진도 관리 */}
+        <View style={[styles.settingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.settingTitle, { color: colors.text }]}>🔄 진도 관리</Text>
+          <Text style={[styles.dangerSub, { color: colors.textSecondary }]}>
+            현재 언어: {LANGS.find((l) => l.code === currentMode)?.flag} {LANGS.find((l) => l.code === currentMode)?.name}
+          </Text>
+
+          <Pressable style={[styles.dangerBtn, { borderColor: colors.border }]} onPress={handleResetStartDate}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.dangerBtnTitle, { color: colors.text }]}>📅 시작일을 오늘로</Text>
+              <Text style={[styles.dangerBtnSub, { color: colors.textSecondary }]}>Day 1부터 다시. 학습 기록은 유지.</Text>
+            </View>
+          </Pressable>
+
+          <Pressable style={[styles.dangerBtn, { borderColor: colors.warning }]} onPress={handleResetAlphabet}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.dangerBtnTitle, { color: colors.warning }]}>🔤 알파벳 진도 리셋</Text>
+              <Text style={[styles.dangerBtnSub, { color: colors.textSecondary }]}>들은 알파벳 기록만 초기화</Text>
+            </View>
+          </Pressable>
+
+          <Pressable style={[styles.dangerBtn, { borderColor: colors.warning }]} onPress={handleRestartCurrentLang}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.dangerBtnTitle, { color: colors.warning }]}>
+                ↻ {LANGS.find((l) => l.code === currentMode)?.name} 처음부터
+              </Text>
+              <Text style={[styles.dangerBtnSub, { color: colors.textSecondary }]}>이 언어의 대화·XP·스트릭 + 시작일 리셋</Text>
+            </View>
+          </Pressable>
+
+          <Pressable style={[styles.dangerBtn, { borderColor: colors.error }]} onPress={handleResetAll}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.dangerBtnTitle, { color: colors.error }]}>⚠️ 모든 데이터 리셋</Text>
+              <Text style={[styles.dangerBtnSub, { color: colors.textSecondary }]}>3개 언어 + 알파벳 + 시작일 전부 초기화</Text>
+            </View>
+          </Pressable>
+        </View>
+
+        <Text style={{ color: colors.textLight, fontSize: 11, textAlign: 'center', marginTop: 16 }}>
+          TangoLingo · 탱고로 배우는 3개국어
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  scroll: { padding: spacing.md, paddingBottom: spacing.xxl },
-  pageTitle: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.lg },
+  title: { fontSize: 26, fontWeight: '800' },
+  titleSub: { fontSize: 12, marginTop: 2 },
 
-  avatarSection: { alignItems: 'center', marginBottom: spacing.lg },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.errorLight, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  greeting: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text },
-  lastStudy: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
+  langCard: { padding: 16, borderRadius: 14, borderWidth: 1, gap: 10 },
+  langHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  langName: { fontSize: 16, fontWeight: '700' },
 
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
-  statBox: { width: '48%' as any, backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, alignItems: 'center', ...shadow.sm },
-  statValue: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text, marginTop: spacing.xs },
-  statLabel: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
+  levelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  levelBox: { flex: 1, gap: 2 },
+  levelTag: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  levelBig: { fontSize: 22, fontWeight: '900' },
+  levelDesc: { fontSize: 11 },
 
-  section: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md, ...shadow.sm },
-  sectionTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.sm },
+  track: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  fill: { height: '100%' },
 
-  settingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.xs },
-  settingLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  settingLabel: { fontSize: fontSize.md, color: colors.text, fontWeight: fontWeight.medium },
+  statsRow: {
+    flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
+    paddingVertical: 10, borderRadius: 10,
+  },
+  statBox: { alignItems: 'center', flex: 1 },
+  statSep: { width: 1, height: 28 },
+  statVal: { fontSize: 18, fontWeight: '800' },
+  statLabel: { fontSize: 10, marginTop: 2 },
 
-  timeLabel: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.md, marginBottom: spacing.xs },
-  timeScroll: { marginBottom: spacing.xs },
-  timeRow: { flexDirection: 'row', gap: spacing.xs },
-  timeChip: { paddingVertical: spacing.xs, paddingHorizontal: spacing.sm + 2, borderRadius: borderRadius.full, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.background },
-  timeChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
-  timeText: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.textSecondary },
-  timeTextActive: { color: '#FFF' },
-  timeHint: { fontSize: fontSize.xs, color: colors.textLight, fontStyle: 'italic', marginTop: spacing.xs },
+  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
 
-  reportBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md, gap: spacing.sm, ...shadow.sm },
-  reportBtnText: { flex: 1, fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text },
+  goalSelectLabel: { fontSize: 11, fontWeight: '700', marginTop: 4 },
+  levelBtn: { flex: 1, paddingVertical: 7, borderRadius: 8, borderWidth: 1, alignItems: 'center' },
 
-  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'flex-start' },
-
-  langRow: { flexDirection: 'row', gap: spacing.sm },
-  langChip: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, paddingVertical: spacing.sm, borderRadius: borderRadius.md, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.background },
-  langChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
-  langFlag: { fontSize: fontSize.lg },
-  langLabel: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.textSecondary },
-  langLabelActive: { color: '#FFF' },
-
-  completedRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.xs },
-  completedText: { fontSize: fontSize.md, color: colors.text },
-
-  freezeCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.md, gap: spacing.sm, ...shadow.sm },
-  freezeEmoji: { fontSize: 28 },
-  freezeTextWrap: { flex: 1 },
-  freezeTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text },
-  freezeDesc: { fontSize: fontSize.sm, color: colors.textSecondary, marginTop: 2 },
-  freezeDots: { flexDirection: 'row', gap: spacing.xs },
-  freezeDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.border },
-  freezeDotActive: { backgroundColor: '#64B5F6' },
+  settingCard: { padding: 16, borderRadius: 14, borderWidth: 1, marginTop: 4 },
+  settingTitle: { fontSize: 15, fontWeight: '700' },
+  settingLabel: { fontSize: 12, fontWeight: '700' },
+  themeBtn: { flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, alignItems: 'center' },
+  dangerSub: { fontSize: 11, marginTop: 4, marginBottom: 4 },
+  testCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12 },
+  toggle: { width: 50, height: 28, borderRadius: 14, padding: 2, justifyContent: 'center' },
+  toggleKnob: { width: 24, height: 24, borderRadius: 12 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  timeBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  timeText: { fontSize: 22, fontWeight: '800', minWidth: 36, textAlign: 'center' },
+  dangerBtn: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 8 },
+  dangerBtnTitle: { fontSize: 14, fontWeight: '700' },
+  dangerBtnSub: { fontSize: 11, marginTop: 2 },
 });

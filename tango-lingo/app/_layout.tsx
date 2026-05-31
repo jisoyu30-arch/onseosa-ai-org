@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useProgressStore } from '../stores/useProgressStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import { useThemeStore } from '../stores/useThemeStore';
 import { useGoalStore } from '../stores/useGoalStore';
 import { useDialogueProgress } from '../stores/useDialogueProgress';
 import { useCurriculumStore } from '../stores/useCurriculumStore';
 import { useTestStore } from '../stores/useTestStore';
+import { useVocabStore } from '../stores/useVocabStore';
 import { useTheme } from '../utils/useTheme';
 import OnboardingScreen from './onboarding';
 
@@ -18,16 +18,16 @@ function AppContent() {
   const { colors, isDark } = useTheme();
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
 
-  const loadProgress = useProgressStore((s) => s.load);
   const loadSettings = useSettingsStore((s) => s.load);
   const loadTheme = useThemeStore((s) => s.load);
   const loadGoal = useGoalStore((s) => s.load);
   const loadDialogueProgress = useDialogueProgress((s) => s.load);
   const loadCurriculum = useCurriculumStore((s) => s.load);
   const loadTest = useTestStore((s) => s.load);
+  const loadVocab = useVocabStore((s) => s.load);
 
   useEffect(() => {
-    loadProgress();
+    loadVocab();
     loadSettings();
     loadTheme();
     loadGoal();

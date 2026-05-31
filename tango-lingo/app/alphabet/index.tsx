@@ -1,11 +1,11 @@
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { spanishAlphabet, argentinaRules, PronunciationVariant, AlphabetEntry } from '../../data/alphabet';
 import { englishAlphabet, englishNotes } from '../../data/english-alphabet';
-import { chinesePinyin, chineseNotes } from '../../data/chinese-pinyin';
+import { chinesePinyin, chineseNotes, chinesePinyinSections } from '../../data/chinese-pinyin';
 import { speak, stopSpeaking } from '../../utils/audio';
 import { useTheme } from '../../utils/useTheme';
 import { useSettingsStore } from '../../stores/useSettingsStore';
@@ -166,12 +166,33 @@ export default function AlphabetScreen() {
           </View>
         )}
 
-        {data.entries.map((entry) => {
+        {data.entries.map((entry, idx) => {
           const isExpanded = expandedLetter === entry.letter;
           const isHeard = heard.includes(entry.letter);
 
+          // ZH 모드일 때 섹션 헤더 끼워넣기
+          let sectionHeader: React.ReactNode = null;
+          if (mode === 'zh') {
+            let cumulative = 0;
+            for (const sec of chinesePinyinSections) {
+              if (idx === cumulative) {
+                sectionHeader = (
+                  <View key={`sec-${sec.id}`} style={styles.zhSectionHeader}>
+                    <Text style={[styles.zhSectionLabel, { color: colors.primary }]}>
+                      {sec.label} ({sec.count})
+                    </Text>
+                  </View>
+                );
+                break;
+              }
+              cumulative += sec.count;
+            }
+          }
+
           return (
-            <View key={entry.letter} style={styles.card}>
+            <React.Fragment key={entry.letter}>
+              {sectionHeader}
+            <View style={styles.card}>
               <TouchableOpacity
                 style={styles.cardHeader}
                 onPress={() => setExpandedLetter(isExpanded ? null : entry.letter)}
@@ -233,6 +254,7 @@ export default function AlphabetScreen() {
                 </View>
               )}
             </View>
+            </React.Fragment>
           );
         })}
       </ScrollView>
@@ -300,5 +322,7 @@ function createStyles(t: ReturnType<typeof useTheme>) {
     exampleBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing.sm, paddingVertical: spacing.xs, paddingHorizontal: spacing.sm, backgroundColor: colors.accentLight, borderRadius: borderRadius.sm, alignSelf: 'flex-start' },
     exampleWord: { fontSize: fontSize.sm, fontWeight: fontWeight.bold, color: colors.text, fontStyle: 'italic' },
     exampleKo: { fontSize: fontSize.xs, color: colors.textSecondary },
+    zhSectionHeader: { paddingTop: spacing.md, paddingBottom: spacing.xs, paddingHorizontal: spacing.xs },
+    zhSectionLabel: { fontSize: fontSize.sm, fontWeight: fontWeight.bold, textTransform: 'uppercase', letterSpacing: 0.5 },
   });
 }

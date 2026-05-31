@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { roleplays } from '../../data/roleplays';
+import { useSettingsStore } from '../../stores/useSettingsStore';
 import { ProgressBar } from '../../components/lesson/ProgressBar';
 import { Button } from '../../components/common/Button';
 import { RoleplayPronunciation } from '../../components/couple/RoleplayPronunciation';
@@ -13,6 +14,9 @@ export default function RoleplayScreen() {
   const { dialogId } = useLocalSearchParams<{ dialogId: string }>();
   const router = useRouter();
   const dialog = roleplays[dialogId!];
+  const mode = useSettingsStore((s) => s.learningMode);
+  const getLineText = (line: any) =>
+    mode === 'es' ? line.spanish : mode === 'en' ? (line.english ?? line.spanish) : (line.chinese ?? line.spanish);
 
   const [currentLine, setCurrentLine] = useState(0);
   const [myRole, setMyRole] = useState<'A' | 'B' | null>(null);
@@ -117,14 +121,14 @@ export default function RoleplayScreen() {
           <View style={[styles.roleTag, { backgroundColor: line.role === 'A' ? colors.primary : colors.secondary }]}>
             <Text style={styles.roleTagText}>{line.roleLabel}</Text>
           </View>
-          <Text style={styles.lineSpanish}>{line.spanish}</Text>
-          <Text style={styles.lineKorean}>{line.korean}</Text>
+          <Text style={styles.lineSpanish}>{getLineText(line)}</Text>
+          <Text style={styles.lineKorean}>🇰🇷 {line.korean}</Text>
         </View>
 
         {/* 발음 연습 */}
         <RoleplayPronunciation
-          key={`${dialog.id}-${currentLine}`}
-          spanish={line.spanish}
+          key={`${dialog.id}-${currentLine}-${mode}`}
+          spanish={getLineText(line)}
           isMyTurn={isMyTurn}
         />
       </ScrollView>

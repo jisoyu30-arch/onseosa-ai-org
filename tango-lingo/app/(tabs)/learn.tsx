@@ -33,6 +33,20 @@ export default function LearnCalendar() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const selectedPlan = selectedDay ? getDayPlan(selectedDay) : null;
 
+  // 현재 Phase 자동 계산 → 그것만 펼침
+  const currentPhase = useMemo(() => {
+    const plan = getDayPlan(currentDay);
+    return plan?.phase ?? 1;
+  }, [currentDay]);
+
+  const [expandedPhases, setExpandedPhases] = useState<Record<number, boolean>>(() => ({
+    1: false, 2: false, 3: false, 4: false, [currentPhase]: true,
+  }));
+
+  const togglePhase = (p: number) => {
+    setExpandedPhases((prev) => ({ ...prev, [p]: !prev[p] }));
+  };
+
   // Phase별 통계
   const phaseStats = useMemo(() => {
     const stats: Record<number, { total: number; done: number }> = { 1: { total: 0, done: 0 }, 2: { total: 0, done: 0 }, 3: { total: 0, done: 0 }, 4: { total: 0, done: 0 } };
@@ -46,6 +60,13 @@ export default function LearnCalendar() {
   const totalDone = Object.values(phaseStats).reduce((s, p) => s + p.done, 0);
   const totalTotal = Object.values(phaseStats).reduce((s, p) => s + p.total, 0);
   const totalPct = totalTotal > 0 ? Math.round((totalDone / totalTotal) * 100) : 0;
+
+  // Phase별 day 미리 그룹화 (한 번만, mode·progress 무관)
+  const phaseDaysMap = useMemo(() => {
+    const map: Record<number, DayPlan[]> = { 1: [], 2: [], 3: [], 4: [] };
+    for (const plan of curriculum365) map[plan.phase].push(plan);
+    return map;
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -80,23 +101,43 @@ export default function LearnCalendar() {
           const info = PHASE_INFO[phaseNum as 1 | 2 | 3 | 4];
           const stat = phaseStats[phaseNum];
           const phasePct = stat.total > 0 ? Math.round((stat.done / stat.total) * 100) : 0;
-          const phaseDays = curriculum365.filter((p) => p.phase === phaseNum);
+          const phaseDays = phaseDaysMap[phaseNum];
           const color = PHASE_COLORS[phaseNum as 1 | 2 | 3 | 4];
+
+          const expanded = expandedPhases[phaseNum] ?? false;
+          const isCurrent = phaseNum === currentPhase;
 
           return (
             <View key={phaseNum} style={styles.phaseSection}>
-              {/* Phase 헤더 */}
-              <View style={[styles.phaseHeader, { borderLeftColor: color }]}>
+              {/* Phase 헤더 (탭 시 접기/펼치기) */}
+              <Pressable
+                onPress={() => togglePhase(phaseNum)}
+                style={[styles.phaseHeader, { borderLeftColor: color }]}
+              >
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.phaseTitle, { color }]}>{info.label}</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={[styles.phaseTitle, { color }]}>{info.label}</Text>
+                    {isCurrent && (
+                      <View style={[styles.currentDot, { backgroundColor: colors.primary }]}>
+                        <Text style={{ color: '#fff', fontSize: 9, fontWeight: '800' }}>NOW</Text>
+                      </View>
+                    )}
+                  </View>
                   <Text style={styles.phaseSub}>{info.range} · {info.goal}</Text>
                 </View>
                 <Text style={[styles.phaseStat, { color }]}>
                   {stat.done}/{stat.total} ({phasePct}%)
                 </Text>
-              </View>
+                <Ionicons
+                  name={expanded ? 'chevron-up' : 'chevron-down'}
+                  size={18}
+                  color={colors.textSecondary}
+                  style={{ marginLeft: 6 }}
+                />
+              </Pressable>
 
-              {/* Day 그리드 */}
+              {/* Day 그리드 (펼쳤을 때만) */}
+              {expanded && (
               <View style={styles.grid}>
                 {phaseDays.map((plan) => {
                   const isToday = plan.day === currentDay;
@@ -146,6 +187,7 @@ export default function LearnCalendar() {
                   );
                 })}
               </View>
+              )}
             </View>
           );
         })}
@@ -264,6 +306,7 @@ function createStyles(t: ReturnType<typeof useTheme>) {
     phaseTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold },
     phaseSub: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
     phaseStat: { fontSize: 12, fontWeight: '800' },
+    currentDot: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
 
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
     dayBox: {

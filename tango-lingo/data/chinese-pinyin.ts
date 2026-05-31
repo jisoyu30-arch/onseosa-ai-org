@@ -89,6 +89,13 @@ const tones: AlphabetEntry[] = [
 
 export const chinesePinyin: AlphabetEntry[] = [...initials, ...simpleFinals, ...tones];
 
+// 섹션별 분리 export (UI 접기/펼치기용)
+export const chinesePinyinSections = [
+  { id: 'initials', label: '성모 (자음)', count: initials.length, entries: initials },
+  { id: 'finals', label: '단운모 (모음)', count: simpleFinals.length, entries: simpleFinals },
+  { id: 'tones', label: '성조 (4성+경성)', count: tones.length, entries: tones },
+];
+
 export const chineseNotes = [
   { rule: '성조가 의미를 결정', description: '같은 음 mā/má/mǎ/mà는 4가지 다른 한자', example: '妈(엄마) 麻(마) 马(말) 骂(꾸짖다)' },
   { rule: '권설음 vs 평설음', description: 'zh/ch/sh/r은 혀 말기 / z/c/s는 평평하게', example: 'zhī (知, 알다) vs zī (字, 글자)' },

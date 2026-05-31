@@ -1,14 +1,4 @@
 import { Sentence } from '../types';
-import { sentencesL1Extra } from './sentences-l1-extra';
-import { sentencesL1Extra2 } from './sentences-l1-extra2';
-import { sentencesL2Extra } from './sentences-l2-extra';
-import { sentencesL3Extra } from './sentences-l3-extra';
-import { sentencesL4Extra } from './sentences-l4-extra';
-import { sentencesL5Extra } from './sentences-l5-extra';
-import { sentencesL2Extra2 } from './sentences-l2-extra2';
-import { sentencesL3Extra2 } from './sentences-l3-extra2';
-import { sentencesL4Extra2 } from './sentences-l4-extra2';
-import { sentencesL5Extra2 } from './sentences-l5-extra2';
 
 const baseSentences: Record<string, Sentence> = {
   // =====================================================
@@ -826,17 +816,5 @@ const baseSentences: Record<string, Sentence> = {
   s5_16_3: { id: 's5_16_3', spanish: 'Nos vemos luego.', korean: '나중에 봐요.', english: 'See you later.', chinese: '回头见。', pronunciation: 'nos VE-mos LUE-go', tags: ['밀롱가', '역할극'], difficulty: 1 },
 };
 
-// 기본 문장 + 확장 문장 병합
-export const sentences: Record<string, Sentence> = {
-  ...baseSentences,
-  ...sentencesL1Extra,
-  ...sentencesL1Extra2,
-  ...sentencesL2Extra,
-  ...sentencesL3Extra,
-  ...sentencesL4Extra,
-  ...sentencesL5Extra,
-  ...sentencesL2Extra2,
-  ...sentencesL3Extra2,
-  ...sentencesL4Extra2,
-  ...sentencesL5Extra2,
-};
+// 기본 문장 (192개)
+export const sentences: Record<string, Sentence> = baseSentences;

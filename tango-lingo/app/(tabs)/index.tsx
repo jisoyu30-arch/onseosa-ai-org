@@ -2,13 +2,14 @@ import { useMemo } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useDialogueProgress } from '../../stores/useDialogueProgress';
 import { useGoalStore } from '../../stores/useGoalStore';
 import { useCurriculumStore } from '../../stores/useCurriculumStore';
 import { useTheme } from '../../utils/useTheme';
 import { allDialogues } from '../../data/dialogues';
-import { getDayPlan, curriculum365 as curriculum100, PHASE_INFO } from '../../data/curriculum-365';
+import { getDayPlan, curriculum365, PHASE_INFO } from '../../data/curriculum-365';
 import { enrichDialogueLines } from '../../utils/dialogueHelper';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 import DialogueCard from '../../components/DialogueCard';
@@ -16,6 +17,7 @@ import PosLegend from '../../components/PosLegend';
 import IntroCard from '../../components/IntroCard';
 
 export default function TodayHome() {
+  const router = useRouter();
   const { colors, spacing } = useTheme();
   const mode = useSettingsStore((s) => s.learningMode);
   const lang = useDialogueProgress((s) => s.langs[mode]);
@@ -69,11 +71,11 @@ export default function TodayHome() {
   );
 
   const totalCurriculumDialogues = useMemo(
-    () => curriculum100.reduce((sum, p) => sum + p.newDialogueIds.length, 0),
+    () => curriculum365.reduce((sum, p) => sum + p.newDialogueIds.length, 0),
     [],
   );
   const completedFromCurriculum = useMemo(() => {
-    const allCurriculumIds = new Set(curriculum100.flatMap((p) => p.newDialogueIds));
+    const allCurriculumIds = new Set(curriculum365.flatMap((p) => p.newDialogueIds));
     return lang.completedIds.filter((id) => allCurriculumIds.has(id)).length;
   }, [lang.completedIds]);
 
@@ -130,6 +132,21 @@ export default function TodayHome() {
         {/* 언어 스위처 */}
         <LanguageSwitcher />
 
+        {/* Word Rush 진입 — 26초 단어 학습 */}
+        <Pressable
+          onPress={() => router.push('/word-rush')}
+          style={[styles.wordRushCard, { backgroundColor: colors.secondary }]}
+        >
+          <Text style={{ fontSize: 32 }}>⚡</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}>Word Rush — 26초 단어 학습</Text>
+            <Text style={{ color: '#fff', fontSize: 12, opacity: 0.9, marginTop: 2 }}>
+              카드 스와이프 · 안다 / 모른다 분류
+            </Text>
+          </View>
+          <Text style={{ color: '#fff', fontSize: 20 }}>→</Text>
+        </Pressable>
+
         {/* Day 1 — 오리엔테이션 */}
         {currentDay === 1 && <IntroCard />}
 
@@ -177,15 +194,64 @@ export default function TodayHome() {
         ))}
 
         {dayDoneAll && (
-          <View style={[styles.doneBanner, { backgroundColor: colors.successLight }]}>
-            <Text style={{ fontSize: 32 }}>🎉</Text>
-            <Text style={{ color: colors.success, fontSize: 16, fontWeight: '800' }}>
-              Day {currentDay} 완료!
+          <>
+            <View style={[styles.doneBanner, { backgroundColor: colors.successLight }]}>
+              <Text style={{ fontSize: 56 }}>🎉</Text>
+              <Text style={{ color: colors.success, fontSize: 20, fontWeight: '800' }}>
+                Day {currentDay} 완료!
+              </Text>
+              <Text style={{ color: colors.text, fontSize: 13, textAlign: 'center', marginTop: 4 }}>
+                {currentDay >= 365 ? '🏆 365일 완주!' : `내일 Day ${currentDay + 1}에 만나요`}
+              </Text>
+            </View>
+
+            {/* 추가 학습 추천 */}
+            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 8 }]}>
+              💡 더 학습하고 싶다면
             </Text>
-            <Text style={{ color: colors.text, fontSize: 13, textAlign: 'center', marginTop: 4 }}>
-              내일 Day {Math.min(currentDay + 1, 100)}에 만나요
-            </Text>
-          </View>
+            <View style={{ gap: 8 }}>
+              <Pressable
+                onPress={() => router.push('/(tabs)/roleplay')}
+                style={[styles.suggestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={{ fontSize: 24 }}>🌹</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>Mila와 자유 대화</Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>AI와 무한 시나리오 연습</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/(tabs)/learn')}
+                style={[styles.suggestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={{ fontSize: 24 }}>📅</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>365일 캘린더</Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>이전 Day 복습 / 미래 미리보기</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/(tabs)/alphabet')}
+                style={[styles.suggestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={{ fontSize: 24 }}>🔤</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>알파벳 발음</Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>ES/EN/ZH 6개 발음 비교</Text>
+                </View>
+              </Pressable>
+              <Pressable
+                onPress={() => router.push('/test')}
+                style={[styles.suggestCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Text style={{ fontSize: 24 }}>📝</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.text, fontSize: 14, fontWeight: '700' }}>레벨 시험</Text>
+                  <Text style={{ color: colors.textSecondary, fontSize: 12 }}>5문제 자동 출제 · 레벨 갱신</Text>
+                </View>
+              </Pressable>
+            </View>
+          </>
         )}
 
         <View style={{ height: 40 }} />
@@ -216,4 +282,6 @@ const styles = StyleSheet.create({
   tag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   doneBtn: { marginTop: 10, padding: 12, borderRadius: 10, alignItems: 'center' },
   doneBanner: { padding: 22, borderRadius: 14, alignItems: 'center', gap: 6 },
+  suggestCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderWidth: 1 },
+  wordRushCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 14 },
 });

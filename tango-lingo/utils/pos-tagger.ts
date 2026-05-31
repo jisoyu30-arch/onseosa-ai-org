@@ -456,8 +456,37 @@ export function tagChinese(text: string): PosToken[] {
   return tokens;
 }
 
-export function tagText(text: string, mode: LearningMode): PosToken[] {
+// ===== 캐시 (모듈 레벨) =====
+// 같은 텍스트+mode 조합은 1번만 계산. LRU 스타일로 max 500개 유지.
+const tagCache = new Map<string, PosToken[]>();
+const MAX_CACHE = 500;
+
+function _tagText(text: string, mode: LearningMode): PosToken[] {
   if (mode === 'es') return tagEnglishOrSpanish(text, ES);
   if (mode === 'en') return tagEnglishOrSpanish(text, EN);
   return tagChinese(text);
+}
+
+export function tagText(text: string, mode: LearningMode): PosToken[] {
+  const key = `${mode}:${text}`;
+  const cached = tagCache.get(key);
+  if (cached) {
+    // LRU: 최근 사용 → 맨 뒤로 이동
+    tagCache.delete(key);
+    tagCache.set(key, cached);
+    return cached;
+  }
+  const result = _tagText(text, mode);
+  // 캐시 크기 제한
+  if (tagCache.size >= MAX_CACHE) {
+    const firstKey = tagCache.keys().next().value;
+    if (firstKey) tagCache.delete(firstKey);
+  }
+  tagCache.set(key, result);
+  return result;
+}
+
+/** 캐시 비우기 (디버그용) */
+export function clearTagCache() {
+  tagCache.clear();
 }

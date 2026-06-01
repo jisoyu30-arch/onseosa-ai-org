@@ -7,6 +7,7 @@ import { useThemeStore } from '../../stores/useThemeStore';
 import { useCurriculumStore } from '../../stores/useCurriculumStore';
 import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useTestStore } from '../../stores/useTestStore';
+import { useVocabStore } from '../../stores/useVocabStore';
 import { useRouter } from 'expo-router';
 import { scheduleDailyReminder, cancelAllReminders, requestNotificationPermission } from '../../utils/notifications';
 import { useTheme } from '../../utils/useTheme';
@@ -43,6 +44,7 @@ export default function Profile() {
   const curLangs = useCurriculumStore((s) => s.langs);
   const currentMode = useSettingsStore((s) => s.learningMode);
   const testLangs = useTestStore((s) => s.langs);
+  const vocabLangs = useVocabStore((s) => s.langs);
   const router = useRouter();
   const settings = useSettingsStore((s) => ({
     enabled: s.notificationEnabled,
@@ -160,10 +162,11 @@ export default function Profile() {
           const pace = computePace(l.code, progress.completedIds.length);
           const target = LEVEL_TARGETS[goal.targetLevel];
 
-          // 자동 레벨 산정 (대화 + 테스트 결과 반영)
+          // 자동 레벨 산정 (대화 + 테스트 + 단어 known 반영)
           const test = testLangs[l.code];
+          const vocab = vocabLangs[l.code];
           const estimate = estimateLevel({
-            completedDialogues: progress.completedIds.length,
+            completedDialogues: progress.completedIds.length + (vocab?.totalKnown ?? 0) * 0.3,  // 단어 1개 = 0.3 점수
             testCorrect: test?.totalCorrect ?? 0,
             testWrong: test?.totalWrong ?? 0,
           });
@@ -219,7 +222,12 @@ export default function Profile() {
               <View style={styles.statsRow}>
                 <View style={styles.statBox}>
                   <Text style={[styles.statVal, { color: colors.primary }]}>{progress.completedIds.length}</Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>대화 완료</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>대화</Text>
+                </View>
+                <View style={[styles.statSep, { backgroundColor: colors.border }]} />
+                <View style={styles.statBox}>
+                  <Text style={[styles.statVal, { color: colors.success }]}>{vocabLangs[l.code]?.totalKnown ?? 0}</Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary }]}>단어 안다</Text>
                 </View>
                 <View style={[styles.statSep, { backgroundColor: colors.border }]} />
                 <View style={styles.statBox}>

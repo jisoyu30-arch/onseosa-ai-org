@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { View, Text, ScrollView, Pressable, StyleSheet, Animated, PanResponder, Dimensions } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet, Animated, PanResponder, Dimensions, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -7,8 +7,11 @@ import { useSettingsStore } from '../../stores/useSettingsStore';
 import { useVocabStore } from '../../stores/useVocabStore';
 import { useTheme } from '../../utils/useTheme';
 import { useSpeech } from '../../utils/useSpeech';
+import VoiceButtons from '../../components/VoiceButtons';
+import WordImage from '../../components/WordImage';
 import { getStudyableVocab, getVocabByFrequency, type VocabWord } from '../../data/vocab';
 import { CATEGORY_INFO } from '../../data/vocab/categories';
+import { getWordEmoji } from '../../data/vocab/word-emoji';
 import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -205,6 +208,8 @@ function SwipeCard({ word, onSwipe, colors, mode }: any) {
   const pan = useRef(new Animated.ValueXY()).current;
   const { speak } = useSpeech();
   const cat = CATEGORY_INFO[word.category];
+  // 단어별 이모지 우선, 없으면 카테고리 이모지
+  const displayEmoji = getWordEmoji(word.word) ?? cat.emoji;
 
   const responder = useRef(
     PanResponder.create({
@@ -251,10 +256,8 @@ function SwipeCard({ word, onSwipe, colors, mode }: any) {
         <Text style={styles.swipeTagText}>↻ 다시</Text>
       </Animated.View>
 
-      {/* 큰 이모지 */}
-      <View style={styles.emojiBox}>
-        <Text style={styles.bigEmoji}>{cat.emoji}</Text>
-      </View>
+      {/* 단어 AI 일러스트 (Pollinations) */}
+      <WordImage word={word.word} mode={mode} ko={word.ko} category={word.category} size={180} />
 
       {/* 단어 + 발음 */}
       <View style={{ alignItems: 'center', gap: 4, marginTop: 8 }}>
@@ -276,10 +279,10 @@ function SwipeCard({ word, onSwipe, colors, mode }: any) {
         </View>
       )}
 
-      {/* 듣기 버튼 */}
-      <Pressable onPress={() => speak(word.word, mode)} style={styles.speakBtn}>
-        <Ionicons name="volume-high" size={24} color={colors.primary} />
-      </Pressable>
+      {/* 다중 발음 버튼 (남/여 + 미국/영국 등) */}
+      <View style={{ marginTop: 14, paddingHorizontal: 4 }}>
+        <VoiceButtons text={word.word} mode={mode} />
+      </View>
 
       {/* 카테고리 + 레벨 뱃지 */}
       <View style={styles.bottomBadges}>

@@ -133,19 +133,32 @@ export default function TodayHome() {
         <LanguageSwitcher />
 
         {/* Word Rush 진입 — 26초 단어 학습 */}
-        <Pressable
-          onPress={() => router.push('/word-rush')}
-          style={[styles.wordRushCard, { backgroundColor: colors.secondary }]}
-        >
-          <Text style={{ fontSize: 32 }}>⚡</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}>Word Rush — 26초 단어 학습</Text>
-            <Text style={{ color: '#fff', fontSize: 12, opacity: 0.9, marginTop: 2 }}>
-              카드 스와이프 · 안다 / 모른다 분류
-            </Text>
-          </View>
-          <Text style={{ color: '#fff', fontSize: 20 }}>→</Text>
-        </Pressable>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Pressable
+            onPress={() => router.push('/word-rush')}
+            style={[styles.wordRushCard, { backgroundColor: colors.secondary, flex: 1 }]}
+          >
+            <Text style={{ fontSize: 24 }}>⚡</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>Word Rush</Text>
+              <Text style={{ color: '#fff', fontSize: 10, opacity: 0.9, marginTop: 1 }}>
+                26초 단어 학습
+              </Text>
+            </View>
+          </Pressable>
+          <Pressable
+            onPress={() => router.push('/weekly-review')}
+            style={[styles.wordRushCard, { backgroundColor: colors.accent, flex: 1 }]}
+          >
+            <Text style={{ fontSize: 24 }}>📅</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '800' }}>주간 복습</Text>
+              <Text style={{ color: '#fff', fontSize: 10, opacity: 0.9, marginTop: 1 }}>
+                이번 주 단어
+              </Text>
+            </View>
+          </Pressable>
+        </View>
 
         {/* Day 1 — 오리엔테이션 */}
         {currentDay === 1 && <IntroCard />}

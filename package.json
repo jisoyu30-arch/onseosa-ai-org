@@ -6,8 +6,10 @@
   "scripts": {
     "dev:worker": "pnpm --filter claude-worker dev",
     "dev:ui": "pnpm --filter control-room dev",
+    "test:writing-safety": "node scripts/test-writing-safety.mjs",
     "build": "pnpm -r build",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "test:writing-map": "node scripts/test-writing-map.mjs"
   },
   "engines": {
     "node": ">=20.0.0"

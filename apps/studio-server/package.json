@@ -1,0 +1,11 @@
+{
+  "name": "studio-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "온서사 집필실 원고 저장 서버. 이 PC 안에서만 열린다.",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "test": "node --test"
+  }
+}

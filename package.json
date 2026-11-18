@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "dev:worker": "pnpm --filter claude-worker dev",
+    "dev:ui": "pnpm --filter control-room dev",
+    "test:writing-safety": "node scripts/test-writing-safety.mjs",
+    "build:workspace": "pnpm -r build",
+    "clean": "pnpm -r clean",
+    "test:writing-map": "node scripts/test-writing-map.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

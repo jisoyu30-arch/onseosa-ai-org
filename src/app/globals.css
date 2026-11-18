@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  --charcoal: #242320;
+  --charcoal-2: #2E2C29;
+  --charcoal-3: #3A3835;
+  --ivory: #F4EFE4;
+  --ivory-warm: #EDE6D5;
+  --paper: #FAF7F2;
+  --dawn: #C8551F;
+  --dawn-2: #D96830;
+  --olive: #6B7055;
+  --smoke: #9A9490;
+  --smoke-2: #C4BFB8;
+
+  --ip: #7B5EA7;
+  --pub: #2E6B4F;
+  --music: #C8551F;
+  --video: #1A6B8A;
+  --platform: #2E4B8A;
+  --brand: #8A4A2E;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--charcoal);
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--smoke-2);
+  border-radius: 3px;
+}
+
+/* Agent card hover */
+.agent-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.agent-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(36, 35, 32, 0.1);
+}
+
+/* Chat messages */
+.chat-message {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Streaming cursor */
+.streaming-cursor::after {
+  content: '▊';
+  animation: blink 0.8s infinite;
+  color: var(--dawn);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Level badge colors */
+.badge-ceo {
+  background: rgba(200, 85, 31, 0.15);
+  color: var(--dawn);
+}
+.badge-lead {
+  background: rgba(200, 85, 31, 0.1);
+  color: var(--dawn);
+}
+.badge-senior {
+  background: rgba(107, 112, 85, 0.1);
+  color: var(--olive);
+}
+.badge-junior {
+  background: rgba(154, 148, 144, 0.1);
+  color: var(--smoke);
+}
+
+/* Spinner for pipeline */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

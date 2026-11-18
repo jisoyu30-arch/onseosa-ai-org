@@ -36,3 +36,6 @@ google-credentials.json
 
 # misc
 .vercel
+
+# Next.js 앱(master)
+.env*.local
